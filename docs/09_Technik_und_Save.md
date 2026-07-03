@@ -2,7 +2,7 @@
 
 *Architektur, Daten-Schema, Save-Format, Determinismus, Lokalisierung. `[GESPERRT]` = bestätigt. `[PROVISORISCH]` = baubar, Feinheiten offen.*
 
-*Stand: 2026-06-30. Update: Kristallisations-Mechanik (Übermut→Schreck, Welle-1-Tor) ergänzt.*
+*Stand: 2026-07-02. Update: Kampf-State Ziehstapel/Hand/Ablage (§3.1), Schema-Slot `eigenStatus` (§2.11), `effekt.typ: "ermutigung"` (§2.1), Save-/RNG-Klärung für das Ziehmodell (§3.1/§4), Build-Stand um 12er-Re-Run-Vermerk. Vorheriges Update: Kristallisations-Mechanik (2026-06-30).*
 
 ---
 
@@ -43,10 +43,12 @@ Reine JS-Objektliterale/Fabrikfunktionen, keine Klassen-Pflicht. Felder unten si
   wert: 0,        // Zahlenwert, auch 0 erlaubt (reine Effekt-Seiten, 04 §1.1)
   effekt: []      // [{ typ: "schaden"|"rinde"|"faeule"|"brand"|"morsch"|"welk"|
                   //         "kraft"|"riss"|"echo"|"glanz"|"flaeche"|"beruhigung"|
-                  //         "praegung"|"labung", wert: 0, ... }]
+                  //         "ermutigung"|"praegung"|"labung", wert: 0, ... }]
                   // Reihenfolge im Array = Auflöse-Reihenfolge falls mehrere (02 §4/03 §2)
 }
 ```
+
+- `"ermutigung"` ergänzt 2026-07-02 (Keyword 02 §6.4: +2 Gemüt universell, 1 Atem — Abgrenzung zu `"beruhigung"`, das nur bei Schreck > 0 greift). `[PROVISORISCH: Keyword, Slot GESPERRT]`
 
 ### 2.2 Würfel `[GESPERRT]`
 
@@ -69,6 +71,7 @@ Reine JS-Objektliterale/Fabrikfunktionen, keine Klassen-Pflicht. Felder unten si
 - Blaupausen-Würfel sind danach normal verzauberbar (auch auf Quell/Hort-Seiten). `[GESPERRT]`
 - Schreck sperrt höchste freie Seiten; **Tiebreak bei Wertgleichheit: niedrigerer `seiten`-Index zuerst** (deterministisch, auch bei Wert-0-Seiten). `[GESPERRT]`
 - **Kristallisation:** bei Kampfende wird restliches Übermut (>0) **1:1 in `gemuet`-Abzug** auf die zuletzt gespielten Würfel verteilt, statt zu verfallen. Sofort-Mechanik (Tischsturz bei Übermut > 6) bleibt unverändert; Kristallisation ist die zusätzliche run-lange Konsequenz. `[GESPERRT — Sim-bestätigt 2026-06-30, Eingriff in vormals `[GESPERRT]` 02 §7 Übermut-Reset]`. Implementiert in `push.js: kristallisiereUebermut(uebermutRest, gespielteWuerfelLetzterZug)`.
+- `gemuet` haftet am Würfel, nicht an der Kampf-Zone — Ziehstapel/Hand/Ablage (§2.11) ändern daran nichts.
 - Atemkosten liegen am Würfel (`atem`), nicht an der Seite.
 
 ### 2.3 Blaupause `[GESPERRT]`
@@ -99,7 +102,7 @@ Reine JS-Objektliterale/Fabrikfunktionen, keine Klassen-Pflicht. Felder unten si
   ],
   maxStufen: 3,              // harter Cap, global [GESPERRT]
   atemAenderung: 0,           // Standard: ändert Atem nicht
-  einStufenSeite: false        // true für Echo/Glanz/Beruhigung/Bruchstelle (04 §3.2)
+  einStufenSeite: false        // true für Echo/Glanz/Beruhigung/Ermutigung/Bruchstelle (04 §3.2)
 }
 ```
 
@@ -156,7 +159,8 @@ Reine JS-Objektliterale/Fabrikfunktionen, keine Klassen-Pflicht. Felder unten si
   absichtAktuell: {
     typ: "angriff" | "block" | "status" | "mehrfach",
     wert: 8,
-    statusTyp: null,   // bei typ "status": "morsch"|"welk"|"faeule"|"brand"|"riss"
+    statusTyp: null,   // bei typ "status": "morsch"|"welk"|"faeule"|"brand"|"riss"|
+                        //   "scharte"|"klemme" (Eigen-Status, spielerseitig — s. §2.11/05)
     angekuendigt: true   // [GESPERRT] Absicht ist vor Spielerzug sichtbar
   },
   mechanikIds: ["..."]   // Verweis auf 05-Mechaniken
@@ -214,7 +218,31 @@ Entsättigungs-/Palette-State, getrennt vom Kampf-Status „Welk" (Namenskollisi
 }
 ```
 
-### 2.11 Save-Objekt
+### 2.11 Kampf-State: Ziehmodell + Eigen-Status `[GESPERRT-Prinzip, Details PROVISORISCH]`
+
+Existiert **nur während eines Kampfs**, wird bei Kampfende aufgelöst und **nie persistiert** (s. §3.1 — kein Mid-Kampf-Save). Referenziert von 02 §2.2/§8.2 und 06 §5.
+
+```js
+{
+  // Ziehmodell (StS-Stil, 02 §2.2): Arrays von Würfel-IDs, disjunkt,
+  // Vereinigung = gesamtes Arsenal
+  ziehstapel: ["id", ...],   // Kampfbeginn: gemischtes Arsenal
+  hand: ["id", ...],          // je Zug 5 frisch gezogen, Zugende → ablage
+  ablage: ["id", ...],        // Reshuffle: bei Zugbeginn < 5 im Ziehstapel
+
+  // Vier Eigen-Status, spielerseitig (02 §8.2): additiv, Cap 3,
+  // Decay -1/Runde, kampf-begrenzt
+  eigenStatus: { wetzung: 0, scharte: 0, freilauf: 0, klemme: 0 },
+
+  gespielteWuerfelLetzterZug: ["id", ...]   // Kristallisations-Ziel (02 §7.2)
+}
+```
+
+- Invariante: `ziehstapel ∪ hand ∪ ablage` = `runState.arsenal`-IDs, paarweise disjunkt. Engine prüft.
+- `eigenStatus` ist der spielerseitige Zwilling von `statusStapel` am Gegner (§2.6) — bewusst getrennter Slot, weil kampf-begrenzt und nie im Save.
+- Gegner-Absichten mit `statusTyp: "scharte"|"klemme"` schreiben hierher; Segen/Klassen-Effekte (Wetzung/Freilauf) ebenso.
+
+### 2.12 Save-Objekt
 
 s. §3.
 
@@ -231,7 +259,8 @@ s. §3.
   zuletztGespeichertAm: "ISO-8601",
   runState: {
     klasse: "eichwart",
-    arsenal: [Würfel, Würfel, ...],
+    arsenal: [Würfel, Würfel, ...],   // Start 12 (00 §3 [GESPERRT-OVERRIDE]), Gesamtmenge —
+                                        //   Ziehstapel/Hand/Ablage sind KEIN Save-Inhalt (s. u.)
     region: 1,
     knotenIndex: 3,
     waehrungen: { muenzen: 0, eicheln: 0, tau: 0 },
@@ -254,6 +283,12 @@ s. §3.
 }
 ```
 
+**Kein Mid-Kampf-Save `[PROVISORISCH: Default, entschieden 2026-07-02]`:**
+- Gespeichert wird **nur zwischen Knoten** (nach Knoten-Abschluss, §3.3 unverändert). Der Kampf-State (§2.11: `ziehstapel`/`hand`/`ablage`/`eigenStatus`) wird **nie serialisiert**.
+- App-Abbruch mitten im Kampf → Kampf startet beim nächsten Laden **neu** (voller HP-Stand vom Knoten-Eintritt, Arsenal-Gemüt vom letzten Save).
+- Konsequenz: **RNG-Stream-Persistenz entfällt** — die offene Frage aus §4 ist damit beantwortet (Stream-Neustart je Session akzeptabel, da kein Seed-Modus existiert und kein Kampf-Zustand fortgesetzt werden muss). Auch die Ziehstapel-Reihenfolge muss nie persistiert werden.
+- Fallback, falls Spielgefühl Mid-Kampf-Resume verlangt (lange Boss-Kämpfe auf Mobile): dann §2.11 + RNG-State in den Save aufnehmen und `saveVersion` erhöhen — bewusst vertagt, kein Slice-Inhalt.
+
 ### 3.2 Versionierung & Migration `[GESPERRT: Prinzip]`
 
 - Jede Save-Struktur-Änderung erhöht `saveVersion` um 1.
@@ -266,18 +301,19 @@ s. §3.
 ### 3.3 Persistenz `[GESPERRT]`
 
 - LocalStorage, Key `"wuerfelhain_save_v" + saveVersion` oder fester Key `"wuerfelhain_save"` mit `saveVersion` im Payload — **fester Key bevorzugt**, damit Migration greift statt Save-Verlust. `[PROVISORISCH: Key-Strategie]`
-- Schreiben: nach jedem Knoten-Abschluss, nicht pro Zug (Performance, Verschleiß irrelevant bei LocalStorage aber unnötige Schreibzyklen vermeiden).
+- Schreiben: nach jedem Knoten-Abschluss, nicht pro Zug (Performance, Verschleiß irrelevant bei LocalStorage aber unnötige Schreibzyklen vermeiden). Konsistent mit „kein Mid-Kampf-Save" (§3.1).
 - Kein Cloud-Sync im Slice.
 
 ---
 
 ## 4. Determinismus & RNG `[GESPERRT]`
 
-- `rng.js`: gesäter **mulberry32**, einzige Zufallsquelle für Würfelwürfe, Belohnungs-Ziehung, Gegner-Variation.
+- `rng.js`: gesäter **mulberry32**, einzige Zufallsquelle für Würfelwürfe, **Ziehstapel-Mischen**, Belohnungs-Ziehung, Gegner-Variation.
 - Seed wird **ausschließlich intern für Tests/Sim** gesetzt (`new RNG(12345)`), nie im Spiel-UI exponiert.
 - **Kein Daily-Modus, kein Seed-Modus für Spieler.** `[GESPERRT]`
-- Echte Runs: Seed aus `Date.now()` oder `crypto.getRandomValues` bei Run-Start, nicht im Save persistiert als reproduzierbarer Spiel-Modus (nur als interner RNG-State, falls Mid-Run-Speicherung den RNG-Stream fortsetzen muss — `[PROVISORISCH: RNG-State im Save nötig?]`).
+- Echte Runs: Seed aus `Date.now()` oder `crypto.getRandomValues` bei Run-Start. **RNG-State wird nicht persistiert** — durch „kein Mid-Kampf-Save" (§3.1) entfällt der einzige Bedarf; je Session startet ein frischer Stream. `[PROVISORISCH: Default 2026-07-02, vormals offene Frage]`
 - Engine/Push sind reine Funktionen über `(state, rng) → neuerState` — keine globalen Zufalls-Seiteneffekte. `[GESPERRT]`
+- Sim/Tests: Mischen des Ziehstapels läuft über denselben gesäten Stream → deterministische Kampf-Reproduktion headless bleibt möglich.
 
 ---
 
@@ -308,28 +344,31 @@ s. §3.
 ## 6. Build-Stand `[GESPERRT]`
 
 **Claude-Code-Repo (echter Spielcode, Smartphone-Workflow):**
-- `rng.js` — mulberry32, deterministisch. ✓
-- `engine.js` — reine Kampf-Auflösung (Pools, L→R, Mult typgebunden, Kraft, Morsch/Welk final, floor). ✓
-- `push.js` — Übermut, Reroll, Tischsturz, Schreck, stimmungsabhängiges Würfeln. ✓
-- `tests/engine.test.js` — 11 Tests grün. ✓
+- `rng.js` — mulberry32, deterministisch (`RNG`-Klasse, `naechsteZahl()`, `wuerfel()`). ✓
+- `engine.js` — reine Kampf-Auflösung (Pools, L→R, Mult typgebunden, Kraft, Glanz, Echo, Gleichklang, Vollmond mit Klassen-Sockel-Ausnahme, Morsch/Welk final, floor). ✓
+- `push.js` — Übermut, Reroll-Ökonomie (inkl. Freilauf/Klemme-Verrechnung), Tischsturz, Schreck-Sperrung, Push/Beruhigung/Ermutigung, **Kristallisation (`kristallisiereUebermut()`, `verarbeiteKampfende()`) portiert**. ✓
+- `ziehstapel.js` — **Ziehmodell (§2.11) portiert**: `kampfbeginn()`/`zieheHand()`/`zugende()`/`pruefeInvariante()`, Fisher-Yates-Mischen über `rng.js`. ✓
+- `tests/engine.test.js`, `tests/push.test.js`, `tests/ziehstapel.test.js` — 16 Tests grün. ✓
 - `data.js`, `save.js`, `ui/`, `sim/` — **noch nicht angelegt.**
-- **Kristallisations-Mechanik (§2.2, §3.1) noch NICHT im Repo-Code portiert** — bisher nur in der Sandbox-Referenz verifiziert (s. u.). Nächster Claude-Code-Schritt: `push.js` um `kristallisiereUebermut()` ergänzen, Kampf-Loop entsprechend verdrahten, Tests ergänzen.
+- **Beide Bausteine für den 12er-Re-Run (Kristallisation + Ziehmodell) sind jetzt im Repo-Code vorhanden** — der Re-Run selbst (via `sim/`) steht noch aus, da `sim/` und `data.js` fehlen.
 
-**Sandbox-Referenzimplementierung (dieser Chat, nicht Teil des Repos):**
+**Sandbox-Referenzimplementierung (Design-Chat, nicht Teil des Repos):**
 - Eigenständiger, lauffähiger Node-Prototyp (`rng.js`/`engine.js`/`push.js`/`data.js`/`sim/gier_vs_pflege.js`, ES-Module) zur Verifikation des Welle-1-Tors gebaut, da kein Zugriff auf den echten Repo-Code bestand.
 - Diente als **Beleg-Werkzeug**, nicht als Übernahme-Vorlage 1:1 — Funktionsnamen/-signaturen können vom Repo-Code abweichen; Mechanik-Logik (insbesondere `kristallisiereUebermut`) ist die zu portierende Referenz.
-- **Welle-1-Tor (Gier-vs-Pflege) strukturell ERFÜLLT** mit der Kristallisations-Regel: Pflege-Politik schlägt sowohl blinde als auch klug-tischsturz-vermeidende Gier-Politik konsistent über mehrere Schwierigkeitsstufen. Exakte Zielband-Kalibrierung (65–70 % Siegrate, 03 §13) offen, reine Eichungsarbeit, kein struktureller Blocker mehr.
+- **Welle-1-Tor (Gier-vs-Pflege) strukturell ERFÜLLT** mit der Kristallisations-Regel: Pflege-Politik schlägt sowohl blinde als auch klug-tischsturz-vermeidende Gier-Politik konsistent über mehrere Schwierigkeitsstufen. **Achtung: alle Läufe auf dem alten 6er-Arsenal** — mit dem 12er-Arsenal + Ziehmodell ist ein **Re-Run nötig** (Struktur hält erwartbar: Atem-Deckel + Kristallisation sind arsenal-größen-unabhängig; absolute Siegraten/Schreck-Werte verschieben sich, 03 §12.1). Exakte Zielband-Kalibrierung (65–70 % Siegrate, 03 §13) offen.
 - Befund-Dokument: `Wuerfelhain_Welle1_Tor_Befund.md`.
 
-**Gesamtstatus:** Welle-0-Tor erfüllt. Welle-1-Tor strukturell erfüllt (Sandbox-verifiziert) — **Portierung der Kristallisations-Mechanik ins Claude-Code-Repo steht noch aus**, bevor Schema-Erweiterung für Welle 2 beginnt.
+**Gesamtstatus:** Welle-0-Tor erfüllt. Welle-1-Tor strukturell erfüllt (Sandbox-verifiziert, 6er-Arsenal) — **Kristallisation und Ziehmodell sind jetzt im Claude-Code-Repo portiert**; offen ist der **12er-Re-Run selbst** (`sim/` + `data.js` fehlen noch), bevor Schema-Erweiterung für Welle 2 beginnt.
 
 ---
 
 ## 7. Offene Punkte für Sim/Folge-Artefakte
 
-- **Kristallisations-Mechanik ins Claude-Code-Repo portieren** (höchste Priorität — Welle-1-Tor real erst geschlossen, wenn der echte Code die Sim-verifizierte Regel trägt, nicht nur die Sandbox-Referenz).
-- Feinkalibrierung Schwierigkeit/Heilung ins Zielband 65–70 % (03 §13).
-- RNG-State-Persistenz bei Mid-Run-Save (§4) — nötig oder Stream-Neustart akzeptabel?
+- ~~Kristallisations-Mechanik ins Claude-Code-Repo portieren~~ — **erledigt** (`push.js: kristallisiereUebermut()`).
+- ~~Ziehmodell implementieren~~ — **erledigt** (`ziehstapel.js`).
+- **12er-Re-Run durchführen** (`sim/` + `data.js` als Voraussetzung) — höchste Priorität, damit das Welle-1-Tor real (nicht nur strukturell/Sandbox) auf 12er-Arsenal-Basis geschlossen ist.
+- Feinkalibrierung Schwierigkeit/Heilung ins Zielband 65–70 % (03 §13) — auf 12er-Basis.
+- ~~RNG-State-Persistenz bei Mid-Run-Save~~ — **entschieden** (§3.1/§4): kein Mid-Kampf-Save, kein RNG-State im Save. `[PROVISORISCH: Default, Fallback dokumentiert]`
 - LocalStorage-Key-Strategie (§3.3) final festlegen.
 - Migrationsketten-Testpflicht (§3.2) in `tests/` verankern, sobald `saveVersion` 2 existiert.
 - `ui/`-Modulgrenzen (Komponenten vs. einzelne Render-Funktionen) — Welle 2.
