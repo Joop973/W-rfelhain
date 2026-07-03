@@ -2,7 +2,7 @@
 
 *Eine einzige Quelle für alle tunbaren Zahlen. Gesperrte Werte aus Index 00 §3 wörtlich; alles andere `[PROVISORISCH]` — die Sim entscheidet die Endwerte.*
 
-*Stand: 2026-06-30. Update: §4 um Kristallisations-Regel, §12 um Welle-1-Tor-Befund ergänzt.*
+*Stand: 2026-07-02. Update: §1 Arsenal 6→12 `[GESPERRT-OVERRIDE]` + Ziehmodell, §2/§3 Vollmond-Präzisierung + Klassen-Sockel-Klausel, §6.1 Eigen-Status-Konstanten, §12/§13 Re-Run-Vermerk (Siegraten stammen von 6er-Läufen). Vorheriges Update: §4 Kristallisation, §12 Welle-1-Tor-Befund.*
 
 ---
 
@@ -10,6 +10,7 @@
 
 - `[GESPERRT]` — durch Design/Sim bestätigt, ändert sich nur mit Begründung.
 - `[PROVISORISCH]` — baubar, aber noch nicht balanciert. Standardwert zum Loslegen, Sim überschreibt.
+- `[GESPERRT-OVERRIDE]` — sanktionierter Eingriff in einen vormals gesperrten Wert (Datum/Begründung in `06_Aenderungen.md`).
 - Die Werte in Region-/Reifegrad-Tabellen sind Startpunkte; das Welle-1-Tor (Region 1, Reifegrad 0) ist die erste echte Eichung.
 
 ---
@@ -21,8 +22,9 @@
 | Atem/Zug | 3 (fix, ungenutzt verfällt) | `[GESPERRT]` |
 | Start-Würfel-Kosten | 1 Atem | `[GESPERRT]` |
 | Handgröße | 5 Würfel | `[GESPERRT]` |
-| Arsenal-Start | 6 Würfel | `[GESPERRT]` |
-| Arsenal-Ziel (Run-Ende) | ~14 Würfel | `[PROVISORISCH]` |
+| Arsenal-Start | **12 Würfel** (vorher 6) | `[GESPERRT-OVERRIDE 2026-07-02]` |
+| Arsenal-Ziel (Run-Ende) | **~22–24 Würfel** (vorher ~14) | `[PROVISORISCH]` |
+| Ziehmodell | Hand je Zug **frisch aus Ziehstapel** (5), Zugende → Ablage; Reshuffle bei Zugbeginn wenn Ziehstapel < 5 (StS-Stil, 02 §2.2) | `[PROVISORISCH: Modell-Default]` |
 | Hüter-Basis-HP | 75 | `[PROVISORISCH]` |
 | Eichwart-HP-Mod | +5 (= 80) | `[PROVISORISCH]` |
 | Block (Rinde) Verfall | je Zug, fängt keinen Status | `[GESPERRT]` |
@@ -30,23 +32,25 @@
 | Überschuss bei Gegner-Tod | verfällt (kein Übertrag ohne Keyword) | `[GESPERRT]` |
 | Pools | ≥ 0, kein Negativschaden; Mult auf leeren Pool = 0 | `[GESPERRT]` |
 
+**Override-Begründung (Arsenal):** StS-Ziehstapel bei 6 Würfeln sinnlos, Hand 5 aus 6 inkohärent (`06_Aenderungen.md` A). **Output/Zug bleibt Atem-gedeckelt (3 Seiten) — der Region-1-Korridor ~15–17 (§7/§12) ändert sich nicht**; 12 Würfel geben Deckbau, nicht mehr Schaden.
+
 ---
 
 ## 2. Auflösungs-Reihenfolge (gesperrt) + Combo-/Glanz-Einschub
 
 Pro gespielter Schaden-Seite, links→rechts:
 
-1. **Basis** = Seitenwert + Kraft `[GESPERRT]`
+1. **Basis** = effektiver Seitenwert (nach Wetzung/Scharte/Klassen-Sockel, 02 §2.2) + Kraft `[GESPERRT]`
 2. **Glanz** (falls aktiv): Basis ×2, verbraucht sich. Greift VOR ×Mult/Combos, damit nicht multiplikativ-stapelbar. `[GESPERRT: Prinzip]` · `[Timing aus 02 ableiten — wenn 02 abweicht, gilt 02]`
 3. **×Mult** (typgebunden, z. B. Wucht), zündet 1× pro Auflösung, kein Selbst-Stapeln `[GESPERRT]`
 4. **Echo-Seite** (falls gespielt): kopiert den Beitrag der unmittelbar links platzierten Schaden-Seite inkl. deren Mults; Echo-Beitrag hart gedeckelt auf 1× Quellbeitrag; max 1 Wiederholung je Echo-Seite, kein Ketten-Echo `[GESPERRT]`
 
 → Pool-Summe bilden, dann auf den Pool:
 
-5. **×Gleichklang** (falls ≥2 gespielte Schaden-Seiten denselben Seitenwert zeigen: ×1,25 / ×1,5 / ×1,75 bei 2 / 3 / 4+; additiv +0,25/Stufe, harter Cap ×1,75; nach Mult, vor Morsch) `[GESPERRT]`
+5. **×Gleichklang** (falls ≥2 gespielte Schaden-Seiten denselben effektiven Seitenwert zeigen: ×1,25 / ×1,5 / ×1,75 bei 2 / 3 / 4+; additiv +0,25/Stufe, harter Cap ×1,75; nach Mult, vor Morsch) `[GESPERRT]`
 6. **×Morsch** `[GESPERRT]`
 7. **×Welk** `[GESPERRT]`
-8. **+ Vollmond-Burst** (fester, regions-skalierter Bonus, additiv, nicht multiplikativ; falls alle gespielten Würfel ihren Höchstwert zeigen; Werte §3.1) `[GESPERRT: Prinzip]`
+8. **+ Vollmond-Burst** (fester, regions-skalierter Bonus, additiv, nicht multiplikativ; falls jede gespielte Seite **effektiven Wert ≥ natürlichen Höchstwert** ihres Würfels erreicht — **permanente Klassen-Wertsockel wie Schleiferin-Schliff zählen für die Prüfung nicht, Wetzung-Status schon** [02 §10.3]; Werte §3.1) `[GESPERRT: Prinzip · Klausel PROVISORISCH]`
 9. **floor**, Pool ≥ 0 `[GESPERRT]`
 
 Morsch/Welk wirken nur auf den Schaden-Pool, nicht auf Fäule/Brand. `[GESPERRT]`
@@ -57,13 +61,14 @@ Morsch/Welk wirken nur auf den Schaden-Pool, nicht auf Fäule/Brand. `[GESPERRT]
 
 | Combo | Bedingung | Effekt | Faktor/Wert | Status |
 |---|---|---|---|---|
-| **Gleichklang** | ≥2 gespielte Schaden-Seiten mit demselben Seitenwert | Schaden-Pool-Mult, gestaffelt nach Anzahl gleicher Werte | ×1,25 / ×1,5 / ×1,75 (2/3/4+); additiv +0,25, Cap ×1,75 | `[GESPERRT]` |
+| **Gleichklang** | ≥2 gespielte Schaden-Seiten mit demselben effektiven Seitenwert | Schaden-Pool-Mult, gestaffelt nach Anzahl gleicher Werte | ×1,25 / ×1,5 / ×1,75 (2/3/4+); additiv +0,25, Cap ×1,75 | `[GESPERRT]` |
 | **Echo** | dedizierte Echo-Seite gespielt | kopiert Beitrag der unmittelbar links platzierten Schaden-Seite inkl. Mults | Cap 1× Quellbeitrag, max 1 Wiederholung, kein Ketten-Echo | `[GESPERRT]` |
-| **Vollmond** | alle gespielten Würfel zeigen Höchstwert | fester Burst, additiv, skaliert mit Region | s. §3.1 `[PROVISORISCH]` | `[GESPERRT: Prinzip]` |
+| **Vollmond** | jede gespielte Seite: effektiver Wert ≥ natürlicher Höchstwert des Würfels (permanente Klassen-Sockel ausgenommen, Wetzung-Status zählt — 02 §10.3) | fester Burst, additiv, skaliert mit Region | s. §3.1 `[PROVISORISCH]` | `[GESPERRT: Prinzip, verfeinert 2026-06-30/07-02]` |
 
 - Combos stapeln miteinander, aber jede zündet **nur einmal pro Zug**. `[GESPERRT]`
 - Echo prüft Nachbarschaft in der Reihe; Gleichklang/Vollmond prüfen das ganze gespielte Paket. `[GESPERRT]`
 - Echo an Position 1 (nichts links) oder nach einer Nicht-Schaden-Seite = 0. Eine Echo-Seite zählt für Gleichklang mit, profitiert aber nur bis zum Quellbeitrags-Cap. `[GESPERRT]`
+- **Vollmond-Klausel:** keine Zahlenänderung — nur der Verweis, dass der permanente Schliff-Sockel (+1, 06 §5) Vollmond **nicht** speist; Schaden rechnet er voll mit. `[PROVISORISCH]`
 
 ### 3.1 Vollmond-Burst je Region `[PROVISORISCH]`
 
@@ -115,7 +120,8 @@ Fester additiver Bonus auf den Schaden-Pool; skaliert mit Region (~×1,5/Region)
 | Fröhlich-Bonus | +1 | `[GESPERRT]` |
 | Schreck-Formel | max(0, −Gemüt) | `[GESPERRT]` |
 | Schreck-Mechanik | sperrt höchste freie Seiten (nicht zufällig), vor Wurf sichtbar, max 3 | `[GESPERRT]` |
-| Beruhigungs-Seite | +2 Gemüt auf einen ängstlichen Hand-Würfel, Kosten 1 Atem | `[GESPERRT]` |
+| Beruhigungs-Seite | +2 Gemüt auf einen ängstlichen Hand-Würfel (nur Schreck > 0), Kosten 1 Atem | `[GESPERRT]` |
+| Ermutigungs-Seite | +2 Gemüt **universell** (auch Gemüt ≥ 0), Kosten 1 Atem; zählt **nicht** auf Frühling-Trösten-Zahl (01 §5) | `[PROVISORISCH]` |
 
 ### Schreck-Sperr-Kurve „mittel" `[GESPERRT]`
 
@@ -140,6 +146,19 @@ Fester additiver Bonus auf den Schaden-Pool; skaliert mit Region (~×1,5/Region)
 | **Riss** | 25 % Zünd-Aussetzer | 2 Runden | — | `[GESPERRT]` |
 | **Glanz** | nächste gespielte Seite zählt doppelt (Basis ×2, vor Mult) | verbraucht sich | — | `[GESPERRT: Prinzip]` |
 
+### 6.1 Eigen-Status (Würfelhain-nativ, 02 §8.2) `[GESPERRT-Prinzip, Werte PROVISORISCH]`
+
+Spielerseitig, kampf-begrenzt, Schema-Slot `eigenStatus` (09 §2.11).
+
+| Status | Achse | Effekt je Stapel | Cap | Decay | Status |
+|---|---|---|---|---|---|
+| **Wetzung** (Buff) | Seitenwert | +1 effektiver Wert jeder gewürfelten Seite (alle Pools); speist Vollmond | 3 | −1/Runde | `[PROVISORISCH]` |
+| **Scharte** (Debuff) | Seitenwert | −1 effektiver Wert jeder Seite, Untergrenze 1; bricht Vollmond | 3 | −1/Runde | `[PROVISORISCH]` |
+| **Freilauf** (Buff) | Reroll | +1 übermut-freier Reroll diesen Zug | 3 | −1/Runde | `[PROVISORISCH]` |
+| **Klemme** (Debuff) | Reroll | erster Reroll je Stapel kostet +1 Übermut (Gratis-Reroll zuerst verteuert) | 3 | −1/Runde | `[PROVISORISCH]` |
+
+Abgrenzungen (Wetzung ≠ Kraft, Scharte ≠ Welk, Sockel-Ausnahme für Vollmond) in 02 §8.2/§10.3.
+
 ---
 
 ## 7. HP- & Schaden-Kurven je Region `[PROVISORISCH]`
@@ -155,9 +174,9 @@ Startpunkte; Sim eicht ab Region 1. Spieler-Output wächst grob ~×1,5–2 je Re
 | 5 | 160–230 | 320–380 | 550–620 | 28–40 |
 | 6 | 230–320 | 450–520 | 750–850 | 38–55 |
 
-Anker (gesperrt-konsistent): Region 1 ~15–17 Schaden/Zug des Hüters → Normalgegner in 2–3 Zügen tot.
+Anker (gesperrt-konsistent): Region 1 ~15–17 Schaden/Zug des Hüters → Normalgegner in 2–3 Zügen tot. **Gilt unverändert unter dem 12er-Arsenal** (Atem-Deckel, §1).
 
-**Hinweis (Welle-1-Tor, s. §12):** Die Sim-Verifikation der Kristallisations-Regel lief mit moderat angehobenen Region-1-Werten am oberen Rand dieser Spanne (Normal-HP 30–45, Schaden 6–8; teils Elite-Mix 50–65 HP). Grund: der gravurlose Starter braucht genug Kampflänge, damit sich Übermut-Akkumulation und Kristallisation überhaupt auswirken können — bei sehr kurzen Kämpfen (2–3 Züge) bleibt kein Raum für den Effekt. Feinkalibrierung ins exakte Zielband (§13) steht noch aus.
+**Hinweis (Welle-1-Tor, s. §12):** Die Sim-Verifikation der Kristallisations-Regel lief mit moderat angehobenen Region-1-Werten am oberen Rand dieser Spanne (Normal-HP 30–45, Schaden 6–8; teils Elite-Mix 50–65 HP). Grund: der gravurlose Starter braucht genug Kampflänge, damit sich Übermut-Akkumulation und Kristallisation überhaupt auswirken können — bei sehr kurzen Kämpfen (2–3 Züge) bleibt kein Raum für den Effekt. Feinkalibrierung ins exakte Zielband (§13) steht noch aus — **auf 12er-Arsenal-Basis**.
 
 ---
 
@@ -197,7 +216,7 @@ Budget-Regel: kombinierte Kaufkraft ~1,2× StS (nicht 3×). `[GESPERRT]`
 | Senke | Kosten | Status |
 |---|---|---|
 | Heilung am Lagerfeuer | — / strukturell | `[PROVISORISCH]` |
-| Würfel entfernen (Senke) | ~25–50 Münzen, steigend | `[PROVISORISCH]` |
+| Würfel entfernen (Senke) | ~25–50 Münzen, steigend | `[PROVISORISCH]` — Wert steigt unter 12er-Arsenal (Thinning wichtiger, 04 §6) |
 | Event-Risiko-Tausch | variabel | `[PROVISORISCH]` |
 
 ---
@@ -229,6 +248,7 @@ Basis: gesäter mulberry32 (`rng.js`, gesperrt deterministisch).
 | Schicht | Regel | Status |
 |---|---|---|
 | Würfelwurf | gleichverteilt 1–6 je freie Seite | `[GESPERRT]` |
+| Ziehstapel-Mischen | Fisher-Yates über denselben Stream (09 §4) | `[PROVISORISCH]` |
 | Stimmungs-Gewichtung | Fröhlich/Ängstlich verschiebt Seiten-Wahrscheinlichkeit | `[PROVISORISCH]` |
 | Belohnungs-Auswahl | 3 Optionen/Knoten, gewichtet nach Seltenheit | `[PROVISORISCH]` |
 | Blaupause-Pity | garantierte Blaupause spätestens nach N Belohnungs-Knoten ohne | N ~6 `[PROVISORISCH]` |
@@ -247,12 +267,14 @@ Basis: gesäter mulberry32 (`rng.js`, gesperrt deterministisch).
 ## 12. Bisherige Sim-Befunde
 
 - Zufälliges Seiten-Sperren ist effektiv kostenlos (Hand-Spielraum + Reroll-Redundanz) → **Schreck sperrt höchste Seite**, nicht zufällig. `[GESPERRT]`
-- Eichwart-Output Region 1: ~15–17 Schaden/Zug, Normalgegner 20–45 HP in 2–3 Zügen. Konsistent mit Ziel-Pacing. `[GESPERRT]`
+- Eichwart-Output Region 1: ~15–17 Schaden/Zug, Normalgegner 20–45 HP in 2–3 Zügen. Konsistent mit Ziel-Pacing. `[GESPERRT]` (Atem-gedeckelt — arsenal-größen-unabhängig.)
 - Wucht additiv (×1,5/2,0/2,5, +0,5/Stufe) wirkt als Anti-Lawinen-Bremse; harter Cap 3 Stufen/Seite. `[GESPERRT]`
 - Drei-Währungs-Budget bei ~1,2× StS-Kaufkraft verhindert Inflation gegenüber naivem 3×. `[GESPERRT]`
 - Python-Prototypen waren ephemeral (gelöscht). JS-Port des Monte-Carlo wurde als eigenständige Sandbox-Referenz gebaut (nicht im Claude-Code-Repo) — s. Welle-1-Tor-Befund unten.
 
-### 12.1 Welle-1-Tor-Befund (2026-06-30) `[GESPERRT — strukturell bestätigt]`
+### 12.1 Welle-1-Tor-Befund (2026-06-30) `[GESPERRT — strukturell bestätigt · Zahlen: 6er-Arsenal, Re-Run nötig]`
+
+**⚠ Kalibrierungs-Basis:** Alle Läufe dieses Befunds fuhren das **alte 6er-Arsenal** (vor `[GESPERRT-OVERRIDE]` 2026-07-02, §1). Das **strukturelle Ergebnis (Pflege > Gier) hält erwartbar** auch unter 12 Würfeln — Atem-Deckel und Kristallisation sind arsenal-größen-unabhängig. Die **absoluten Siegraten und die Schreck-Akkumulation verschieben sich** jedoch (mehr Würfel = Schreck verteilt sich, einzelne Sperrungen treffen seltener dieselbe Hand; Ziehmodell ändert Hand-Zusammensetzung): **Re-Run auf 12er-Arsenal + Ziehmodell (02 §2.2) erforderlich**, bevor die Zahlen unten als Eichpunkte weiterverwendet werden.
 
 **Erste Iteration (ohne Kristallisation) — Tor NICHT erfüllbar:**
 
@@ -264,16 +286,16 @@ Einzelkampf-Diagnostik (1 Elite, volle HP, n=5000) zeigte: eine „kluge Gier"-P
 
 **Fix:** Kristallisations-Regel eingeführt (s. §4.1). Übermut-Output-Malus als reine Kampf-interne Strafe wurde probiert und wieder verworfen — er wirkte unter kurzen Kämpfen zu schwach, um den schnelleren-Kill-Vorteil der Gier-Politik zu überkompensieren. Kristallisation (run-lange Schreck-Kopplung) war der tragende Fix.
 
-**Ergebnis nach Fix — Tor strukturell ERFÜLLT über mehrere Schwierigkeitsstufen:**
+**Ergebnis nach Fix — Tor strukturell ERFÜLLT über mehrere Schwierigkeitsstufen (6er-Arsenal):**
 
 | Schwierigkeit | Gier (blind) | Gier (klug, tischsturz-vermeidend) | Pflege |
 |---|---|---|---|
 | moderat | 8,6 % | 71,8 % | 96,3 % |
 | mittel | 2,6 % | 20,8 % | 48,1 % |
 
-Pflege schlägt **beide** Gier-Politiken konsistent in beiden getesteten Stufen. Schreck akkumuliert unter Gier sichtbar (Ø 60–73/Arsenal am Kampfende), unter Pflege bleibt er bei 0.
+Pflege schlägt **beide** Gier-Politiken konsistent in beiden getesteten Stufen. Schreck akkumuliert unter Gier sichtbar (Ø 60–73/Arsenal am Kampfende), unter Pflege bleibt er bei 0. **Achtung:** der Ø-Schreck-Anker 60–73 bezog sich auf ein 6er-Arsenal — auch die Enden-Schwellen (01 §5) hängen an diesem Anker und werden mit dem Re-Run nachgeeicht.
 
-**Nebenbefund — Schreck-Wachstum ist nichtlinear/klippen-anfällig:** bei zu hoher Schwierigkeit kollabierten alle Politiken auf 0 % Siegrate (selbstverstärkende Spirale: gesperrte Top-Seiten senken Output → mehr Rerolls/Pushes nötig → mehr Schreck). Das ist im Kern der gewollte Anti-Gier-Mechanismus, macht die Schwierigkeitskurve aber empfindlich — für Welle 2 wichtig: früher Trösten-Zugang (Beruhigungs-Seite, Hain-Segen) muss verfügbar sein, bevor die Spirale unkontrolliert kippt.
+**Nebenbefund — Schreck-Wachstum ist nichtlinear/klippen-anfällig:** bei zu hoher Schwierigkeit kollabierten alle Politiken auf 0 % Siegrate (selbstverstärkende Spirale: gesperrte Top-Seiten senken Output → mehr Rerolls/Pushes nötig → mehr Schreck). Das ist im Kern der gewollte Anti-Gier-Mechanismus, macht die Schwierigkeitskurve aber empfindlich — für Welle 2 wichtig: früher Trösten-Zugang (Beruhigungs-/Ermutigungs-Seite, Hain-Segen) muss verfügbar sein, bevor die Spirale unkontrolliert kippt.
 
 **Offen:** exakte Kalibrierung ins Zielband 65–70 % (§13) — Pflege pendelt aktuell zwischen 48 % und 96 % je nach Heilungswert zwischen den Kämpfen; reine Eichungsarbeit, kein struktureller Blocker. Vollständiger Befund inkl. Sim-Code: `Wuerfelhain_Welle1_Tor_Befund.md`.
 
@@ -293,7 +315,7 @@ Gemessen über Monte-Carlo mit Standard-Spielpolitik (greedy-vernünftig).
 | 9 | ~35 % | starkes Spiel nötig |
 | 10 | ~25–30 % | Veteranen-Jagd auf God Runs |
 
-Gier-vs-Pflege-Kriterium: Bei keinem Reifegrad darf reine Gier (Dauer-Push, kein Trösten) dominieren — Schreck-Akkumulation muss die Siegrate gegenüber gepflegtem Spiel messbar senken. Beleg via Sim ist die Bestehensbedingung des Welle-1-Tors. **Strukturell erfüllt seit Kristallisations-Fix (s. §12.1); exakte Reifegrad-0-Kalibrierung (65–70 %) noch offen.**
+Gier-vs-Pflege-Kriterium: Bei keinem Reifegrad darf reine Gier (Dauer-Push, kein Trösten) dominieren — Schreck-Akkumulation muss die Siegrate gegenüber gepflegtem Spiel messbar senken. Beleg via Sim ist die Bestehensbedingung des Welle-1-Tors. **Strukturell erfüllt seit Kristallisations-Fix (s. §12.1); bisherige Siegraten stammen von 6er-Arsenal-Läufen — Re-Run auf 12er-Arsenal + Ziehmodell nötig, bevor die Reifegrad-0-Kalibrierung (65–70 %) angegangen wird.**
 
 ---
 
@@ -303,20 +325,24 @@ Gier-vs-Pflege-Kriterium: Bei keinem Reifegrad darf reine Gier (Dauer-Push, kein
 2. Mult-Seiten zünden **1× pro Auflösung**, kein Selbst-Stapeln. `[GESPERRT]`
 3. Skalier-Seiten setzen bei **Kampfende zurück** (kampf-lang). `[GESPERRT]`
 4. **Keine** pauschale Skalier-Grenze; jede run-lange Engine bringt **eigene Bremse** mit (StS-Stil). `[GESPERRT]`
-5. Gleichklang **hart gedeckelt** (×1,75 max), Echo auf **1× Quellbeitrag**, Vollmond = **fester regions-skalierter Burst** (additiv) — keine multiplikative Explosion. `[GESPERRT]`
+5. Gleichklang **hart gedeckelt** (×1,75 max), Echo auf **1× Quellbeitrag**, Vollmond = **fester regions-skalierter Burst** (additiv, permanente Klassen-Sockel speisen ihn nicht) — keine multiplikative Explosion. `[GESPERRT]`
 6. Glanz verdoppelt **Basis** (vor Mult), nicht das Endprodukt. `[GESPERRT: Prinzip]`
-7. Status-Intensität gedeckelt (Morsch/Welk Cap 4, additiv, Decay). `[GESPERRT]`
+7. Status-Intensität gedeckelt (Morsch/Welk Cap 4, Eigen-Status Cap 3, additiv, Decay). `[GESPERRT]`
 8. **Übermut/Reroll:** Kristallisation koppelt Rerollen an eine run-lange Schreck-Strafe — Bremse gegen Gier-Optimierung, nicht gegen Schaden-Skalierung, aber Teil des gleichen Anti-Avalanche-Prinzips. `[GESPERRT — Sim-bestätigt 2026-06-30]`
 
 ---
 
 ## 15. Offene Werte, die die Sim klären muss
 
-- Hüter-Basis-HP & Eichwart-Mod (§1)
-- Vollmond-Burst-Kurve je Region (§3.1)
+- Hüter-Basis-HP & Klassen-Mods (§1, 06 §1.3)
+- **Ziehmodell-Default bestätigen** (§1: je Zug 5 frisch vs. behalten+auffüllen, 02 §2.2)
+- Vollmond-Burst-Kurve je Region (§3.1) + Schliff-Ausnahme (§3) per Schleiferin-Sim
+- **Eigen-Status-Werte (§6.1):** Stapel-Wirkung, Caps, Decay, Freilauf/Klemme-Verrechnung (02 §7.5)
+- **Ermutigung (§5):** Häufigkeit gegen Frühling-Schwelle (01 §5); Nicht-Anrechnung bestätigen
 - HP-/Schaden-Kurven Region 1–6 (§7)
 - Reifegrad-Schwellen & exakte Mods (§9)
 - Pity-Schwellen N/M (§10)
 - Sauberer-Sieg: „ohne HP-Verlust" zu streng? (§11)
 - Ziel-Siegraten als harte Eichpunkte (§13)
-- **Feinkalibrierung Kristallisation:** exakte Region-1-Schwierigkeit/Heilung, um Pflege ins 65–70-%-Band zu bringen, ohne die Gier-vs-Pflege-Relation zu verlieren (§4.1/§12.1).
+- **Welle-1-Tor Re-Run auf 12er-Arsenal + Ziehmodell** (§12.1) — Voraussetzung für alles Weitere
+- **Feinkalibrierung Kristallisation:** exakte Region-1-Schwierigkeit/Heilung, um Pflege ins 65–70-%-Band zu bringen, ohne die Gier-vs-Pflege-Relation zu verlieren (§4.1/§12.1) — nach dem Re-Run

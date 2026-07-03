@@ -2,7 +2,7 @@
 
 *Genre, Kern-Schleife, Eisberg-Prinzip, vollständiges Narrativ, 3 Enden, Ton, Regions-Themen. Mechanik-Anker aus Index 00 §3 wörtlich. `[GESPERRT]` = Design-Kern, ändert sich nur mit Begründung. `[PROVISORISCH]` = erfunden, baubar, Endwerte/Schwellen offen (Sim/Spielgefühl eicht). Narrativ ist Design-Kanon, keine Sim-Größe — Schwellen der Enden sind die einzigen sim-abhängigen Werte hier.*
 
-*Stand: 2026-06-30. Erstfassung. Narrativ-Gabelung gesetzt: junger Hüter · früherer Hüter = Ursprung der Dürre & Endboss · hohle Großmutter-Eiche, Mentor-Stimme = die Gier selbst.*
+*Stand: 2026-07-02. Update: §2 Kern-Schleife auf 12er-Arsenal/Ziehstapel (`[GESPERRT-OVERRIDE]`, `06_Aenderungen.md`), §5 Frühling-Trösten-Zahl gegen Keyword Ermutigung entschieden (zählt nicht). Erstfassung 2026-06-30: Narrativ-Gabelung gesetzt — junger Hüter · früherer Hüter = Ursprung der Dürre & Endboss · hohle Großmutter-Eiche, Mentor-Stimme = die Gier selbst.*
 
 ---
 
@@ -14,17 +14,17 @@ Ton: warm-melancholisch, märchenhaft mit unheimlichem Unterton. Cozy-Oberfläch
 
 ---
 
-## 2. Genre & Kern-Schleife `[GESPERRT: Struktur, aus Index 00 §2/§3]`
+## 2. Genre & Kern-Schleife `[GESPERRT: Struktur, aus Index 00 §2/§3 · Arsenal-Zahlen OVERRIDE 2026-07-02]`
 
 - **Genre:** Roguelike-Deckbuilder, aber mit **Würfeln statt Karten**. Slay-the-Spire-Skelett (Knoten-Landkarte, Belohnungs-Flow, Reifegrade, Relikt-artige Hain-Segen), eigener Würfel-/Stimmungs-Kern.
 - **Run-Struktur:** 6 Regionen × 7 Knoten + Boss. Ein Run ist eine Reise durch den Hain von außen (noch grün) zum hohlen Herzen.
 - **Kampf-Schleife pro Zug:**
-  1. Hand aus 5 Würfeln aus dem Arsenal werfen (Arsenal-Start 6, Ziel ~14).
+  1. Hand aus 5 Würfeln **frisch aus dem Ziehstapel** ziehen (StS-Stil, 02 §2.2) — Arsenal-Start **12**, Ziel **~22–24** (`[GESPERRT-OVERRIDE 2026-07-02]`, vorher 6/~14). Gespieltes und Reste wandern auf die Ablage; leer → neu mischen.
   2. Optional rerollen (1 gratis, danach **Übermut**), optional pushen/trösten.
   3. Seiten **links→rechts** in typgebundene Pools legen, **3 Atem** ausgeben.
   4. Auflösen (Kraft → Glanz → Mult → Echo → Combos → Status → floor).
   5. Gegnerzug, Rundenende (Status-Decay).
-- **Meta-Schleife:** Sieg/Niederlage → Jahresringe → Stammbaum (dauerhafte Freischaltungen) → Heimat-Hain/Samen (Welle 4). Fünf **Hüter-Klassen**, Eichwart als Start (`[GESPERRT]`), Rest über Meta freigeschaltet.
+- **Meta-Schleife:** Sieg/Niederlage → Jahresringe → Stammbaum (dauerhafte Freischaltungen) → Heimat-Hain/Samen (Welle 4). Fünf **Hüter-Klassen** — Eichwart (Start, `[GESPERRT]`), Dorfschamane, Glöckner, Schleiferin, Rodbauer (06) —, Rest über Meta freigeschaltet.
 - **Drei Währungen:** **Eicheln** (Kampf-Beute), **Tau** (Pflege/Struktur, pro Region), **Münzen** (reine Schmiede-Währung). Kombinierte Kaufkraft ~1,2× StS.
 
 ---
@@ -36,7 +36,7 @@ Zwei Eisberge, mechanisch und narrativ, absichtlich parallel.
 **Mechanischer Eisberg:**
 - *Oberfläche (Minute 1):* Würfel werfen, hohe Zahlen sind gut, Schaden austeilen, blocken.
 - *Erste Tiefe:* Atem ist knapp; rerollen hat einen Preis (Übermut → Tischsturz → **Schreck**); Würfel haben Laune.
-- *Meisterschaft:* Gier kristallisiert run-lang zu Schreck (gesperrte Top-Seiten, Abwärtsspirale); Pflege-Ökonomie (Trösten, Tau, sauberer Sieg) hält das Arsenal ruhig; Combos, Blaupausen, Gravuren, Anti-Lawinen-Timing.
+- *Meisterschaft:* Gier kristallisiert run-lang zu Schreck (gesperrte Top-Seiten, Abwärtsspirale); Pflege-Ökonomie (Trösten, Tau, sauberer Sieg) hält das Arsenal ruhig; Deckbau über das 12er-Arsenal (Ziehrotation, Thinning); Combos, Blaupausen, Gravuren, Anti-Lawinen-Timing.
 
 **Narrativer Eisberg:**
 - *Oberfläche:* „Heile den sterbenden Hain, folge dem Rat der alten Eiche."
@@ -82,15 +82,17 @@ Der **frühere Hüter** ist der Endboss. Seine finale Phase **spiegelt das ängs
 Gemessen am **Ende des Runs** (bei Fall des früheren Hüters), über zwei Run-weite Größen:
 
 - **End-Schreck** = Σ max(0, −Gemüt) über das ganze Arsenal (kristallisierter + gepushter Schreck, s. 02 §6/§7).
-- **Trösten-Zahl** = Summe aller Trösten-Ereignisse im Run (Beruhigungs-Seiten, Events, Hain-Segen; +2 Gemüt je Ereignis).
+- **Trösten-Zahl** = Summe aller **gezielten Trösten-Ereignisse** im Run: **Beruhigungs-Seiten, Events, Hain-Segen** (+2 Gemüt je Ereignis). **Ermutigungs-Seiten (02 §6.4) zählen NICHT** — s. u.
 
-Sim-Anker: Unter reiner Gier akkumuliert das Arsenal Ø **60–73** Schreck, unter reiner Pflege **0** (03 §12.1). Die Schwellen unten spannen dazwischen auf.
+**Ermutigungs-Entscheid `[PROVISORISCH — Default 2026-07-02, Sim prüft]`:** Das Keyword **Ermutigung** (+2 Gemüt universell, auch bei Gemüt ≥ 0) würde als billige, ab Zug 1 spambare Quelle die Trösten-Bedingung trivialisieren — der Dorfschamane (06 §3) erreicht 8 Ermutigungen in wenigen Kämpfen nebenbei. Gewählter Fix: **Ermutigung wird nicht auf die Trösten-Zahl angerechnet** (statt die Schwelle anzuheben). Begründung: die Frühling-Bedingung soll **reaktive Fürsorge** messen — das Hinwenden zu einem verängstigten Würfel (Beruhigung: nur Schreck > 0) bzw. bewusste Pflege-Entscheidungen (Events, Segen) —, nicht proaktives Stimmungs-Stacking. Eine bloße Schwellen-Anhebung würde die Bedingung klassen-abhängig verzerren (Dorfschamane trivial, Rodbauer unmöglich). Schwelle **≥ 8 bleibt** unverändert; nach dem 12er-Re-Run (03 §12.1) gegen die neue Schreck-Basis nacheichen.
+
+Sim-Anker: Unter reiner Gier akkumuliert das Arsenal Ø **60–73** Schreck, unter reiner Pflege **0** (03 §12.1 — **Werte von 6er-Arsenal-Läufen; Re-Run auf 12er nötig, Schwellen wandern ggf. mit**). Die Schwellen unten spannen dazwischen auf.
 
 | Ende | Bedingung `[PROVISORISCH]` | Kanon |
 |---|---|---|
 | **Das hohle Erbe** (Dürre-Ende) | End-Schreck ≥ ~40 | Du besiegst den früheren Hüter — und nimmst seinen Platz. Die Rinde schließt sich um dich, deine Stimme wird die neue „Großmutter-Eiche". Die Dürre pausiert, kehrt wieder. Der Kreislauf hält. Tragisch, nicht als Game-Over inszeniert, sondern als stille Übernahme. |
 | **Der stille Hain** (bitter-süß, Default) | dazwischen (~10 < Schreck < ~40) | Du brichst den Kreislauf, aber der Hain ist vernarbt. Die tote Eiche wird zur Ruhe gebettet, ein **Samen** gepflanzt (Anschluss Stammbaum/Heimat-Hain, Welle 4). Kein Frühling, aber ein Ende der Dürre. Das häufigste Ende. |
-| **Der neue Frühling** (Pflege-Ende) | End-Schreck ≤ ~10 **und** Trösten-Zahl ≥ ~8 **und** finaler Hüter durch Trösten-Auflösung befriedet (nicht totgeschlagen) | Du weigerst dich, ihn zu erschlagen; du tröstest ihn, wie du deine Würfel getröstet hast. Die Gier löst sich, die echte Eiche darf sterben, ein neuer Trieb bricht durch. Volle Restauration, Farbe kehrt zurück. Das wahre Ende. |
+| **Der neue Frühling** (Pflege-Ende) | End-Schreck ≤ ~10 **und** Trösten-Zahl ≥ ~8 (ohne Ermutigung, s. o.) **und** finaler Hüter durch Trösten-Auflösung befriedet (nicht totgeschlagen) | Du weigerst dich, ihn zu erschlagen; du tröstest ihn, wie du deine Würfel getröstet hast. Die Gier löst sich, die echte Eiche darf sterben, ein neuer Trieb bricht durch. Volle Restauration, Farbe kehrt zurück. Das wahre Ende. |
 
 **Design-Regeln der Enden `[GESPERRT: Prinzip]`:**
 - Kein Ende ist ein „Fail-Screen": auch **Das hohle Erbe** wird ruhig und würdevoll erzählt — der Spieler hat *gewonnen* und dabei *verloren*, ohne dass das Spiel ihn belehrt.
@@ -124,7 +126,7 @@ Von außen (grün, warm, lebendig) nach innen (farblos, hohl). Entsättigung ste
 | 5 | **Graupforte** | fast monochrom, kalt, Stille | **Schreck / Riss** — Furcht, Aussetzer | Die Kreaturen sind verängstigt und still. Hier wird der Preis der Gier am deutlichsten. |
 | 6 | **Hohles Herz** | farblos, Rinde und Leere | alle Status, personalisierte Endphase | Die tote Großmutter-Eiche. Die Wendung. Der frühere Hüter. Das gewählte Ende. |
 
-**Regel `[GESPERRT: Prinzip]`:** Das Status-Thema einer Region *dominiert*, ersetzt aber nicht — Region 3 kann Fäule-Reste tragen, Region 6 alles bündeln. Die Themen liefern Roster-Leitlinien für Artefakt 05, keine harten Sperren.
+**Regel `[GESPERRT: Prinzip]`:** Das Status-Thema einer Region *dominiert*, ersetzt aber nicht — Region 3 kann Fäule-Reste tragen, Region 6 alles bündeln. Die Themen liefern Roster-Leitlinien für Artefakt 05, keine harten Sperren. (Eigen-Status Scharte/Klemme, 02 §8.2, werden bei der 05-Roster-Arbeit den Regionen zugeordnet — Kandidaten: Scharte in R4/R5, Klemme in R5.)
 
 ---
 
@@ -140,9 +142,10 @@ Die drei Währungen spiegeln die Achse: Eicheln (nehmen, was gegeben wird), Tau 
 
 ## 9. Offene Punkte (für Sim / Folge-Artefakte)
 
-- **End-Schwellen (§5):** ~10 / ~40 End-Schreck und Trösten-Zahl ~8 sind Startpunkte an den §12.1-Anker gelehnt — Sim/Spielgefühl eicht, sobald ein Voll-Run existiert (Welle 4+).
+- **End-Schwellen (§5):** ~10 / ~40 End-Schreck und Trösten-Zahl ~8 lehnen sich an den §12.1-Anker (Ø 60–73 Schreck unter Gier) — der stammt von **6er-Arsenal-Läufen**; nach dem 12er-Re-Run (03 §12.1) nacheichen, sobald ein Voll-Run existiert (Welle 4+).
+- **Ermutigungs-Entscheid (§5):** Nicht-Anrechnung per Sim bestätigen — insbesondere, ob der Dorfschamane das Frühling-Ende trotz Ausschluss noch spürbar leichter erreicht (über niedrigen End-Schreck) und ob das gewollt ist (Pflege-Klasse darf pflege-belohnt sein).
 - **Pflege-Auflösung des Endkampfs (§5, „Frühling"):** mechanische Trösten-Bedingung gegen den Endboss braucht Definition in Artefakt 05 (Boss-Phasen).
 - **Personalisierte Endphase (§4.4):** exakte Übersetzung „ängstlichstes Arsenal → Boss-Moveset" → 05.
 - **Zweifel-Events (§7, R4/R5):** Events, die den Mentor infrage stellen und dem Spieler die Wendung vorab andeuten dürfen (ohne sie zu spoilern) → Artefakt 07.
 - **Welk-Grad ↔ Region-Übergänge (§7):** Kopplung von narrativer Entsättigung an den technischen `globalerWelkGrad` (09 §2.10) und die Palette-Swaps (08) — nur grob gesetzt.
-- **Klassen-Lore (§2):** die vier weiteren Hüter und ihre Beziehung zum Hain/zur Dürre → Artefakt 06 (hier bewusst nicht vorgegriffen).
+- **Klassen-Lore:** in 06 §1.4 gesetzt (zeitgenössische Archetypen ohne Dürre-Bezug) — hier kein Vorgriff mehr nötig.

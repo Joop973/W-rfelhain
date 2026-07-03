@@ -2,18 +2,19 @@
 
 *Vollständige, eindeutige Regeltexte. Gesperrte Regeln aus Index 00 §3 wörtlich übernommen und ausgearbeitet. `[GESPERRT]` = bestätigt. `[PROVISORISCH]` = baubar, Endwerte offen (Sim/03 entscheidet). Reine Zahlenwerte ohne Sperrvermerk stehen in Artefakt 03.*
 
-*Stand: 2026-06-30. Update: §7 Kristallisation (Übermut→Schreck). Neu: vier universelle Eigen-Status (Wetzung/Scharte, Freilauf/Klemme) in §8; Folgeänderungen in §2.2, §4, §7, §10.3.*
+*Stand: 2026-07-02. Update: §2.2 Ziehstapel/Ablage/Reshuffle (StS-Stil, Arsenal 12 — s. 06 §1.1), §6.4/§9 Keyword Ermutigung, §10.3 Vollmond-Ausnahme für permanente Klassen-Sockel. Vorherige Updates: §7 Kristallisation, vier Eigen-Status (§8).*
 
 ---
 
 ## 1. Begriffe
 
 - **Würfel:** sechsseitig, hat einen **Typ** (z. B. Schaden, Rinde) und sechs **Seiten**. Jede Seite hat einen **Wert** und einen **Seiten-Effekt**.
-- **Hand:** die zu Zugbeginn geworfenen Würfel. Handgröße 5 (03 §1).
-- **Arsenal:** alle Würfel des Spielers; aus ihm wird die Hand gezogen.
+- **Arsenal:** alle Würfel des Spielers (Start 12, 06 §1.1 `[GESPERRT-OVERRIDE]`). Im Kampf zirkuliert es als **Ziehstapel → Hand → Ablagestapel** (§2.2).
+- **Hand:** die zu Zugbeginn aus dem Ziehstapel gezogenen Würfel. Handgröße 5 (03 §1). `[GESPERRT]`
+- **Ziehstapel / Ablagestapel:** Kampf-State (09 §2.11/§3.1). Zu Kampfbeginn = gemischtes Arsenal / leer.
 - **Atem:** Aktionswährung pro Zug. **Atem 3 fix, ungenutzt verfällt.** `[GESPERRT]`
 - **Pool:** Sammelbecken pro Wirkungs-Art (Schaden, Rinde, Fäule, Brand, …). Multiplikatoren sind **typgebunden** — sie wirken nur auf ihren eigenen Pool.
-- **Effektiver Seitenwert:** der gewürfelte Seitenwert **nach** Wetzung/Scharte (§8), vor allem Weiteren. Alle Pools und Combos rechnen mit dem effektiven Wert.
+- **Effektiver Seitenwert:** der gewürfelte Seitenwert **nach** Wetzung/Scharte (§8) und permanenten Klassen-Sockeln (06, z. B. Schliff), vor allem Weiteren. Alle Pools und Combos rechnen mit dem effektiven Wert — einzige Ausnahme: die Vollmond-Bedingung ignoriert permanente Klassen-Sockel (§10.3).
 
 ---
 
@@ -23,18 +24,29 @@ Eine **Runde** = Spielerzug, dann Gegnerzug. Decay-Effekte (Morsch/Welk/Wetzung/
 
 ### 2.1 Kampfbeginn
 1. **Übermut = 0** setzen. `[GESPERRT]`
-2. Gegner zeigen ihre **Absicht** an (Angriff/Block/Status → 05).
-3. Hain-Segen / Klassen-Passive anwenden (Eichwart: +2 auf jede gespielte Schaden-Seite). `[GESPERRT]`
+2. **Ziehstapel aufbauen:** gesamtes Arsenal mischen → Ziehstapel; Ablagestapel leer. `[PROVISORISCH: Modell, s. 2.2]`
+3. Gegner zeigen ihre **Absicht** an (Angriff/Block/Status → 05).
+4. Hain-Segen / Klassen-Passive anwenden (Eichwart: +2 auf jede gespielte Schaden-Seite). `[GESPERRT]`
 
 ### 2.2 Spielerzug
+
+**Ziehstapel-/Ablage-Modell (StS-Stil) `[PROVISORISCH: Modell-Default, Sim/Spielgefühl bestätigt]`:**
+- **Ziehen:** zu Zugbeginn werden **5 Würfel frisch aus dem Ziehstapel gezogen** (Handgröße 5, `[GESPERRT]`).
+- **Reshuffle-Timing:** liegen zu Zugbeginn **weniger als 5** Würfel im Ziehstapel, wird der Ablagestapel **vor dem Ziehen** in den Ziehstapel gemischt (erst Rest ziehen, dann mischen, dann auffüllen — StS-identisch).
+- **Ablegen:** am Zugende wandern **alle Hand-Würfel** (gespielte wie ungespielte) auf den Ablagestapel — **kein Behalten/Auffüllen**. Default „je Zug 5 frisch" gewählt, weil einfacher und StS-nah; Alternative (Reste behalten, auffüllen) verworfen, bleibt als Sim-Fallback notiert.
+- Über einen Kampf zirkuliert so das ganze 12er-Deck; 12 Würfel geben Deckbau/Rotation/Thinning, **nicht** mehr Output (Atem-Deckel, §5).
+
+Ablauf im Zug:
 1. **Rundenbeginn-Status:** **Fäule** tickt — Träger nimmt `Stapel` Schaden, dann Stapel −1. `[GESPERRT]`
-2. **Werfen:** Hand wird geworfen. Vor dem Wurf gesperrte Seiten (durch Schreck) sind **sichtbar markiert** und können nicht fallen. `[GESPERRT]` **Wetzung/Scharte** modifizieren jetzt den gefallenen Seitenwert zum **effektiven Wert** (§8) — dieser gilt fortan für Pools, Gleichklang und Vollmond.
-3. **Rerolls:** 1 Gratis-Reroll/Zug. Jeder weitere Reroll +1 Übermut. **Freilauf/Klemme** verändern die Reroll-Ökonomie dieses Zugs (§7.4). Reroll bei **Übermut > 6** löst Tischsturz aus (→ §7). `[GESPERRT]`
-4. **Platzieren:** Seiten werden **links→rechts** in der Zug-Reihe angeordnet. Jede platzierte Seite kostet Atem (Start-Würfel 1 Atem). `[GESPERRT]`
-5. **Ziel wählen:** **ein Ziel pro Zug**, kein Wechsel mitten im Paket. `Fläche`-Seiten treffen alle. `[GESPERRT]`
-6. **Auflösen:** L→R, Reihenfolge nach §4.
-7. **Zugende-Status:** **Brand** tickt — Ziel nimmt `Stapel` Schaden, dann Stapel −2. `[GESPERRT]`
-8. **Rinde verfällt:** aller in diesem Zug nicht verbrauchter Block geht verloren. `[GESPERRT]`
+2. **Ziehen:** 5 Würfel aus dem Ziehstapel (Modell oben).
+3. **Werfen:** Hand wird geworfen. Vor dem Wurf gesperrte Seiten (durch Schreck) sind **sichtbar markiert** und können nicht fallen. `[GESPERRT]` **Wetzung/Scharte** (und permanente Klassen-Sockel) modifizieren jetzt den gefallenen Seitenwert zum **effektiven Wert** (§8) — dieser gilt fortan für Pools, Gleichklang und Vollmond (Vollmond-Sonderfall §10.3).
+4. **Rerolls:** 1 Gratis-Reroll/Zug. Jeder weitere Reroll +1 Übermut. **Freilauf/Klemme** verändern die Reroll-Ökonomie dieses Zugs (§7.4). Reroll bei **Übermut > 6** löst Tischsturz aus (→ §7). `[GESPERRT]`
+5. **Platzieren:** Seiten werden **links→rechts** in der Zug-Reihe angeordnet. Jede platzierte Seite kostet Atem (Start-Würfel 1 Atem). `[GESPERRT]`
+6. **Ziel wählen:** **ein Ziel pro Zug**, kein Wechsel mitten im Paket. `Fläche`-Seiten treffen alle. `[GESPERRT]`
+7. **Auflösen:** L→R, Reihenfolge nach §4.
+8. **Zugende-Status:** **Brand** tickt — Ziel nimmt `Stapel` Schaden, dann Stapel −2. `[GESPERRT]`
+9. **Rinde verfällt:** aller in diesem Zug nicht verbrauchter Block geht verloren. `[GESPERRT]`
+10. **Ablegen:** gesamte Hand → Ablagestapel (Modell oben).
 
 ### 2.3 Gegnerzug
 1. Gegner führt angekündigte Absicht aus.
@@ -48,6 +60,13 @@ Eine **Runde** = Spielerzug, dann Gegnerzug. Decay-Effekte (Morsch/Welk/Wetzung/
 - Überschuss-Schaden bei Gegner-Tod **verfällt** (kein Übertrag ohne Keyword). `[GESPERRT]`
 - **Kristallisation:** restliches Übermut (>0), das nicht in Tischsturz mündete, wird zusätzlich verarbeitet — siehe §7.2. `[GESPERRT — Sim-bestätigt 2026-06-30]`
 - Alle kampf-begrenzten Eigen-Status (Wetzung/Scharte/Freilauf/Klemme, §8) **verfallen** — keine Übertragung in den nächsten Kampf. `[GESPERRT-Prinzip]`
+- Ziehstapel/Hand/Ablage werden aufgelöst — zwischen Knoten existiert nur das Arsenal (09 §3.1).
+
+### 2.6 Ziehmodell-Edge-Cases `[PROVISORISCH]`
+- **Reshuffle mitten im Auffüllen:** Rest des Ziehstapels zuerst ziehen, dann Ablage mischen, dann auf 5 auffüllen (kein Würfel doppelt in einer Hand).
+- **Arsenal < 5** (durch Entfernen-Senken theoretisch möglich): Hand = gesamtes verfügbares Arsenal, kein Fehler.
+- **Gemüt/Schreck haften am Würfel**, nicht an der Zone — ein ängstlicher Würfel bleibt ängstlich, egal wo er liegt.
+- **Mid-Kampf-Save:** entfällt per Default — gespeichert wird nur zwischen Knoten (09 §3.1/§3.3); damit müssen Ziehstapel-Reihenfolge und RNG-Stream nicht persistiert werden.
 
 ---
 
@@ -66,7 +85,7 @@ Eine **Runde** = Spielerzug, dann Gegnerzug. Decay-Effekte (Morsch/Welk/Wetzung/
 
 **Fester Ablauf je Schaden-Pool, floor erst am Ende** (keine Zwischenrundung). `[GESPERRT]`
 
-0. **Effektiver Wert** = Seitenwert ± Wetzung/Scharte (bereits beim Wurf gesetzt, §2.2). Alles Folgende rechnet mit diesem Wert. `[GESPERRT-Prinzip]`
+0. **Effektiver Wert** = Seitenwert ± Wetzung/Scharte ± permanente Klassen-Sockel (bereits beim Wurf gesetzt, §2.2). Alles Folgende rechnet mit diesem Wert. `[GESPERRT-Prinzip]`
 1. **Effektiver Wert + Kraft + flache Passive** (additive Stufe; pro Schaden-Seite sofort). Eichwart-Passiv (+2) und Kraft (+`Stapel`) gehören hierher.
 2. **× Mult** (typgebunden, z. B. Wucht)
 3. **× Gleichklang**
@@ -102,6 +121,7 @@ Eichwart spielt eine Schaden-Seite, gefallener Wert **5**. Aktiv: Wetzung 1 (+1 
 - **3 Atem/Zug, fix.** Ungenutzter Atem verfällt. `[GESPERRT]`
 - Start-Würfel kosten **1 Atem** je gespielte Seite. `[GESPERRT]`
 - **Beruhigungs-Seite:** kostet 1 Atem (Wirkung → §6). `[GESPERRT]`
+- **Ermutigungs-Seite:** kostet 1 Atem (Wirkung → §6.4). `[PROVISORISCH]`
 - Vollendete Würfel können 0 Atem kosten (Untergrenze 0). `[GESPERRT]`
 
 ---
@@ -122,13 +142,20 @@ Eichwart spielt eine Schaden-Seite, gefallener Wert **5**. Aktiv: Wetzung 1 (+1 
 - Gesperrte Seiten fallen beim Wurf **nicht**; der Würfel landet nur auf seinen freien Seiten.
 
 ### 6.3 Beruhigungs-Seite
-- **+2 Gemüt** auf einen ängstlichen Hand-Würfel, Kosten **1 Atem**. `[GESPERRT]`
+- **+2 Gemüt** auf einen ängstlichen Hand-Würfel, Kosten **1 Atem**. **Greift nur bei Würfeln mit Schreck > 0.** `[GESPERRT]`
 - Universelle Regel: **1 Trösten = +2 Gemüt.** `[GESPERRT]`
 
-### 6.4 Edge-Cases
+### 6.4 Ermutigungs-Seite (Keyword „Ermutigung") `[PROVISORISCH]`
+- **+2 Gemüt universell** auf einen Hand-Würfel — wirkt **auch bei Gemüt ≥ 0** (baut Richtung Fröhlich weiter auf). Kosten **1 Atem**.
+- **Abgrenzung zu Beruhigung:** Beruhigung ist self-gated (nur Schreck > 0) und unter sauberem Pflege-Spiel tot — das Henne-Ei-Problem: wer nie Schreck ansammelt, kann nie beruhigen. **Ermutigung wirkt immer**; sie ist der proaktive Pflege-Kanal (Fröhlich-Aufbau ab Zug 1), Beruhigung der reaktive (Schreck-Abbau).
+- Folgt der universellen Trösten-Regel (+2 Gemüt) — **ob Ermutigung als „Trösten-Ereignis" für die Frühling-Trösten-Zahl zählt, ist verneint** (01 §5: zählt **nicht**; Default gegen Trivialisierung, Sim prüft).
+- Träger im Slice: Sanftholz-Blaupause und Ermutigungs-Gravur (04 §3.2/§4), Dorfschamane-Kit (06 §3). Schema: `effekt.typ: "ermutigung"` (09 §2.1).
+
+### 6.5 Edge-Cases
 - Schreck-Sperrung greift **vor** dem Wurf — gesperrte hohe Seiten sind nicht würfelbar.
 - Trösten über die 0-Linie hinaus baut **positives Gemüt** auf (Richtung Fröhlich); Schreck bleibt 0.
 - Push auf einen bereits ängstlichen Würfel vertieft Schreck und kann eine weitere Top-Seite sperren, sobald die Kurven-Schwelle erreicht ist.
+- **Ermutigung auf Würfel mit Schreck > 0** ist erlaubt und wirkt wie Beruhigung (+2 Gemüt) — die Keywords unterscheiden sich nur in der Zugangsbedingung, nicht in der Wirkung.
 
 ---
 
@@ -164,6 +191,7 @@ Eichwart spielt eine Schaden-Seite, gefallener Wert **5**. Aktiv: Wetzung 1 (+1 
 - Kristallisierter Schreck ist identisch zu push-erzeugtem Schreck (Sperr-Kurve `mittel`, nur durch Trösten abbaubar).
 - Reihenfolge Kampfende: erst Sauberer-Sieg-Bonus (§2.5), **dann** Kristallisation.
 - Kristallisation prüft nur **Rest-Übermut am Kampfende**, nicht kumulierten Übermut.
+- **Ziehmodell-neutral:** „zuletzt gespielte Würfel" meint die im letzten Zug **platzierten** Würfel, unabhängig davon, in welcher Zone (Ablage) sie bei Kampfende liegen.
 
 ### 7.4 Freilauf & Klemme (Reroll-Ökonomie-Status) `[GESPERRT-Prinzip, Werte PROVISORISCH]`
 
@@ -197,7 +225,7 @@ Zwei universelle Eigen-Status (Definition/Caps §8), die **direkt** an dieser Ö
 
 ### 8.2 Eigen-Status (Würfelhain-nativ, universell) `[GESPERRT-Prinzip, Werte PROVISORISCH]`
 
-Vier Status als zwei Buff/Debuff-Paare an den zwei Achsen, die kartenbasierte Spiele nicht haben: dem **gewürfelten Seitenwert** und der **Reroll-Ökonomie**. Additiv, stapelbar, **Cap 3**, **Decay −1/Runde**, **kampf-begrenzt**. Universell von Region 1 bis 6 nutzbar, weil beide Achsen jeden Zug berühren.
+Vier Status als zwei Buff/Debuff-Paare an den zwei Achsen, die kartenbasierte Spiele nicht haben: dem **gewürfelten Seitenwert** und der **Reroll-Ökonomie**. Additiv, stapelbar, **Cap 3**, **Decay −1/Runde**, **kampf-begrenzt**. Universell von Region 1 bis 6 nutzbar, weil beide Achsen jeden Zug berühren. Schema-Slot: `eigenStatus` (09 §2.11).
 
 | Status | Achse | Wirkung | Cap | Decay |
 |--------|-------|---------|-----|-------|
@@ -210,6 +238,7 @@ Vier Status als zwei Buff/Debuff-Paare an den zwei Achsen, die kartenbasierte Sp
 - **Wetzung ≠ Kraft:** Kraft addiert erst bei der Auflösung und **nur** auf Schaden-Seiten. Wetzung setzt den **effektiven Wert schon beim Wurf** und wirkt auf **alle Pools** (Rinde-Block, Fäule-/Brand-Werte, Schaden gleichermaßen). Einziger pool-übergreifender Wert-Modifikator im Spiel.
 - **Scharte ≠ Welk:** Welk ist ein prozentualer Malus **nur** auf den fertigen Schaden-Pool. Scharte ist ein flacher Malus auf den **Wert** jeder Seite **vor** allen Pools und kann u. a. **Vollmond brechen**.
 - **Klemme/Freilauf** haben in kartenbasierten Spielen kein Gegenstück — sie greifen ausschließlich die Reroll-/Übermut-Ökonomie an.
+- **Wetzung-Status ≠ permanenter Klassen-Sockel (Schliff, 06 §5):** gleiche Rechenposition (effektiver Wert), aber der Status stapelt/decayt und **speist Vollmond**, der permanente Sockel ist hart bei +1 gedeckelt und **speist Vollmond nicht** (§10.3).
 
 ### 8.3 Status-Edge-Cases
 - **Morsch/Welk additiv:** 3 Morsch = +60 %, nicht (1,2)³. Reihenfolge §4 (Morsch vor Welk).
@@ -229,7 +258,8 @@ Vier Status als zwei Buff/Debuff-Paare an den zwei Achsen, die kartenbasierte Sp
 | Keyword | Wirkung | Edge-Case |
 |---------|---------|-----------|
 | **Fläche** | trifft alle Gegner statt eines Ziels | `[GESPERRT]` Schaden je Ziel getrennt durch §4 gerechnet; Überschuss je Ziel verfällt einzeln. |
-| **Beruhigung** | +2 Gemüt auf einen ängstlichen Hand-Würfel, 1 Atem | `[GESPERRT]` greift nur bei Würfeln mit Schreck > 0. |
+| **Beruhigung** | +2 Gemüt auf einen ängstlichen Hand-Würfel, 1 Atem | `[GESPERRT]` greift **nur** bei Würfeln mit Schreck > 0 (reaktiv). |
+| **Ermutigung** | +2 Gemüt auf einen Hand-Würfel, **universell** (auch Gemüt ≥ 0), 1 Atem | `[PROVISORISCH]` proaktiver Pflege-Kanal; s. §6.4. Zählt **nicht** auf die Frühling-Trösten-Zahl (01 §5). |
 | **Glanz** | nächste gespielte Seite ×2 | `[GESPERRT]` siehe §8.3 (vor Mult, nach Wetzung/Scharte). |
 
 **Labung** (Tau) und **Prägung** (Münzen) sind Welle-3-Inhalt; Definition in Artefakt 04. `[PROVISORISCH]`
@@ -253,9 +283,10 @@ Auslöse-**Modelle** für Gleichklang, Echo, Vollmond sind `[GESPERRT]`; konkret
 
 ### 10.3 Vollmond
 - **Bedingung `[GESPERRT — verfeinert 2026-06-30]`:** jede gespielte Würfel-Seite erreicht **effektiven Wert ≥ natürlichem Höchstwert** ihres Würfels (Würfel-/Schaden-Typ egal) → einmaliger Flach-Bonus auf den Schaden-Pool (additiv).
-- **Verfeinerung/Eingriff:** die vormals gesperrte Formulierung „alle gespielten Würfel **zeigen** ihren Höchstwert" wird zu „**effektiver Wert ≥ Höchstwert**" präzisiert, damit **Wetzung** Vollmond ermöglichen und **Scharte** ihn brechen kann (§8.2). Begründung: koppelt die neuen Seitenwert-Status an die dice-native Combo, statt Vollmond von ihnen zu isolieren. Reine Bedingungs-Präzisierung; der additive, regions-skalierte Burst (kein Mult) bleibt unverändert. Index 00 §3 / 03 §2/§3.1 ziehen nach. `[GESPERRT: Prinzip]`
+- **Verfeinerung/Eingriff:** die vormals gesperrte Formulierung „alle gespielten Würfel **zeigen** ihren Höchstwert" wird zu „**effektiver Wert ≥ Höchstwert**" präzisiert, damit **Wetzung** Vollmond ermöglichen und **Scharte** ihn brechen kann (§8.2). Begründung: koppelt die neuen Seitenwert-Status an die dice-native Combo, statt Vollmond von ihnen zu isolieren. Reine Bedingungs-Präzisierung; der additive, regions-skalierte Burst (kein Mult) bleibt unverändert. Index 00 §3 / 03 §2/§3.1 nachgezogen (2026-07-02). `[GESPERRT: Prinzip]`
+- **Ausnahme für permanente Klassen-Sockel `[PROVISORISCH — 2026-07-02]`:** **dauerhafte, klassengebundene Wertsockel** (im Slice: Schleiferin-Passiv „Schliff" +1, 06 §5) zählen **nicht** für die Vollmond-Bedingung. Für Vollmond wird der effektive Wert **ohne** permanente Klassen-Sockel geprüft (natürlicher Wurf ± temporäre Status wie Wetzung/Scharte). Der **Wetzung-Status** ermöglicht Vollmond weiterhin regulär, Scharte bricht ihn weiterhin. Begründung: ein permanenter +1-Sockel würde Vollmond zur Norm machen (jede 5 auf einem W6 wäre „Höchstwert") und die Combo entwerten — temporäre Status bleiben als taktisches Fenster erhalten. Schaden rechnet der Sockel selbstverständlich voll mit (§4 Schritt 0/1) — die Ausnahme betrifft **nur die Vollmond-Prüfung**.
 - **Selbstbremse `[GESPERRT]`:** **flacher** Bonus (kein Mult), 1×/Zug. Bonuswert `[PROVISORISCH]` (→ 03 §3.1).
-- **Edge-Case:** jede **Nicht-Schaden-Seite** (Rinde/Block, Beruhigung) bricht Vollmond. Scharte, die auch nur einen Würfel unter seinen Höchstwert drückt, bricht Vollmond. Tischsturz bricht Vollmond.
+- **Edge-Case:** jede **Nicht-Schaden-Seite** (Rinde/Block, Beruhigung, Ermutigung) bricht Vollmond. Scharte, die auch nur einen Würfel unter seinen Höchstwert drückt, bricht Vollmond. Tischsturz bricht Vollmond.
 
 - Alle Combos zünden **1×/Zug**, stapeln miteinander. `[GESPERRT]`
 
@@ -265,10 +296,11 @@ Auslöse-**Modelle** für Gleichklang, Echo, Vollmond sind `[GESPERRT]`; konkret
 
 Modelle stehen. **Offen bleiben Zahlen und Folge-Redaktion:**
 - Handgröße-Bestätigung, sauberer-Sieg-Bedingung, Tischsturz-Selbstschaden, alle Combo-Faktoren (Gleichklang-Stufen, Vollmond-Burst-Kurve).
-- **Eigen-Status-Werte (§8.2):** Aufschlag/Malus je Stapel, Caps (Start 3), Decay-Rate, Freilauf/Klemme-Verrechnung (§7.5). Sim eicht; danach in **03 §6** als Konstanten-Tabelle spiegeln.
-- **Vollmond-Präzisierung (§10.3):** in **Index 00 §3** und **03 §2/§3.1** nachziehen.
-- **Kampf-begrenzter Player-State** für die vier Eigen-Status braucht Schema-Slot in **09 §2** (analog `statusStapel`, aber spielerseitig).
+- **Ziehmodell (§2.2):** Default „je Zug 5 frisch" per Sim/Spielgefühl bestätigen; Fallback „Reste behalten + auffüllen" notiert.
+- **Eigen-Status-Werte (§8.2):** Aufschlag/Malus je Stapel, Caps (Start 3), Decay-Rate, Freilauf/Klemme-Verrechnung (§7.5). Sim eicht; Konstanten-Tabelle in **03 §6** gespiegelt (2026-07-02).
+- **Ermutigung (§6.4):** Häufigkeit/Zugang gegen Frühling-Schwelle (01 §5) prüfen; Nicht-Anrechnung auf Trösten-Zahl per Sim bestätigen.
+- **Vollmond-Sockel-Ausnahme (§10.3):** per Schleiferin-Sim bestätigen (06 §9).
 - **Zuordnung Status → Gegner/Segen (05/07):** welche Gegner Scharte/Klemme auflegen (Regions-Themen 01 §7), welche Hain-Segen/Klassen Wetzung/Freilauf gewähren.
 - **Wetzung/Scharte-Kopplung an Fäule-/Brand-Auflege-Mengen (§4.2):** je Gravur klären (04).
-- Feinkalibrierung Region-1-Schwierigkeit ins Zielband 65–70 % unter Kristallisation (03 §13).
+- Feinkalibrierung Region-1-Schwierigkeit ins Zielband 65–70 % unter Kristallisation (03 §13) — **Re-Run auf 12er-Arsenal nötig** (03 §12.1).
 - Diese Werte **nicht** hier festklopfen — Sim belegt sie.
