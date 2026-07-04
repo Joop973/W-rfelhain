@@ -1,0 +1,116 @@
+# Würfelhain — Entwicklungsplan bis zur Vollendung (Artefakt 10)
+
+*Arbeitsdokument mit fortschreibbaren Häkchen. Etappen = Wellen aus 00 §2, Etappen-Grenzen und Balance-Tore sind fix; Reihenfolge innerhalb einer Etappe darf nach Abhängigkeiten optimiert werden. Rollen: **[C]** = Claude (Code-Session), **[D]** = Du (Design/Playtest/Assets), **[C+D]** = gemeinsam.*
+
+*Stand: 2026-07-04. Erstfassung nach Abschluss des Welle-1-Slices.*
+
+---
+
+## 0. Ausgangslage
+
+- [x] Design-Artefakte 00–09 vollständig in `docs/`
+- [x] Fundament: `rng.js` · `engine.js` · `push.js` · `ziehstapel.js` · `data.js` · `save.js` · `kampf.js` · `sim/` · `ui/` · `i18n/` · `index.html` — 38 Tests grün
+- [x] Welle-1-Tor auf 12er-Arsenal geschlossen (Pflege 70,2 % > Gier klug 63,4 %, `docs/Welle1_Tor_ReRun_12er_Befund.md`)
+- [x] Spielbarer Kampf-Slice im Browser (Region-1-Sequenz, 9 Kämpfe, Chromium-verifiziert)
+
+**Damit sind die Stufen 1–5 der Ausarbeitungs-Reihenfolge (00 §2) erfüllt.**
+
+## Rollenverteilung (durchgängig)
+
+| Wer | Aufgaben |
+|---|---|
+| **Claude [C]** | Implementierung + Tests (Node + Chromium-Smoke), Monte-Carlo-Sims + Befund-Dokumente, Save-Migrationen, Doku-Nachzüge in `docs/`, Commits auf den Branch |
+| **Du [D]** | Design-Entscheide (`[PROVISORISCH]` → `[GESPERRT]`), Handy-Playtests + Spielgefühl-Feedback, neue Artefakt-Stände aus Design-Chats hochladen, Kunst/Audio (bzw. Aaron, 08), Abnahme an den 3 Balance-Toren, Merge-Entscheidungen (PR ja/nein) |
+
+**Arbeits-Loop je Schritt:** Du gibst frei → Claude baut + testet + committet → du spielst auf dem Handy → Sim misst nach → Befund nach `docs/` → nächster Schritt.
+
+---
+
+## Etappe A — Welle 2: Region 1 voll *(als Nächstes)*
+
+Ziel: kompletter Region-1-Run mit Karte, Belohnungen, Händlern, Boss, Save — „lesbare Handy-UI, Tutorial-Boden" (00 §2 Stufe 6).
+
+- [ ] **A1 [C] Belohnungs-Flow** nach Kämpfen: Münzen/Eicheln automatisch + 1 Wahl aus 3 (Blaupause/Gravur/Würfel), Seltenheits-Gewichte, Blaupause-Pity N≈6 *(09 §2.5, 03 §10)*
+- [ ] **A2 [C] Gravuren anwendbar**: Seite überschreiben (Cap 3), Wucht-Mult in den Kampf-Loop verdrahten (`resolveZug` kann Mult schon — `kampf.js` reicht ihn noch nicht durch), Schmiede-Knoten mit Preisen 40/60/80 *(04 §3, 02 §4)*
+- [ ] **A3 [C] Karten-Generator** Region 1: DAG 7 Reihen + Boss, bis 3 breit, StS-Merge, Garantie-Regeln (Reihe 1 Kampf, 6 kommerziell, 7 Lagerfeuer, Elite-Erreichbarkeit) *(07 §1)*
+- [ ] **A4 [C] Knotentypen**: Markt (Eicheln-Käufe, Würfel entfernen 25+15/Anwendung), Event-Vignetten aus `data.js`, Lagerfeuer (Heilen/Trösten/Vollenden), 3 Währungen mit Quellen/Senken *(07 §1.3/§2/§3)*
+- [ ] **A5 [C] Boss 1 Saumhüter**: 2 Phasen, Twist „Erste Geduld" (jede 3. Runde Block), Sonder-Belohnung *(05 §6)*
+- [ ] **A6 [C] Save v2**: Karte/Position/Währungen/Segen in `runState`, erste echte Migration 1→2 (Kettenpflicht-Test greift dann automatisch) *(09 §3)*
+- [ ] **A7 [C+D] Handy-UI-Ausbau**: Karten-/Belohnungs-/Händler-Screens, Tutorial-Hinweise — weiter in Platzhalter-Konvention (08 §4.0). **Du testest auf dem echten Handy** (Lesbarkeit ist Design-Kriterium, 08 §1.3)
+- [ ] **A8 [C+D] Region-1-Nach-Eichung**: `sim/` um Gravuren/Segen/Belohnungs-Ökonomie erweitern, Gegner-Werte gegen Zielband 65–70 % nacheichen — die kalibrierte Basis verschiebt sich mit Spieler-Output (Priorität aus 05 §10). Claude misst, **du entscheidest** die Endwerte *(03 §13, 05 §1.2)*
+
+**Deine Entscheide in Etappe A [D]:**
+- [ ] Ziehmodell-Default bestätigen (je Zug 5 frisch — 02 §2.2)
+- [ ] Rinde-Reserve zünden ja/nein (04 §2, falls Block zu dünn wirkt)
+- [ ] Sauber-Sieg-Bedingung: „ohne HP-Verlust" zu streng? (03 §11)
+- [ ] Ökonomie-Gefühl: reichen ~12–13 Gravuren/Run?
+
+---
+
+## Etappe B — Welle 3: Tiefe
+
+Ziel: alle Systeme voll aktiv, mehrere Build-Pfade. Endet mit **Balance-Tor 2**.
+
+- [ ] **B1 [C] Status-Set voll im Kampf**: Fäule/Brand-Ticks, Morsch/Welk-Stapel + Decay, Kraft, Riss (25 %-Aussetzer), Glanz — Engine kann die Mathe schon, `kampf.js` braucht Status-State + Tick-Timing *(02 §2)*
+- [ ] **B2 [C] Eigen-Status**: Wetzung/Scharte (effektiver Wert im Wurf), Freilauf/Klemme (Reroll-Ökonomie — `rerollKosten` kann es schon), `eigenStatus`-Slot im Kampf-State *(09 §2.11)*
+- [ ] **B3 [C] Combos komplett spielbar**: Echo-/Glanz-Seiten als Gravuren im Loop, Vollmond-Prüfung mit echten Höchstwerten, Gleichklang-Anzeige in der UI
+- [ ] **B4 [C] Alle 16 Blaupausen anwendbar** (Slice-Sperre aufheben), inkl. Quell/Labung- und Hort/Prägung-Engines
+- [ ] **B5 [C] Beruhigung/Ermutigung spielbar** + Trösten-Zähler run-weit (zählt für Frühling-Bedingung, Ermutigung ausgeschlossen — 01 §5)
+- [ ] **B6 [C] Hain-Segen-Pool**: alle 16 mit Haken-Effekten (Kristallisations-Modifikatoren „Gieriger Griff"/„Ungeduld" brauchen `push.js`-Hooks)
+- [ ] **B7 [C+D] Morsch-als-Gegner-Entscheid**: Option A (eingehend-Multiplikator in `engine.js`) vs. B (Fallback Kraft) — Claude baut Prototyp A, **du entscheidest** *(05 §2.1)*
+- [ ] **B8 [C+D] BALANCE-TOR 2**: Sim-Suite über mehrere Build-Pfade (Wucht-, Status-, Gleichklang-, Pflege-Build) — Kriterium: alle viable, keine Lawine (03 §14), Gier-vs-Pflege hält weiter. Claude misst, **du nimmst ab**
+
+**Deine Entscheide in Etappe B [D]:**
+- [ ] Alle `[PROVISORISCH]`-Gravur-/Blaupausen-Werte nach Sim-Befund sperren
+- [ ] Freilauf/Klemme-Verrechnung bestätigen (02 §7.5)
+- [ ] Tau-Knappheit prüfen: reicht der Trösten-Zugang in R1–2 gegen die Schreck-Spirale? *(Kernfrage 03 §12.1)*
+
+---
+
+## Etappe C — Welle 4: Meta
+
+- [ ] **C1 [C] Jahresringe + Stammbaum** (Meta-Save, dauerhafte Freischaltungen, 09 §2.9)
+- [ ] **C2 [C] Klassen 2–5 spielbar**: Dorfschamane (Zuversicht + Gratis-Ermutigung), Glöckner (Widerhall), Schleiferin (Schliff-Sockel + Vollmond-Ausnahme + Extra-Reroll), Rodbauer (Brandrodung) — Daten liegen schon in `data.js`, Passive brauchen `kampf.js`/`engine.js`-Anbindung
+- [ ] **C3 [C] Klassen-Freischalt-Reihenfolge** (3/5/8/12 Jahresringe, Rodbauer hinter Bedingung — 06 §7)
+- [ ] **C4 [C] Reifegrade 1–10** (kumulative Mods, 03 §9) + Ziel-Siegraten-Sims je Stufe
+- [ ] **C5 [C+D] Heimat-Hain/Samen** (Anschluss „Stiller Hain"-Ende) — noch dünn in den Artefakten, ggf. Design-Chat-Runde vorab
+- [ ] **C6 [C] Run-weite Enden-Zähler**: End-Schreck + Trösten-Zahl tracken, Schwellen ~10/~40 provisorisch verdrahten
+- [ ] **C7 [C+D] Klassen-Balance-Sim**: jede Klasse gegen den Korridor 15–17 (06 §8), Rodbauer-Überlebbarkeit R1, Dorfschamane vs. Frühling-Trivialisierung. Claude misst, **du entscheidest**
+
+---
+
+## Etappe D — Welle 5: Voller Umfang
+
+Endet mit **Balance-Tor 3** (voller Run balanciert).
+
+- [ ] **D1 [C] Regionen 2–6**: Roster als `data.js`-Zeilen (05 §5 liegt komplett vor), Status-Themen je Region, HP-/Schaden-Kurven
+- [ ] **D2 [C] Bosse 2–5** mit Phasen + Twists (Ausbreitung, Auflodern, Auszehrung, Enge Pforte)
+- [ ] **D3 [C] Endboss**: 3 Phasen, Twist „Hohles Echo", personalisierte Phase aus dem ängstlichsten Arsenal, Trösten-Auflösung via `bossSchreck` *(05 §7/§8)*
+- [ ] **D4 [C+D] 3 Enden + Narrativ**: Mentor-Stimme über den Run (Text-Keys!), Zweifel-Events R4/R5, Wendungs-Szene, Enden-Inszenierung — **du redigierst alle Texte** (Ton 01 §6 ist Chefsache)
+- [ ] **D5 [C+D] Welk-Grad/Entsättigung**: Filter-MVP ist vorbereitet → Rollen-Swap (08 §3.4 A/B) sobald echte Sprites da sind; Audio-Stems mit diegetischem Ausdünnen (08 §2.2). Claude Technik, **du/Aaron Assets**
+- [ ] **D6 [D→C] Kunst/Audio-Produktion**: Sprites nach Platzhalter-Specs (~136 Boxen, 08 §4), Musik-Stems (~24), SFX (~13), Bitmap-Font mit Umlauten — Platzhalter werden 1:1 ersetzt (gleiche Maße/Keys). **Du/Aaron liefert**, Claude integriert
+- [ ] **D7 [C+D] Lokalisierung EN**: `i18n/en.js` (Struktur steht). Claude übersetzt, du prüfst
+- [ ] **D8 [C+D] BALANCE-TOR 3**: Voll-Run-Monte-Carlo gegen 03 §13 (Reifegrad 0: 65–70 % … Reifegrad 10: 25–30 %), Enden-Schwellen nacheichen, Gier-darf-nie-dominieren-Kriterium auf jeder Stufe. Claude misst, **du nimmst ab**
+
+---
+
+## Etappe E — Release
+
+- [ ] **E1 [C+D] Deployment**: GitHub Pages (statisch, kein Build — passt exakt zur Architektur). Claude bereitet vor, **du aktivierst Pages in den Repo-Settings** und entscheidest den Merge
+- [ ] **E2 [C+D] Geräte-Matrix-Test**: iOS Safari + Android Chrome (Audio-Fallback `.m4a`, LocalStorage, Performance Integer-Scaling). Claude automatisiert was geht, **du testest real**
+- [ ] **E3 [D→C] Beta mit echten Spielern**, Feedback-Runde, letzte Eichung. **Du organisierst**, Claude fixt
+- [ ] **E4 [C+D] Doku-Endstand**: alle verbleibenden `[PROVISORISCH]` → `[GESPERRT]` oder gestrichen; Index 00 final
+
+---
+
+## Laufende Pflege (parallel zu allem)
+
+- **Doku-Sync [C]:** Nach jedem Etappen-Abschluss Build-Stand in 00 §4 / 09 §6 nachziehen. **Wichtig [D]:** neue Artefakt-Stände aus Design-Chats immer hochladen — Claude difft gegen den Repo-Stand und weist auf Regressionen hin (wie beim veralteten 00-Index geschehen).
+- **Test-Disziplin [C]:** jede neue Mechanik bekommt Node-Tests; jeder UI-Schritt einen Chromium-Smoke; jedes Balance-Tor ein Befund-Dokument in `docs/`.
+- **Save-Migrationen [C]:** jede Schema-Änderung = `SAVE_VERSION`+1 + Migrationsfunktion (Kettenpflicht-Test erzwingt das bereits).
+
+## Annahmen
+
+- Hosting-Ziel ist **GitHub Pages** (statische Web-App ohne Build-Step legt das nahe).
+- „Aaron" (08) ist die Kunst-/Audio-Quelle — die Produktion der echten Assets liegt auf eurer Seite; Claude baut nur Platzhalter + Integration.
+- Reihenfolge innerhalb der Etappen darf nach Abhängigkeiten optimiert werden; die Etappen-Grenzen (= Wellen + Tore aus 00 §2) sind fix.
