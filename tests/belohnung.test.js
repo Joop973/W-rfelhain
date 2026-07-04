@@ -93,7 +93,7 @@ test('Gravur: gleiche Gravur stuft auf bis Cap 3, Typ-Wechsel resettet auf Stufe
 
 test('Wucht-gravierte Seite multipliziert den Schaden-Pool im echten Zug', () => {
   const rng = new RNG(14);
-  const run = starteRun('eichwart');
+  const run = starteRun('eichwart', rng);
   const kampf = starteKampf(run, rng);
   beginneZug(run, kampf, rng);
 
@@ -118,7 +118,7 @@ test('Wucht-gravierte Seite multipliziert den Schaden-Pool im echten Zug', () =>
 
 test('Sieg liefert Einkommen + 3 Belohnungs-Optionen am Kampf-Objekt', () => {
   const rng = new RNG(15);
-  const run = starteRun('eichwart');
+  const run = starteRun('eichwart', rng);
   const kampf = starteKampf(run, rng);
   kampf.gegner.hp = 1;
   beginneZug(run, kampf, rng);

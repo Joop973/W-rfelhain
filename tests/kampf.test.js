@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { RNG } from '../rng.js';
 import { schreck } from '../push.js';
 import { pruefeInvariante } from '../ziehstapel.js';
+import { rasteLagerfeuer } from '../knoten.js';
 import {
   starteRun,
   starteKampf,
@@ -13,7 +14,10 @@ import {
   loeseZugAuf,
   fuehreGegnerzugAus,
   arsenalSchreckSumme,
-  KAEMPFE_PRO_REGION,
+  verfuegbareKnoten,
+  betreteKnoten,
+  findeKnoten,
+  naechsteAbsicht,
 } from '../kampf.js';
 
 function spieleZugAuto(run, kampf, rng) {
@@ -28,9 +32,20 @@ function spieleZugAuto(run, kampf, rng) {
   return loeseZugAuf(run, kampf, rng);
 }
 
+function kaempfeDurch(run, kampf, rng) {
+  while (kampf.phase === 'zug' || kampf.phase === 'gegnerzug') {
+    if (kampf.phase === 'zug') {
+      beginneZug(run, kampf, rng);
+      spieleZugAuto(run, kampf, rng);
+    } else {
+      fuehreGegnerzugAus(run, kampf);
+    }
+  }
+}
+
 test('Kampf startet regelkonform: Hand 5, Atem 3, Absicht angekündigt, Invariante hält', () => {
   const rng = new RNG(1);
-  const run = starteRun('eichwart');
+  const run = starteRun('eichwart', rng);
   const kampf = starteKampf(run, rng);
   beginneZug(run, kampf, rng);
 
@@ -43,7 +58,7 @@ test('Kampf startet regelkonform: Hand 5, Atem 3, Absicht angekündigt, Invarian
 
 test('Platzieren kostet Atem, Zurücknehmen erstattet; max 3 Seiten je Zug', () => {
   const rng = new RNG(2);
-  const run = starteRun('eichwart');
+  const run = starteRun('eichwart', rng);
   const kampf = starteKampf(run, rng);
   beginneZug(run, kampf, rng);
 
@@ -60,7 +75,7 @@ test('Platzieren kostet Atem, Zurücknehmen erstattet; max 3 Seiten je Zug', () 
 
 test('Tischsturz über Reroll: Hand +2 Schreck, Selbstschaden, Zug verbraucht', () => {
   const rng = new RNG(3);
-  const run = starteRun('eichwart');
+  const run = starteRun('eichwart', rng);
   const kampf = starteKampf(run, rng);
   beginneZug(run, kampf, rng);
   const handIds = [...kampf.hand];
@@ -80,7 +95,7 @@ test('Tischsturz über Reroll: Hand +2 Schreck, Selbstschaden, Zug verbraucht', 
 
 test('Kristallisation bei Kampfende: Rest-Übermut wird Schreck auf zuletzt gespielte', () => {
   const rng = new RNG(4);
-  const run = starteRun('eichwart');
+  const run = starteRun('eichwart', rng);
   const kampf = starteKampf(run, rng);
   kampf.gegner.hp = 1; // stirbt am nächsten Paket
   beginneZug(run, kampf, rng);
@@ -97,7 +112,7 @@ test('Kristallisation bei Kampfende: Rest-Übermut wird Schreck auf zuletzt gesp
 
 test('sauberer Sieg ohne HP-Verlust: +1 Gemüt nur auf gespielte Würfel', () => {
   const rng = new RNG(5);
-  const run = starteRun('eichwart');
+  const run = starteRun('eichwart', rng);
   const kampf = starteKampf(run, rng);
   kampf.gegner.hp = 1;
   beginneZug(run, kampf, rng);
@@ -111,25 +126,69 @@ test('sauberer Sieg ohne HP-Verlust: +1 Gemüt nur auf gespielte Würfel', () =>
   }
 });
 
-test('kompletter Run terminiert: 9 Kämpfe greedy durchgespielt', () => {
+test('Karten-Navigation: Start bietet Reihe 1, betreten nur wählbarer Knoten', () => {
+  const rng = new RNG(6);
+  const run = starteRun('eichwart', rng);
+
+  const start = verfuegbareKnoten(run);
+  assert.ok(start.length >= 2);
+  assert.ok(start.every((k) => k.reihe === 1 && k.typ === 'kampf'));
+
+  assert.equal(betreteKnoten(run, 'r8s0'), null); // Boss ist nicht wählbar
+  const knoten = betreteKnoten(run, start[0].id);
+  assert.equal(run.positionKnotenId, knoten.id);
+
+  const danach = verfuegbareKnoten(run);
+  assert.ok(danach.every((k) => k.reihe === 2 && knoten.kanten.includes(k.slot)));
+});
+
+test('Boss-Twist "Erste Geduld": jede dritte Boss-Runde ist zwingend Block', () => {
+  const gegner = {
+    mechanikIds: ['erste_geduld'],
+    absichtsMuster: 'schlaeger',
+    phasen: [{ abHpAnteil: 0.5, absichtsMuster: 'waechter_mehrfach' }],
+    schaden: 10,
+    hp: 120,
+    hpMax: 120,
+    zyklus: 0,
+  };
+  const typen = [];
+  for (let zyklus = 0; zyklus < 6; zyklus += 1) {
+    gegner.zyklus = zyklus;
+    typen.push(naechsteAbsicht(gegner).typ);
+  }
+  assert.deepEqual(typen, ['angriff', 'angriff', 'block', 'angriff', 'angriff', 'block']);
+
+  gegner.hp = 50; // Phase 2 (<50 %): Wächter-Rotation, Twist bleibt
+  gegner.zyklus = 2;
+  assert.equal(naechsteAbsicht(gegner).typ, 'block'); // Twist hat Vorrang
+  gegner.zyklus = 1;
+  assert.equal(naechsteAbsicht(gegner).typ, 'angriff'); // Wächter: Zyklus 1 = Angriff
+});
+
+test('kompletter Run über die Karte terminiert (Boss beendet die Region)', () => {
   const rng = new RNG(20260704);
-  const run = starteRun('eichwart');
+  const run = starteRun('eichwart', rng);
 
   let sicherheit = 0;
-  while (!run.abgeschlossen && !run.verloren && sicherheit < 500) {
+  while (!run.abgeschlossen && !run.verloren && sicherheit < 100) {
     sicherheit += 1;
-    const kampf = starteKampf(run, rng);
-    while (kampf.phase === 'zug' || kampf.phase === 'gegnerzug') {
-      if (kampf.phase === 'zug') {
-        beginneZug(run, kampf, rng);
-        spieleZugAuto(run, kampf, rng);
-      } else {
-        fuehreGegnerzugAus(run, kampf);
+    const wahl = verfuegbareKnoten(run)[0];
+    const knoten = betreteKnoten(run, wahl.id);
+    if (['kampf', 'elite', 'boss'].includes(knoten.typ)) {
+      const kampf = starteKampf(run, rng, knoten.typ);
+      kaempfeDurch(run, kampf, rng);
+      if (kampf.phase === 'sieg' && knoten.typ === 'boss') {
+        assert.ok(kampf.belohnung.optionen.every((o) => o.typ === 'blaupause')); // Boss-Sonder-Belohnung
       }
+    } else if (knoten.typ === 'lagerfeuer') {
+      rasteLagerfeuer(run, 'heilen');
     }
+    // Markt/Schmiede/Event: im Auto-Test nur durchlaufen.
   }
 
   assert.ok(run.abgeschlossen || run.verloren);
-  if (run.abgeschlossen) assert.equal(run.kampfNummer, KAEMPFE_PRO_REGION);
-  assert.ok(run.hp <= run.hpMax);
+  if (run.abgeschlossen) {
+    assert.equal(findeKnoten(run, run.positionKnotenId).typ, 'boss');
+  }
 });

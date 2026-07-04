@@ -31,11 +31,11 @@
 Ziel: kompletter Region-1-Run mit Karte, Belohnungen, Händlern, Boss, Save — „lesbare Handy-UI, Tutorial-Boden" (00 §2 Stufe 6).
 
 - [x] **A1 [C] Belohnungs-Flow** nach Kämpfen: Münzen/Eicheln automatisch + 1 Wahl aus 3 (Blaupause/Gravur/Münzen), Seltenheits-Gewichte, Blaupause-Pity N≈6 *(09 §2.5, 03 §10)* — `belohnung.js`, 2026-07-04
-- [x] **A2 [C] Gravuren anwendbar**: Seite überschreiben (Cap 3), Wucht-Mult in den Kampf-Loop verdrahtet (Seiten-Index-Refactor in `kampf.js`) — *Slice-Gravuren Wucht/Schärfe/Borke; Status-Gravuren folgen mit Etappe B, **Schmiede-Knoten mit Preisen 40/60/80 folgt mit A3/A4*** *(04 §3, 02 §4)*
-- [ ] **A3 [C] Karten-Generator** Region 1: DAG 7 Reihen + Boss, bis 3 breit, StS-Merge, Garantie-Regeln (Reihe 1 Kampf, 6 kommerziell, 7 Lagerfeuer, Elite-Erreichbarkeit) *(07 §1)*
-- [ ] **A4 [C] Knotentypen**: Markt (Eicheln-Käufe, Würfel entfernen 25+15/Anwendung), Event-Vignetten aus `data.js`, Lagerfeuer (Heilen/Trösten/Vollenden), 3 Währungen mit Quellen/Senken *(07 §1.3/§2/§3)*
-- [ ] **A5 [C] Boss 1 Saumhüter**: 2 Phasen, Twist „Erste Geduld" (jede 3. Runde Block), Sonder-Belohnung *(05 §6)*
-- [ ] **A6 [C] Save v2**: Karte/Position/Währungen/Segen in `runState`, erste echte Migration 1→2 (Kettenpflicht-Test greift dann automatisch) *(09 §3)*
+- [x] **A2 [C] Gravuren anwendbar**: Seite überschreiben (Cap 3), Wucht-Mult in den Kampf-Loop verdrahtet (Seiten-Index-Refactor in `kampf.js`), Schmiede-Knoten mit Preisen 40/60/80 — *Slice-Gravuren Wucht/Schärfe/Borke; Status-Gravuren folgen mit Etappe B* *(04 §3, 02 §4)*
+- [x] **A3 [C] Karten-Generator** Region 1: DAG 7 Reihen + Boss, bis 3 breit, StS-Merge, Garantie-Regeln (Reihe 1 Kampf, 6 kommerziell, 7 Lagerfeuer, Elite-Erreichbarkeit) *(07 §1)* — `karte.js`, 2026-07-04
+- [x] **A4 [C] Knotentypen**: Markt (Eicheln-Käufe, Würfel entfernen 25+15/Anwendung, Trösten-Dienst 3 Tau), Event-Vignetten (Slice: Brunnen + Kätzchen), Lagerfeuer (Heilen/Trösten/Vollenden), Tau +6/Region *(07 §1.3/§2/§3)* — `knoten.js`, 2026-07-04
+- [x] **A5 [C] Boss 1 Saumhüter**: 2 Phasen, Twist „Erste Geduld" (jede 3. Runde Block), Sonder-Belohnung = Blaupausen-Wahl *(05 §6)* — 2026-07-04 *(mehrfach-Treffer der Phase 2 folgen mit Etappe B)*
+- [x] **A6 [C] Save v2**: Karte/Position/HP/Pity in `runState`, Migration 1→2 aktiv (Kettenpflicht-Test greift), UI lädt gespeicherten Run beim Start *(09 §3)* — 2026-07-04
 - [ ] **A7 [C+D] Handy-UI-Ausbau**: Karten-/Belohnungs-/Händler-Screens, Tutorial-Hinweise — weiter in Platzhalter-Konvention (08 §4.0). **Du testest auf dem echten Handy** (Lesbarkeit ist Design-Kriterium, 08 §1.3)
 - [ ] **A8 [C+D] Region-1-Nach-Eichung**: `sim/` um Gravuren/Segen/Belohnungs-Ökonomie erweitern, Gegner-Werte gegen Zielband 65–70 % nacheichen — die kalibrierte Basis verschiebt sich mit Spieler-Output (Priorität aus 05 §10). Claude misst, **du entscheidest** die Endwerte *(03 §13, 05 §1.2)*
 

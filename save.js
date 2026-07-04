@@ -6,7 +6,9 @@
 
 import { erstelleStartArsenal, HUETER_BASIS_HP, KLASSEN } from './data.js';
 
-export const SAVE_VERSION = 1; // [GESPERRT] Pflichtfeld, monoton steigend
+export const SAVE_VERSION = 2; // [GESPERRT] Pflichtfeld, monoton steigend
+// v2 (2026-07-04): + karte, positionKnotenId, hp, belohnungenOhneBlaupause,
+// entfernteWuerfel, troestenZahl (Etappe A3–A6, Karten-Run).
 export const SAVE_KEY = 'wuerfelhain_save'; // fester Key, Migration statt Save-Verlust (09 §3.3)
 
 // --- Neuen Run anlegen (Struktur 09 §3.1) -----------------------------------
@@ -22,10 +24,16 @@ export function erstelleNeuenSave(klasseId = 'eichwart', jetzt = () => new Date(
       arsenal: erstelleStartArsenal(klasseId),
       region: 1,
       knotenIndex: 0,
+      karte: null, // null = kein laufender Karten-Run (v2)
+      positionKnotenId: null,
+      hp: HUETER_BASIS_HP + KLASSEN[klasseId].hpMod,
       waehrungen: { muenzen: 0, eicheln: 0, tau: 0 },
       hainSegen: [],
       reifegrad: 0,
       uebermut: 0, // zwischen Knoten effektiv immer 0 (Rest kristallisiert in arsenal[].gemuet)
+      belohnungenOhneBlaupause: 0,
+      entfernteWuerfel: 0,
+      troestenZahl: 0,
       aktiveFluechte: [],
       sauberSiegStreak: 0,
     },
@@ -78,7 +86,21 @@ export function validiereSave(save) {
 // lückenlos sein (Test prüft).
 
 export const MIGRATIONEN = {
-  // 1: (save) => ({ ...save, saveVersion: 2, ... })  — erst ab SAVE_VERSION 2
+  // v1 → v2: Karten-Run-Felder ergänzen. karte: null bedeutet "kein laufender
+  // Run" — die UI startet dann eine frische Region mit dem geretteten Arsenal.
+  1: (save) => ({
+    ...save,
+    saveVersion: 2,
+    runState: {
+      ...save.runState,
+      karte: null,
+      positionKnotenId: null,
+      hp: save.runState.hp ?? null,
+      belohnungenOhneBlaupause: save.runState.belohnungenOhneBlaupause ?? 0,
+      entfernteWuerfel: 0,
+      troestenZahl: 0,
+    },
+  }),
 };
 
 export class SaveVersionsFehler extends Error {}

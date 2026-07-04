@@ -56,6 +56,14 @@
     .ph--wuerfel .position { position: absolute; top: 2px; left: 4px; font-size: 10px; font-weight: bold; }
 
     .ph--belohnung { background: color-mix(in srgb, var(--pergament) 80%, var(--tau)); }
+    .ph--karte { display: flex; flex-direction: column; gap: 8px; }
+    .karten-reihe { display: flex; justify-content: center; gap: 8px; }
+    .ph--knoten {
+      min-width: 88px; min-height: 40px; font: inherit; font-size: 11px;
+      cursor: default; opacity: 0.55;
+    }
+    .ph--knoten.waehlbar { cursor: pointer; opacity: 1; border-style: solid; border-width: 2px; }
+    .ph--knoten.aktuell { background: var(--tau); opacity: 1; }
     .picker { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
     .ph--seite {
       min-width: 56px; min-height: 44px; cursor: pointer; font: inherit;

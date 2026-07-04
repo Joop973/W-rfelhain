@@ -80,6 +80,21 @@ export function zieheBelohnungsoptionen(run, rng) {
   return optionen;
 }
 
+// Boss-Sonder-Belohnung: garantierte Blaupausen-Wahl (05 §6 Boss 1) —
+// 3 verschiedene Blaupausen; Segen-Alternative folgt mit dem Segen-System. [PROVISORISCH]
+export function zieheBossBelohnung(run, rng) {
+  const pool = [...SLICE_BLAUPAUSEN];
+  const optionen = [];
+  for (let i = 0; i < 3 && pool.length > 0; i += 1) {
+    const kandidaten = pool.map((id) => ({ id, gewicht: SELTENHEITS_GEWICHT[BLAUPAUSEN[id].seltenheit] }));
+    const { id } = gewichteteWahl(kandidaten, rng);
+    pool.splice(pool.indexOf(id), 1);
+    optionen.push({ typ: 'blaupause', blaupauseId: id, nameKey: BLAUPAUSEN[id].nameKey });
+  }
+  run.belohnungenOhneBlaupause = 0;
+  return optionen;
+}
+
 // --- Anwendung -------------------------------------------------------------------
 
 // Blaupause überschreibt alle 6 Seiten UND setzt alle Stufen zurück (04 §1.1/09 §2.2, gesperrt).

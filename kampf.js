@@ -15,28 +15,57 @@ import {
 } from './push.js';
 import { kampfbeginn, zieheHand, zugende } from './ziehstapel.js';
 import { GEGNER_VORLAGEN, KLASSEN, HUETER_BASIS_HP, ATEM_PRO_ZUG, erstelleStartArsenal } from './data.js';
-import { verdieneKampfBelohnung, zieheBelohnungsoptionen } from './belohnung.js';
+import { verdieneKampfBelohnung, zieheBelohnungsoptionen, zieheBossBelohnung } from './belohnung.js';
+import { generiereKarte } from './karte.js';
+import { TAU_PRO_REGION } from './knoten.js';
 
-export const KAEMPFE_PRO_REGION = 9; // [PROVISORISCH] Sim-Annahme, 05 §1.2
-export const HEILUNG_ZWISCHEN_KAEMPFEN = 8; // kalibrierte Stufe "mittel"
 const NORMALE_GEGNER = ['astbeisser', 'borkenkriecher', 'moosgnom'];
 const ELITE_GEGNER = 'dornalter';
+const BOSS_GEGNER = 'saumhueter';
 
 // --- Run --------------------------------------------------------------------
 
-export function starteRun(klasseId = 'eichwart') {
+export function starteRun(klasseId = 'eichwart', rng) {
   const hpMax = HUETER_BASIS_HP + KLASSEN[klasseId].hpMod;
   return {
     klasse: klasseId,
     arsenal: erstelleStartArsenal(klasseId),
     hp: hpMax,
     hpMax,
-    kampfNummer: 0, // abgeschlossene Kämpfe
-    waehrungen: { muenzen: 0, eicheln: 0, tau: 0 },
+    karte: generiereKarte(rng),
+    positionKnotenId: null, // vor Reihe 1
+    kampfNummer: 0, // abgeschlossene Kämpfe (Statistik)
+    waehrungen: { muenzen: 0, eicheln: 0, tau: TAU_PRO_REGION }, // Tau je Region (03 §8)
     belohnungenOhneBlaupause: 0, // Blaupause-Pity-Zähler (03 §10)
+    entfernteWuerfel: 0, // treibt die Entfernen-Preiseskalation (07 §3.3)
+    troestenZahl: 0, // run-weite Trösten-Ereignisse (01 §5)
     verloren: false,
-    abgeschlossen: false,
+    abgeschlossen: false, // Boss besiegt
   };
+}
+
+// --- Karten-Navigation (07 §1) -------------------------------------------------
+
+export function findeKnoten(run, knotenId) {
+  return run.karte.reihen.flat().find((k) => k.id === knotenId) ?? null;
+}
+
+// Wählbare Knoten: Reihe 1 am Start, danach die Kanten des aktuellen Knotens.
+export function verfuegbareKnoten(run) {
+  if (run.verloren || run.abgeschlossen) return [];
+  if (!run.positionKnotenId) return run.karte.reihen[0];
+  const aktuell = findeKnoten(run, run.positionKnotenId);
+  if (aktuell.reihe >= run.karte.reihen.length) return [];
+  const naechsteReihe = run.karte.reihen[aktuell.reihe]; // reihe ist 1-basiert
+  return naechsteReihe.filter((k) => aktuell.kanten.includes(k.slot));
+}
+
+// Betritt einen wählbaren Knoten; Kampf-Knoten startet der Aufrufer via starteKampf.
+export function betreteKnoten(run, knotenId) {
+  const knoten = verfuegbareKnoten(run).find((k) => k.id === knotenId);
+  if (!knoten) return null;
+  run.positionKnotenId = knoten.id;
+  return knoten;
 }
 
 // --- Gegner & Absicht (05 §4, minimaler Slice) --------------------------------
@@ -45,8 +74,19 @@ function zufallZwischen(rng, [min, max]) {
   return Math.round(min + rng.naechsteZahl() * (max - min));
 }
 
-function naechsteAbsicht(gegner) {
-  const muster = gegner.absichtsMuster;
+export function naechsteAbsicht(gegner) {
+  // Boss-Twist "Erste Geduld" (05 §6): jede dritte Boss-Runde zwingend Block.
+  if (gegner.mechanikIds?.includes('erste_geduld') && gegner.zyklus % 3 === 2) {
+    return { typ: 'block', wert: gegner.schaden, angekuendigt: true };
+  }
+  let muster = gegner.absichtsMuster;
+  // Boss-Phasen (05 §6): unter der HP-Schwelle wechselt das Muster.
+  if (gegner.phasen) {
+    for (const phase of gegner.phasen) {
+      if (gegner.hp / gegner.hpMax <= phase.abHpAnteil) muster = phase.absichtsMuster;
+    }
+  }
+  if (muster === 'waechter_mehrfach') muster = 'waechter'; // mehrfach-Treffer folgen mit Etappe B
   const zyklus = gegner.zyklus;
   if (muster === 'waechter') {
     // blockt zuerst, schlägt dann (05 §4) — Block halbiert eingehenden Schaden.
@@ -68,10 +108,13 @@ function baueGegner(vorlageId, rng) {
   const gegner = {
     vorlageId,
     nameKey: vorlage.nameKey,
+    rolle: vorlage.rolle,
     hp,
     hpMax: hp,
     schaden: zufallZwischen(rng, vorlage.schadenBereich),
     absichtsMuster: vorlage.absichtsMuster,
+    mechanikIds: vorlage.mechanikIds ?? [],
+    phasen: vorlage.phasen ?? null,
     zyklus: 0,
     absicht: null,
   };
@@ -81,11 +124,14 @@ function baueGegner(vorlageId, rng) {
 
 // --- Kampf --------------------------------------------------------------------
 
-export function starteKampf(run, rng) {
-  const istElite = run.kampfNummer === KAEMPFE_PRO_REGION - 1;
-  const vorlageId = istElite
-    ? ELITE_GEGNER
-    : NORMALE_GEGNER[Math.floor(rng.naechsteZahl() * NORMALE_GEGNER.length)];
+// knotenTyp: 'kampf' | 'elite' | 'boss' (aus dem betretenen Karten-Knoten).
+export function starteKampf(run, rng, knotenTyp = 'kampf') {
+  const vorlageId =
+    knotenTyp === 'boss'
+      ? BOSS_GEGNER
+      : knotenTyp === 'elite'
+        ? ELITE_GEGNER
+        : NORMALE_GEGNER[Math.floor(rng.naechsteZahl() * NORMALE_GEGNER.length)];
   return {
     zieh: kampfbeginn(run.arsenal.map((w) => w.id), rng), // Übermut-Reset implizit unten
     gegner: baueGegner(vorlageId, rng),
@@ -290,18 +336,17 @@ function beendeKampf(run, kampf, sieg, rng) {
   kampf.kristallisiert = kampf.uebermut;
   kampf.phase = 'sieg';
 
-  const warElite = GEGNER_VORLAGEN[kampf.gegner.vorlageId].rolle === 'elite';
+  const rolle = kampf.gegner.rolle;
   kampf.belohnung = {
-    einkommen: verdieneKampfBelohnung(run, rng, { elite: warElite }),
-    optionen: zieheBelohnungsoptionen(run, rng),
+    einkommen: verdieneKampfBelohnung(run, rng, { elite: rolle !== 'normal' }),
+    // Boss-Sonder-Belohnung: garantierte Blaupausen-Wahl (05 §6).
+    optionen: rolle === 'boss' ? zieheBossBelohnung(run, rng) : zieheBelohnungsoptionen(run, rng),
   };
 
   run.kampfNummer += 1;
-  if (run.kampfNummer >= KAEMPFE_PRO_REGION) {
-    run.abgeschlossen = true;
-  } else {
-    run.hp = Math.min(run.hpMax, run.hp + HEILUNG_ZWISCHEN_KAEMPFEN);
-  }
+  if (rolle === 'boss') run.abgeschlossen = true; // Region 1 geschafft
+  // Keine Auto-Heilung mehr — Heilung ist strukturell (Lagerfeuer, 07 §1.3);
+  // Nach-Eichung der Schwierigkeit gegen die neue Struktur ist Etappe A8.
 }
 
 // --- Anzeige-Helfer (rein lesend) ----------------------------------------------
