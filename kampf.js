@@ -4,7 +4,7 @@
 // Slice-Umfang: Region-1-Sequenz (9 Kämpfe, Kampf 9 = Elite), Werte aus der
 // kalibrierten Stufe "mittel" (docs/Welle1_Tor_ReRun_12er_Befund.md).
 
-import { resolveZug } from './engine.js';
+import { resolveZug, welkMult } from './engine.js';
 import {
   schreck,
   bestimmeGesperrteSeitenIndizes,
@@ -13,6 +13,7 @@ import {
   verarbeiteKampfende,
   TISCHSTURZ_SELBSTSCHADEN,
 } from './push.js';
+import { leererStatus, tickeFaeule, tickeBrand, decayRundenende, legeStatusAuf } from './status.js';
 import { kampfbeginn, zieheHand, zugende } from './ziehstapel.js';
 import { GEGNER_VORLAGEN, KLASSEN, HUETER_BASIS_HP, ATEM_PRO_ZUG, erstelleStartArsenal } from './data.js';
 import { verdieneKampfBelohnung, zieheBelohnungsoptionen, zieheBossBelohnung } from './belohnung.js';
@@ -115,6 +116,7 @@ function baueGegner(vorlageId, rng) {
     absichtsMuster: vorlage.absichtsMuster,
     mechanikIds: vorlage.mechanikIds ?? [],
     phasen: vorlage.phasen ?? null,
+    status: leererStatus(), // vom Spieler auflegbare Status (Fäule/Brand/Morsch/Welk)
     zyklus: 0,
     absicht: null,
   };
@@ -143,6 +145,7 @@ export function starteKampf(run, rng, knotenTyp = 'kampf') {
     reihe: [], // platzierte Würfel-IDs, links→rechts
     atem: 0,
     block: 0,
+    spielerStatus: leererStatus(), // vom Gegner auflegbare Status + Selbst-Buffs (Kraft)
     hpBeiKampfbeginn: run.hp,
     tischsturzImKampf: false,
     gespielteImKampf: [],
@@ -166,6 +169,16 @@ function wirf(wuerfel, rng) {
 
 // Zugbeginn: 5 frisch ziehen, werfen (Schreck-Sperrung greift vor dem Wurf).
 export function beginneZug(run, kampf, rng) {
+  // Rundenbeginn-Status: eigene Fäule tickt (02 §2.2 Schritt 1).
+  const faeuleSchaden = tickeFaeule(kampf.spielerStatus);
+  if (faeuleSchaden > 0) {
+    run.hp -= faeuleSchaden;
+    if (run.hp <= 0) {
+      run.verloren = true;
+      kampf.phase = 'niederlage';
+      return kampf;
+    }
+  }
   kampf.zugNummer += 1;
   kampf.rerollsDiesenZug = 0;
   kampf.atem = ATEM_PRO_ZUG;
@@ -229,51 +242,81 @@ export function nimmZurueck(run, kampf, wuerfelId) {
 }
 
 // Auflösen L→R (02 §4), dann Hand ablegen. Baut das Paket aus den tatsächlich
-// gefallenen Seiten-Effekten — Gravur-Seiten (z. B. Wucht-Mult) wirken damit.
+// gefallenen Seiten-Effekten: Schaden/Rinde/Mult, Status-Auflage (Fäule/Brand/
+// Morsch/Welk/Kraft), Glanz-Verdopplung und Riss-Aussetzer (02 §8).
 export function loeseZugAuf(run, kampf, rng) {
   if (kampf.phase !== 'zug') return null;
   const passiv = KLASSEN[run.klasse].passiv;
   const passivWert = passiv.typ === 'schaden_flach' ? passiv.wert : 0;
+  const spielerKraft = kampf.spielerStatus.kraft; // gilt für alle Schaden-Seiten dieses Zugs
 
   const gespielteSeiten = [];
+  const auflage = { morsch: 0, welk: 0, kraft: 0 }; // Pool-fremde Status (resolveZug ignoriert sie)
+  let pendingGlanz = false;
+  let aussetzer = 0;
+
   for (const id of kampf.reihe) {
     const w = findeWuerfel(run, id);
     const seite = w.seiten[kampf.wuerfe[id].seitenIndex];
     const hoechstwert = Math.max(...w.seiten.map((s) => s.wert));
     for (const effekt of seite.effekt) {
       if (effekt.typ === 'schaden') {
+        // Riss: 25 % Zünd-Aussetzer je gespielter Seite (02 §8.1) — Seite zählt 0.
+        if (kampf.spielerStatus.riss > 0 && rng.naechsteZahl() < 0.25) {
+          aussetzer += 1;
+          continue;
+        }
         gespielteSeiten.push({
           typ: 'schaden',
           effektiverWert: effekt.wert,
           vollmondWert: effekt.wert,
           hoechstwert,
-          kraft: 0,
+          kraft: spielerKraft,
           passiv: passivWert,
+          glanz: pendingGlanz, // Glanz verdoppelt die nächste gespielte Schaden-Seite
         });
+        pendingGlanz = false;
       } else if (effekt.typ === 'rinde') {
         gespielteSeiten.push({ typ: 'rinde', effektiverWert: effekt.wert, hoechstwert });
       } else if (effekt.typ === 'schaden_mult') {
         // Mult-Seite: multipliziert den Pool, ist selbst keine Schaden-Seite (kein Passiv).
-        gespielteSeiten.push({
-          typ: 'schaden',
-          effektiverWert: 0,
-          vollmondWert: 0,
-          hoechstwert,
-          kraft: 0,
-          passiv: 0,
-          mult: effekt.wert,
-        });
+        gespielteSeiten.push({ typ: 'schaden', effektiverWert: 0, vollmondWert: 0, hoechstwert, kraft: 0, passiv: 0, mult: effekt.wert });
+      } else if (effekt.typ === 'faeule' || effekt.typ === 'brand') {
+        // resolveZug summiert diese als Pool = Auflege-Menge; bricht Vollmond.
+        gespielteSeiten.push({ typ: effekt.typ, stapel: effekt.wert, hoechstwert });
+      } else if (effekt.typ === 'glanz') {
+        gespielteSeiten.push({ typ: 'glanz', hoechstwert }); // Nicht-Schaden-Seite: bricht Vollmond
+        pendingGlanz = true;
+      } else if (effekt.typ === 'morsch' || effekt.typ === 'welk' || effekt.typ === 'kraft') {
+        gespielteSeiten.push({ typ: effekt.typ, hoechstwert }); // bricht Vollmond, kein Pool
+        auflage[effekt.typ] += effekt.wert;
       }
-      // Weitere Effekt-Typen (Status, Echo, Glanz, …) folgen mit Etappe B.
+      // Echo/Beruhigung/Ermutigung folgen mit B3/B5.
     }
   }
 
-  const pools = resolveZug(gespielteSeiten, { morschStapel: 0, welkStapel: 0, region: 1 });
+  // Morsch dieses Zugs boostet bereits diesen Zug (einmaliger Pool-Mult), Cap 4.
+  // Welk auf dem Spieler (vom Gegner) senkt den eigenen Pool; Spieler-Welk trifft den Gegner.
+  const morschStapel = Math.min(4, kampf.gegner.status.morsch + auflage.morsch);
+  const welkStapel = kampf.spielerStatus.welk;
+  const pools = resolveZug(gespielteSeiten, { morschStapel, welkStapel, region: 1 });
+
+  // Status-Auflage auf den Gegner (Fäule/Brand/Morsch/Welk) bzw. Spieler (Kraft-Selbst-Buff).
+  if (pools.faeule > 0) legeStatusAuf(kampf.gegner.status, 'faeule', pools.faeule);
+  if (pools.brand > 0) legeStatusAuf(kampf.gegner.status, 'brand', pools.brand);
+  if (auflage.morsch > 0) legeStatusAuf(kampf.gegner.status, 'morsch', auflage.morsch);
+  if (auflage.welk > 0) legeStatusAuf(kampf.gegner.status, 'welk', auflage.welk);
+  if (auflage.kraft > 0) legeStatusAuf(kampf.spielerStatus, 'kraft', auflage.kraft);
 
   // Gegner-Block halbiert eingehenden Schaden (Slice-Minimal, 05 §4 Wächter).
   const effektiverSchaden = kampf.gegner.absicht.typ === 'block' ? Math.floor(pools.schaden / 2) : pools.schaden;
   kampf.gegner.hp = Math.max(0, kampf.gegner.hp - effektiverSchaden);
   kampf.block = pools.rinde;
+  kampf.aussetzer = aussetzer;
+
+  // Zugende-Status: eigener Brand tickt (02 §2.2 Schritt 8).
+  const brandSpieler = tickeBrand(kampf.spielerStatus);
+  if (brandSpieler > 0) run.hp -= brandSpieler;
 
   kampf.zuletztGespielteIds = [...kampf.reihe];
   for (const id of kampf.reihe) {
@@ -283,7 +326,10 @@ export function loeseZugAuf(run, kampf, rng) {
   kampf.hand = [];
   kampf.reihe = [];
 
-  if (kampf.gegner.hp <= 0) {
+  if (run.hp <= 0) {
+    run.verloren = true;
+    kampf.phase = 'niederlage';
+  } else if (kampf.gegner.hp <= 0) {
     beendeKampf(run, kampf, true, rng);
   } else {
     kampf.phase = 'gegnerzug';
@@ -291,16 +337,46 @@ export function loeseZugAuf(run, kampf, rng) {
   return pools;
 }
 
-// Gegnerzug: angekündigte Absicht ausführen; Rinde fängt Schaden, keinen Status (02 §2.3).
-export function fuehreGegnerzugAus(run, kampf) {
+// Gegnerzug: Fäule (Zug-Beginn) → Angriff (Kraft/Welk-moduliert) → Brand (Zug-Ende)
+// → Rundenende-Decay. Rinde fängt Angriffsschaden, keinen Status (02 §2.3/§8).
+export function fuehreGegnerzugAus(run, kampf, rng) {
   if (kampf.phase !== 'gegnerzug') return null;
+  const status = kampf.gegner.status;
+
+  // Gegnerzug-Beginn: Fäule tickt auf dem Gegner (kann ihn töten).
+  const faeule = tickeFaeule(status);
+  if (faeule > 0) {
+    kampf.gegner.hp = Math.max(0, kampf.gegner.hp - faeule);
+    if (kampf.gegner.hp <= 0) {
+      beendeKampf(run, kampf, true, rng);
+      return { erlitten: 0, faeule, brand: 0, besiegt: true };
+    }
+  }
+
+  // Gegner handelt: Kraft-Buff hebt, Welk-Debuff senkt den Angriffswert (02 §8).
   const { absicht } = kampf.gegner;
   let erlitten = 0;
   if (absicht.typ === 'angriff') {
-    erlitten = Math.max(0, absicht.wert - kampf.block);
+    const roh = Math.floor((absicht.wert + status.kraft) * welkMult(status.welk));
+    erlitten = Math.max(0, roh - kampf.block);
     run.hp -= erlitten;
   }
   kampf.block = 0; // Rinde verfällt (02 §2.2 Schritt 9)
+
+  // Gegnerzug-Ende: Brand tickt (kann ihn töten).
+  const brand = tickeBrand(status);
+  if (brand > 0) {
+    kampf.gegner.hp = Math.max(0, kampf.gegner.hp - brand);
+    if (kampf.gegner.hp <= 0) {
+      beendeKampf(run, kampf, true, rng);
+      return { erlitten, faeule, brand, besiegt: true };
+    }
+  }
+
+  // Rundenende-Decay beider Seiten (02 §2.4).
+  decayRundenende(status);
+  decayRundenende(kampf.spielerStatus);
+
   kampf.gegner.zyklus += 1;
   kampf.gegner.absicht = naechsteAbsicht(kampf.gegner);
 
@@ -310,7 +386,7 @@ export function fuehreGegnerzugAus(run, kampf) {
   } else {
     kampf.phase = 'zug';
   }
-  return { erlitten };
+  return { erlitten, faeule, brand };
 }
 
 // Kampfende: erst Sauberer-Sieg-Bonus, dann Kristallisation (02 §2.5/§7.3),

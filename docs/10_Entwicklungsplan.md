@@ -51,7 +51,7 @@ Ziel: kompletter Region-1-Run mit Karte, Belohnungen, Händlern, Boss, Save — 
 
 Ziel: alle Systeme voll aktiv, mehrere Build-Pfade. Endet mit **Balance-Tor 2**.
 
-- [ ] **B1 [C] Status-Set voll im Kampf**: Fäule/Brand-Ticks, Morsch/Welk-Stapel + Decay, Kraft, Riss (25 %-Aussetzer), Glanz — Engine kann die Mathe schon, `kampf.js` braucht Status-State + Tick-Timing *(02 §2)*
+- [x] **B1 [C] Status-Set voll im Kampf**: Fäule/Brand-Ticks (Zug-Beginn/-Ende, DoT-Tod → Sieg), Morsch/Welk-Stapel + Decay, Kraft-Selbst-Buff, Riss (25 %-Aussetzer), Glanz-Verdopplung — neues Modul `status.js`, in `kampf.js` verdrahtet; Slice-Gravuren um Gift/Zunder/Fäulnis-Hauch/Dürre-Hauch/Markhärtung/Glanz erweitert; Status-Badges in der UI *(02 §2/§8)* — 2026-07-04
 - [ ] **B2 [C] Eigen-Status**: Wetzung/Scharte (effektiver Wert im Wurf), Freilauf/Klemme (Reroll-Ökonomie — `rerollKosten` kann es schon), `eigenStatus`-Slot im Kampf-State *(09 §2.11)*
 - [ ] **B3 [C] Combos komplett spielbar**: Echo-/Glanz-Seiten als Gravuren im Loop, Vollmond-Prüfung mit echten Höchstwerten, Gleichklang-Anzeige in der UI
 - [ ] **B4 [C] Alle 16 Blaupausen anwendbar** (Slice-Sperre aufheben), inkl. Quell/Labung- und Hort/Prägung-Engines

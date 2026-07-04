@@ -308,9 +308,14 @@ export const GRAVUREN = {
 // Gravur-Typ-Wechsel: Aufpreis-Default +50 % auf Stufe-1-Preis (04 §3.2) [PROVISORISCH]
 export const GRAVUR_WECHSEL_AUFPREIS_FAKTOR = 1.5;
 
-// Welle-2-Slice: nur Gravuren, deren Effekte der Kampf-Loop schon ausführen
-// kann (Mult/Wert-Aufschlag). Status-Gravuren folgen mit Etappe B. [PROVISORISCH]
-export const SLICE_GRAVUREN = ['wucht', 'schaerfe', 'borke'];
+// Slice-Gravuren, deren Effekte der Kampf-Loop ausführen kann: Mult/Aufschlag
+// (Wucht/Schärfe/Borke) + Status/Glanz seit Etappe B1 (Gift/Zunder/Fäulnis-Hauch/
+// Dürre-Hauch/Markhärtung/Glanz). Echo/Beruhigung/Ermutigung/Doppelschlag/
+// Bruchstelle folgen mit B3/B5. [PROVISORISCH]
+export const SLICE_GRAVUREN = [
+  'wucht', 'schaerfe', 'borke',
+  'gift', 'zunder', 'faeulnis_hauch', 'duerre_hauch', 'markhaertung', 'glanz_gravur',
+];
 
 // --- Blaupausen (04 §4, Schema 09 §2.3) ---------------------------------------
 // Effekt-Seiten-Stapelmengen sind [PROVISORISCH] (04 §1.1 — je Blaupause offen).

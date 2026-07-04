@@ -110,13 +110,23 @@ export function wendeBlaupauseAn(wuerfel, blaupauseId) {
   return wuerfel;
 }
 
+// Gravur-Seiten drei Kategorien (09 §2.1 / 04 §3):
+// - schaden_mult (Wucht): reine Mult-Seite, Wert 0.
+// - schaden/rinde (Schärfe/Borke): fester Aufschlag auf den ursprünglichen Seitenwert.
+// - alles Übrige (Gift/Zunder/Fäulnis/Dürre/Kraft/Glanz/…): reine Effekt-Seite,
+//   Wert 0, der Effekt trägt die Menge (Status-Stapel bzw. Glanz-Marker).
+const AUFSCHLAG_TYPEN = new Set(['schaden', 'rinde']);
+
 function baueGravurSeite(gravur, effektWert, basisWert) {
-  if (gravur.ueberschreibtZu === 'schaden_mult') {
+  const typ = gravur.ueberschreibtZu;
+  if (typ === 'schaden_mult') {
     return { wert: 0, basisWert, gravurId: gravur.id, effekt: [{ typ: 'schaden_mult', wert: effektWert }] };
   }
-  // Schärfe/Borke: fester Aufschlag auf den ursprünglichen Seitenwert (04 §3.2).
-  const wert = basisWert + effektWert;
-  return { wert, basisWert, gravurId: gravur.id, effekt: [{ typ: gravur.ueberschreibtZu, wert }] };
+  if (AUFSCHLAG_TYPEN.has(typ)) {
+    const wert = basisWert + effektWert;
+    return { wert, basisWert, gravurId: gravur.id, effekt: [{ typ, wert }] };
+  }
+  return { wert: 0, basisWert, gravurId: gravur.id, effekt: [{ typ, wert: effektWert }] };
 }
 
 // Gleiche Gravur auf gravierter Seite → Stufe +1 (Cap 3); andere Gravur →

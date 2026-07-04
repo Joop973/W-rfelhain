@@ -186,11 +186,17 @@ function klickAufloesen() {
 }
 
 function klickGegnerzug() {
-  const ergebnis = fuehreGegnerzugAus(run, kampf);
+  const ergebnis = fuehreGegnerzugAus(run, kampf, rng);
   if (!ergebnis) return;
-  letztesEreignis = ergebnis.erlitten > 0
-    ? `Der Gegner trifft für ${ergebnis.erlitten}.`
-    : 'Der Gegner holt aus — kein Schaden durchgedrungen.';
+  const dot = (ergebnis.faeule || 0) + (ergebnis.brand || 0);
+  if (ergebnis.besiegt) {
+    letztesEreignis = 'Der Status frisst den Gegner auf — besiegt.';
+  } else {
+    letztesEreignis = ergebnis.erlitten > 0
+      ? `Der Gegner trifft für ${ergebnis.erlitten}.`
+      : 'Der Gegner holt aus — kein Schaden durchgedrungen.';
+    if (dot > 0) letztesEreignis += ` (Status: ${dot} an den Gegner.)`;
+  }
   if (kampf.phase === 'zug') beginneZug(run, kampf, rng);
   render();
 }
@@ -397,6 +403,15 @@ function belohnungsPanel() {
     </section>`;
 }
 
+const STATUS_ICON = { faeule: '☣', brand: '🔥', morsch: '💢', welk: '🥀', kraft: '💪', riss: '⚡' };
+
+function statusBadges(status) {
+  return Object.entries(STATUS_ICON)
+    .filter(([typ]) => status[typ] > 0)
+    .map(([typ, icon]) => `<span class="badge" title="${typ}">${icon}${status[typ]}</span>`)
+    .join(' ');
+}
+
 function renderKampf() {
   const belohnungOffen = kampf.phase === 'sieg' && kampf.belohnung && !kampf.belohnung.erledigt;
   const g = kampf.gegner;
@@ -406,6 +421,7 @@ function renderKampf() {
       <strong>${uebersetze(g.nameKey)}</strong>
       <div class="balken"><div class="balken-fuellung" style="width:${(g.hp / g.hpMax) * 100}%"></div></div>
       <span>${g.hp} / ${g.hpMax} HP · Absicht: ${absichtText}</span>
+      ${statusBadges(g.status) ? `<div class="badges">${statusBadges(g.status)}</div>` : ''}
     </section>
     <section class="status">
       <span>❤ ${run.hp}/${run.hpMax}</span>
@@ -413,6 +429,7 @@ function renderKampf() {
       <span>Rinde ${kampf.block}</span>
       <span class="${kampf.uebermut >= KIPP_PUNKT ? 'warnung' : ''}">Übermut ${pips(KIPP_PUNKT, kampf.uebermut, 'Übermut')}</span>
       <span>🪙 ${run.waehrungen.muenzen} · 🌰 ${run.waehrungen.eicheln}</span>
+      ${statusBadges(kampf.spielerStatus) ? `<span class="badges">${statusBadges(kampf.spielerStatus)}</span>` : ''}
     </section>
     <section class="hand">${kampf.hand.map((id) => wuerfelBox(id)).join('')}</section>
     ${belohnungOffen ? belohnungsPanel() : ''}
