@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Würfelhain — Kampf-Slice</title>
+  <link rel="icon" href="data:,">
+  <style>
+    /* Rollen-Slots (08 §1.4) + Welk-Stufen-MVP via Filter (08 §3.4 Variante C). */
+    #hain {
+      --holz: #8a5a3b; --rinde: #3d2a1e; --laub: #6a8f3c; --tau: #7fb7c4;
+      --glut: #c8552e; --pergament: #e8dcc0; --tinte: #2a2018;
+    }
+    #hain.welk-1 { filter: saturate(0.85); }
+    #hain.welk-2 { filter: saturate(0.7) sepia(0.15); }
+    #hain.welk-3 { filter: saturate(0.5) sepia(0.25); }
+    #hain.welk-4 { filter: saturate(0.3) sepia(0.2) brightness(0.95); }
+    #hain.welk-5 { filter: saturate(0.1) brightness(0.9); }
+
+    * { box-sizing: border-box; margin: 0; }
+    body { background: var(--rinde, #3d2a1e); display: flex; justify-content: center; }
+    #hain {
+      width: 100%; max-width: 448px; min-height: 100vh;
+      background: var(--holz); color: var(--tinte);
+      font: 14px/1.4 monospace; padding: 12px; image-rendering: pixelated;
+    }
+    h1 { font-size: 16px; color: var(--pergament); margin-bottom: 8px; }
+    section { margin-bottom: 10px; }
+
+    /* Platzhalter-Konvention (08 §4.0): beschriftete Boxen, keine fertige Kunst. */
+    .ph { border: 1px dashed var(--tinte); background: var(--pergament); padding: 6px; }
+    .ph--gegner { text-align: center; }
+    .ph--log { min-height: 2.8em; font-style: italic; }
+    .ph--ende { text-align: center; padding: 24px 12px; }
+
+    .balken { height: 8px; background: var(--rinde); margin: 4px 0; }
+    .balken-fuellung { height: 100%; background: var(--glut); transition: width 0.2s; }
+
+    .status { display: flex; flex-wrap: wrap; gap: 10px; color: var(--pergament); }
+    .status .warnung { color: var(--glut); font-weight: bold; }
+    .pips { letter-spacing: 2px; }
+
+    .hand { display: flex; flex-wrap: wrap; gap: 6px; }
+    .ph--wuerfel {
+      position: relative; width: 72px; height: 72px; cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      font: inherit;
+    }
+    .ph--wuerfel .wert { font-size: 22px; font-weight: bold; }
+    .ph--wuerfel .label { font-size: 8px; }
+    .ph--wuerfel.typ-rinde { background: color-mix(in srgb, var(--pergament) 70%, var(--laub)); }
+    .ph--wuerfel.stimmung-froh { outline: 2px solid var(--tau); }
+    .ph--wuerfel.stimmung-aengstlich { outline: 2px solid var(--glut); opacity: 0.85; }
+    .ph--wuerfel.platziert { border-style: solid; border-width: 2px; background: var(--tau); }
+    .ph--wuerfel .gesperrt { position: absolute; top: 2px; right: 2px; font-size: 9px; }
+    .ph--wuerfel .position { position: absolute; top: 2px; left: 4px; font-size: 10px; font-weight: bold; }
+
+    .aktionen { display: flex; gap: 8px; }
+    button:not(.ph--wuerfel) {
+      font: inherit; padding: 8px 12px; cursor: pointer;
+      background: var(--pergament); border: 1px solid var(--tinte); color: var(--tinte);
+    }
+    button:disabled { opacity: 0.45; cursor: default; }
+  </style>
+</head>
+<body>
+  <div id="hain" class="welk-0">
+    <h1>Würfelhain — Saumhain (Kampf-Slice)</h1>
+    <div id="spiel"></div>
+  </div>
+  <script type="module" src="ui/main.js"></script>
+</body>
+</html>
