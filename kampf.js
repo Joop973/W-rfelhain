@@ -15,6 +15,7 @@ import {
 } from './push.js';
 import { kampfbeginn, zieheHand, zugende } from './ziehstapel.js';
 import { GEGNER_VORLAGEN, KLASSEN, HUETER_BASIS_HP, ATEM_PRO_ZUG, erstelleStartArsenal } from './data.js';
+import { verdieneKampfBelohnung, zieheBelohnungsoptionen } from './belohnung.js';
 
 export const KAEMPFE_PRO_REGION = 9; // [PROVISORISCH] Sim-Annahme, 05 §1.2
 export const HEILUNG_ZWISCHEN_KAEMPFEN = 8; // kalibrierte Stufe "mittel"
@@ -31,6 +32,8 @@ export function starteRun(klasseId = 'eichwart') {
     hp: hpMax,
     hpMax,
     kampfNummer: 0, // abgeschlossene Kämpfe
+    waehrungen: { muenzen: 0, eicheln: 0, tau: 0 },
+    belohnungenOhneBlaupause: 0, // Blaupause-Pity-Zähler (03 §10)
     verloren: false,
     abgeschlossen: false,
   };
@@ -106,10 +109,13 @@ function findeWuerfel(run, id) {
   return run.arsenal.find((w) => w.id === id);
 }
 
+// Wirft einen Würfel und liefert den gefallenen Seiten-INDEX — der Index ist
+// nötig, damit Gravur-Seiten (Effekt-Liste) in der Auflösung wirken können.
 function wirf(wuerfel, rng) {
   const gesperrt = new Set(bestimmeGesperrteSeitenIndizes(wuerfel));
   const frei = [0, 1, 2, 3, 4, 5].filter((i) => !gesperrt.has(i));
-  return wuerfel.seiten[frei[Math.floor(rng.naechsteZahl() * frei.length)]].wert;
+  const seitenIndex = frei[Math.floor(rng.naechsteZahl() * frei.length)];
+  return { seitenIndex, wert: wuerfel.seiten[seitenIndex].wert };
 }
 
 // Zugbeginn: 5 frisch ziehen, werfen (Schreck-Sperrung greift vor dem Wurf).
@@ -176,24 +182,45 @@ export function nimmZurueck(run, kampf, wuerfelId) {
   return true;
 }
 
-// Auflösen L→R (02 §4), dann Hand ablegen.
-export function loeseZugAuf(run, kampf) {
+// Auflösen L→R (02 §4), dann Hand ablegen. Baut das Paket aus den tatsächlich
+// gefallenen Seiten-Effekten — Gravur-Seiten (z. B. Wucht-Mult) wirken damit.
+export function loeseZugAuf(run, kampf, rng) {
   if (kampf.phase !== 'zug') return null;
   const passiv = KLASSEN[run.klasse].passiv;
   const passivWert = passiv.typ === 'schaden_flach' ? passiv.wert : 0;
 
-  const gespielteSeiten = kampf.reihe.map((id) => {
+  const gespielteSeiten = [];
+  for (const id of kampf.reihe) {
     const w = findeWuerfel(run, id);
-    const wert = kampf.wuerfe[id];
-    return {
-      typ: w.typ === 'schaden' ? 'schaden' : 'rinde',
-      effektiverWert: wert,
-      vollmondWert: wert,
-      hoechstwert: Math.max(...w.seiten.map((s) => s.wert)),
-      kraft: 0,
-      passiv: w.typ === 'schaden' ? passivWert : 0,
-    };
-  });
+    const seite = w.seiten[kampf.wuerfe[id].seitenIndex];
+    const hoechstwert = Math.max(...w.seiten.map((s) => s.wert));
+    for (const effekt of seite.effekt) {
+      if (effekt.typ === 'schaden') {
+        gespielteSeiten.push({
+          typ: 'schaden',
+          effektiverWert: effekt.wert,
+          vollmondWert: effekt.wert,
+          hoechstwert,
+          kraft: 0,
+          passiv: passivWert,
+        });
+      } else if (effekt.typ === 'rinde') {
+        gespielteSeiten.push({ typ: 'rinde', effektiverWert: effekt.wert, hoechstwert });
+      } else if (effekt.typ === 'schaden_mult') {
+        // Mult-Seite: multipliziert den Pool, ist selbst keine Schaden-Seite (kein Passiv).
+        gespielteSeiten.push({
+          typ: 'schaden',
+          effektiverWert: 0,
+          vollmondWert: 0,
+          hoechstwert,
+          kraft: 0,
+          passiv: 0,
+          mult: effekt.wert,
+        });
+      }
+      // Weitere Effekt-Typen (Status, Echo, Glanz, …) folgen mit Etappe B.
+    }
+  }
 
   const pools = resolveZug(gespielteSeiten, { morschStapel: 0, welkStapel: 0, region: 1 });
 
@@ -211,7 +238,7 @@ export function loeseZugAuf(run, kampf) {
   kampf.reihe = [];
 
   if (kampf.gegner.hp <= 0) {
-    beendeKampf(run, kampf, true);
+    beendeKampf(run, kampf, true, rng);
   } else {
     kampf.phase = 'gegnerzug';
   }
@@ -240,8 +267,9 @@ export function fuehreGegnerzugAus(run, kampf) {
   return { erlitten };
 }
 
-// Kampfende: erst Sauberer-Sieg-Bonus, dann Kristallisation (02 §2.5/§7.3).
-function beendeKampf(run, kampf, sieg) {
+// Kampfende: erst Sauberer-Sieg-Bonus, dann Kristallisation (02 §2.5/§7.3),
+// danach Einkommen + Belohnungs-Ziehung (A1).
+function beendeKampf(run, kampf, sieg, rng) {
   if (!sieg) {
     kampf.phase = 'niederlage';
     run.verloren = true;
@@ -261,6 +289,12 @@ function beendeKampf(run, kampf, sieg) {
   kampf.sauberSieg = sauberSieg;
   kampf.kristallisiert = kampf.uebermut;
   kampf.phase = 'sieg';
+
+  const warElite = GEGNER_VORLAGEN[kampf.gegner.vorlageId].rolle === 'elite';
+  kampf.belohnung = {
+    einkommen: verdieneKampfBelohnung(run, rng, { elite: warElite }),
+    optionen: zieheBelohnungsoptionen(run, rng),
+  };
 
   run.kampfNummer += 1;
   if (run.kampfNummer >= KAEMPFE_PRO_REGION) {

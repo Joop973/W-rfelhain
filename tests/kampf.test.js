@@ -16,16 +16,16 @@ import {
   KAEMPFE_PRO_REGION,
 } from '../kampf.js';
 
-function spieleZugAuto(run, kampf) {
+function spieleZugAuto(run, kampf, rng) {
   // Platziert die 3 höchsten Schaden-Würfe (greedy, kein Reroll).
   const kandidaten = kampf.hand
     .filter((id) => run.arsenal.find((w) => w.id === id).typ === 'schaden')
-    .sort((a, b) => kampf.wuerfe[b] - kampf.wuerfe[a]);
+    .sort((a, b) => kampf.wuerfe[b].wert - kampf.wuerfe[a].wert);
   for (const id of kandidaten) {
     if (kampf.atem <= 0) break;
     platziere(run, kampf, id);
   }
-  return loeseZugAuf(run, kampf);
+  return loeseZugAuf(run, kampf, rng);
 }
 
 test('Kampf startet regelkonform: Hand 5, Atem 3, Absicht angekündigt, Invariante hält', () => {
@@ -87,7 +87,7 @@ test('Kristallisation bei Kampfende: Rest-Übermut wird Schreck auf zuletzt gesp
   kampf.uebermut = 4; // bezahlte Rerolls simuliert
   run.hp -= 1; // HP-Verlust → kein sauberer Sieg, kein +1-Gegenverrechnen
 
-  spieleZugAuto(run, kampf);
+  spieleZugAuto(run, kampf, rng);
 
   assert.equal(kampf.phase, 'sieg');
   assert.equal(kampf.sauberSieg, false);
@@ -101,7 +101,7 @@ test('sauberer Sieg ohne HP-Verlust: +1 Gemüt nur auf gespielte Würfel', () =>
   const kampf = starteKampf(run, rng);
   kampf.gegner.hp = 1;
   beginneZug(run, kampf, rng);
-  spieleZugAuto(run, kampf);
+  spieleZugAuto(run, kampf, rng);
 
   assert.equal(kampf.phase, 'sieg');
   assert.equal(kampf.sauberSieg, true);
@@ -122,7 +122,7 @@ test('kompletter Run terminiert: 9 Kämpfe greedy durchgespielt', () => {
     while (kampf.phase === 'zug' || kampf.phase === 'gegnerzug') {
       if (kampf.phase === 'zug') {
         beginneZug(run, kampf, rng);
-        spieleZugAuto(run, kampf);
+        spieleZugAuto(run, kampf, rng);
       } else {
         fuehreGegnerzugAus(run, kampf);
       }

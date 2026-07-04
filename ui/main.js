@@ -17,11 +17,14 @@ import {
   arsenalSchreckSumme,
   KAEMPFE_PRO_REGION,
 } from '../kampf.js';
+import { wendeBelohnungAn } from '../belohnung.js';
 
 const rng = new RNG((Date.now() >>> 0) || 1);
 let run = null;
 let kampf = null;
 let letztesEreignis = '';
+// Belohnungs-Auswahlzustand: null | { option, wuerfelId? } — steuert die Picker.
+let belohnungsWahl = null;
 
 const wurzel = document.getElementById('spiel');
 
@@ -47,9 +50,59 @@ function neuerRun() {
 }
 
 function naechsterKampf() {
+  belohnungsWahl = null;
   kampf = starteKampf(run, rng);
   beginneZug(run, kampf, rng);
   letztesEreignis = `Kampf ${run.kampfNummer + 1} von ${KAEMPFE_PRO_REGION}.`;
+  render();
+}
+
+// --- Belohnungs-Flow (A1/A2) ----------------------------------------------------
+
+function optionLabel(option) {
+  if (option.typ === 'muenzen') return `+${option.betrag} Münzen`;
+  if (option.typ === 'blaupause') return `Blaupause: ${uebersetze(option.nameKey)}`;
+  return `Gravur: ${uebersetze(option.nameKey)}`;
+}
+
+function waehleBelohnung(index) {
+  const option = kampf.belohnung.optionen[index];
+  if (option.typ === 'muenzen') {
+    wendeBelohnungAn(run, option);
+    kampf.belohnung.erledigt = true;
+    letztesEreignis = `${option.betrag} Münzen eingestrichen.`;
+  } else {
+    belohnungsWahl = { option }; // Blaupause/Gravur brauchen ein Ziel
+  }
+  render();
+}
+
+function waehleZielWuerfel(wuerfelId) {
+  const wuerfel = run.arsenal.find((w) => w.id === wuerfelId);
+  if (belohnungsWahl.option.typ === 'blaupause') {
+    wendeBelohnungAn(run, belohnungsWahl.option, { wuerfel });
+    letztesEreignis = `${uebersetze(belohnungsWahl.option.nameKey)} auf ${uebersetze(wuerfel.nameKey)} angewandt.`;
+    kampf.belohnung.erledigt = true;
+    belohnungsWahl = null;
+  } else {
+    belohnungsWahl = { ...belohnungsWahl, wuerfelId }; // Gravur: jetzt Seite wählen
+  }
+  render();
+}
+
+function waehleZielSeite(seitenIndex) {
+  const wuerfel = run.arsenal.find((w) => w.id === belohnungsWahl.wuerfelId);
+  wendeBelohnungAn(run, belohnungsWahl.option, { wuerfel, seitenIndex });
+  letztesEreignis = `${uebersetze(belohnungsWahl.option.nameKey)} auf Seite ${seitenIndex + 1} von ${uebersetze(wuerfel.nameKey)} graviert (Stufe ${wuerfel.stufen[seitenIndex]}).`;
+  kampf.belohnung.erledigt = true;
+  belohnungsWahl = null;
+  render();
+}
+
+function ueberspringeBelohnung() {
+  belohnungsWahl = null;
+  kampf.belohnung.erledigt = true;
+  letztesEreignis = 'Belohnung ausgeschlagen.';
   render();
 }
 
@@ -69,7 +122,7 @@ function klickReroll() {
 }
 
 function klickAufloesen() {
-  const pools = loeseZugAuf(run, kampf);
+  const pools = loeseZugAuf(run, kampf, rng);
   if (!pools) return;
   letztesEreignis = `Paket aufgelöst: ${pools.schaden} Schaden, ${pools.rinde} Rinde.`;
   if (kampf.phase === 'sieg') {
@@ -103,7 +156,7 @@ function pips(anzahl, voll, label) {
 
 function wuerfelBox(id) {
   const w = run.arsenal.find((x) => x.id === id);
-  const wert = kampf.wuerfe[id];
+  const { wert } = kampf.wuerfe[id];
   const s = schreck(w.gemuet);
   const gesperrt = gesperrteSeitenAnzahl(s);
   const platziert = kampf.reihe.includes(id);
@@ -119,8 +172,58 @@ function wuerfelBox(id) {
     </button>`;
 }
 
+function belohnungsPanel() {
+  const b = kampf.belohnung;
+  if (belohnungsWahl?.wuerfelId) {
+    // Seiten-Picker (Gravur)
+    const wuerfel = run.arsenal.find((w) => w.id === belohnungsWahl.wuerfelId);
+    return `
+      <section class="ph ph--belohnung">
+        <strong>${uebersetze(belohnungsWahl.option.nameKey)} — Seite wählen (${uebersetze(wuerfel.nameKey)})</strong>
+        <div class="picker">
+          ${wuerfel.seiten
+            .map(
+              (s, i) => `
+            <button class="ph ph--seite" data-ziel-seite="${i}">
+              <span class="wert">${s.wert}</span>
+              ${wuerfel.stufen[i] > 0 ? `<span class="stufe">St.${wuerfel.stufen[i]}</span>` : ''}
+            </button>`
+            )
+            .join('')}
+        </div>
+      </section>`;
+  }
+  if (belohnungsWahl) {
+    // Würfel-Picker (Blaupause oder Gravur)
+    return `
+      <section class="ph ph--belohnung">
+        <strong>${optionLabel(belohnungsWahl.option)} — Würfel wählen</strong>
+        <div class="picker">
+          ${run.arsenal
+            .map(
+              (w) => `
+            <button class="ph ph--seite" data-ziel-wuerfel="${w.id}">
+              <span class="label">${uebersetze(w.nameKey)}</span>
+              ${w.blaupause ? `<span class="stufe">${uebersetze(w.blaupause.nameKey)}</span>` : ''}
+            </button>`
+            )
+            .join('')}
+        </div>
+      </section>`;
+  }
+  return `
+    <section class="ph ph--belohnung">
+      <strong>Sieg! +${b.einkommen.muenzen} Münzen, +${b.einkommen.eicheln} Eicheln</strong>
+      <div class="picker">
+        ${b.optionen.map((o, i) => `<button data-opt="${i}">${optionLabel(o)}</button>`).join('')}
+        <button data-aktion="ueberspringen">Überspringen</button>
+      </div>
+    </section>`;
+}
+
 function render() {
-  if (run.verloren || run.abgeschlossen) {
+  const belohnungOffen = kampf?.phase === 'sieg' && kampf.belohnung && !kampf.belohnung.erledigt;
+  if ((run.verloren || run.abgeschlossen) && !belohnungOffen) {
     const titel = run.abgeschlossen ? 'Region 1 durchquert' : 'Der Hüter fällt';
     const text = run.abgeschlossen
       ? `Der Saumhain liegt hinter dir. Arsenal-Schreck: ${arsenalSchreckSumme(run)}.`
@@ -151,12 +254,15 @@ function render() {
       <span>Atem ${pips(3, kampf.atem, 'Atem')}</span>
       <span>Rinde ${kampf.block}</span>
       <span class="${kampf.uebermut >= KIPP_PUNKT ? 'warnung' : ''}">Übermut ${pips(KIPP_PUNKT, kampf.uebermut, 'Übermut')}</span>
-      <span>Kampf ${run.kampfNummer + 1}/${KAEMPFE_PRO_REGION}</span>
+      <span>🪙 ${run.waehrungen.muenzen} · 🌰 ${run.waehrungen.eicheln}</span>
+      <span>Kampf ${Math.min(run.kampfNummer + 1, KAEMPFE_PRO_REGION)}/${KAEMPFE_PRO_REGION}</span>
     </section>
 
     <section class="hand">
       ${kampf.hand.map(wuerfelBox).join('')}
     </section>
+
+    ${belohnungOffen ? belohnungsPanel() : ''}
 
     <section class="aktionen">
       ${kampf.phase === 'zug' ? `
@@ -164,7 +270,7 @@ function render() {
         <button data-aktion="aufloesen" ${kampf.reihe.length === 0 ? 'disabled' : ''}>Auflösen (${kampf.reihe.length})</button>
       ` : ''}
       ${kampf.phase === 'gegnerzug' ? `<button data-aktion="gegnerzug">Gegnerzug</button>` : ''}
-      ${kampf.phase === 'sieg' ? `<button data-aktion="weiter">Weiter</button>` : ''}
+      ${kampf.phase === 'sieg' && !belohnungOffen ? `<button data-aktion="weiter">Weiter</button>` : ''}
     </section>
 
     <section class="ph ph--log">${letztesEreignis}</section>
@@ -172,15 +278,30 @@ function render() {
   verdrahte();
 }
 
+function klickWeiter() {
+  if (run.abgeschlossen || run.verloren) render(); // End-Screen
+  else naechsterKampf();
+}
+
 function verdrahte() {
   wurzel.querySelectorAll('[data-wuerfel]').forEach((el) => {
     el.addEventListener('click', () => klickWuerfel(el.dataset.wuerfel));
+  });
+  wurzel.querySelectorAll('[data-opt]').forEach((el) => {
+    el.addEventListener('click', () => waehleBelohnung(Number(el.dataset.opt)));
+  });
+  wurzel.querySelectorAll('[data-ziel-wuerfel]').forEach((el) => {
+    el.addEventListener('click', () => waehleZielWuerfel(el.dataset.zielWuerfel));
+  });
+  wurzel.querySelectorAll('[data-ziel-seite]').forEach((el) => {
+    el.addEventListener('click', () => waehleZielSeite(Number(el.dataset.zielSeite)));
   });
   const aktionen = {
     reroll: klickReroll,
     aufloesen: klickAufloesen,
     gegnerzug: klickGegnerzug,
-    weiter: naechsterKampf,
+    weiter: klickWeiter,
+    ueberspringen: ueberspringeBelohnung,
     neu: neuerRun,
   };
   wurzel.querySelectorAll('[data-aktion]').forEach((el) => {

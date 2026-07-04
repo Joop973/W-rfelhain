@@ -55,6 +55,16 @@
     .ph--wuerfel .gesperrt { position: absolute; top: 2px; right: 2px; font-size: 9px; }
     .ph--wuerfel .position { position: absolute; top: 2px; left: 4px; font-size: 10px; font-weight: bold; }
 
+    .ph--belohnung { background: color-mix(in srgb, var(--pergament) 80%, var(--tau)); }
+    .picker { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .ph--seite {
+      min-width: 56px; min-height: 44px; cursor: pointer; font: inherit;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .ph--seite .wert { font-size: 16px; font-weight: bold; }
+    .ph--seite .label { font-size: 8px; }
+    .ph--seite .stufe { font-size: 8px; color: var(--glut); }
+
     .aktionen { display: flex; gap: 8px; }
     button:not(.ph--wuerfel) {
       font: inherit; padding: 8px 12px; cursor: pointer;
