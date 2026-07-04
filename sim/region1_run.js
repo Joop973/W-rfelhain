@@ -115,7 +115,7 @@ function kaempfe(run, policy, knotenTyp, rng) {
       beginneZug(run, kampf, rng);
       spieleZug(run, kampf, policy, rng);
     } else {
-      fuehreGegnerzugAus(run, kampf);
+      fuehreGegnerzugAus(run, kampf, rng);
     }
   }
   if (kampf.phase === 'sieg') wendeSiegBelohnungAn(run, kampf, rng);

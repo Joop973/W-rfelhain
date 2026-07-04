@@ -38,7 +38,7 @@ function kaempfeDurch(run, kampf, rng) {
       beginneZug(run, kampf, rng);
       spieleZugAuto(run, kampf, rng);
     } else {
-      fuehreGegnerzugAus(run, kampf);
+      fuehreGegnerzugAus(run, kampf, rng);
     }
   }
 }
