@@ -482,7 +482,7 @@ export const GEGNER_VORLAGEN = {
     region: 1,
     rolle: 'normal',
     hpBereich: [30, 38],
-    schadenBereich: [8, 9],
+    schadenBereich: [11, 12], // A8-Nach-Eichung 2026-07-04 (war 8-9)
     statusAuflagen: [],
     absichtsMuster: 'schlaeger',
     mechanikIds: [],
@@ -493,7 +493,7 @@ export const GEGNER_VORLAGEN = {
     region: 1,
     rolle: 'normal',
     hpBereich: [38, 45],
-    schadenBereich: [6, 8],
+    schadenBereich: [8, 11], // A8-Nach-Eichung 2026-07-04 (war 6-8)
     statusAuflagen: [],
     absichtsMuster: 'waechter',
     mechanikIds: ['blockt_zug_1'],
@@ -504,7 +504,7 @@ export const GEGNER_VORLAGEN = {
     region: 1,
     rolle: 'normal',
     hpBereich: [30, 35],
-    schadenBereich: [8, 10],
+    schadenBereich: [11, 13], // A8-Nach-Eichung 2026-07-04 (war 8-10)
     statusAuflagen: [],
     absichtsMuster: 'schlaeger',
     mechanikIds: ['schwankender_angriff'],
@@ -515,7 +515,7 @@ export const GEGNER_VORLAGEN = {
     region: 1,
     rolle: 'elite',
     hpBereich: [60, 65],
-    schadenBereich: [9, 10],
+    schadenBereich: [12, 13], // A8-Nach-Eichung 2026-07-04 (war 9-10)
     statusAuflagen: [],
     absichtsMuster: 'wetterwechsler',
     mechanikIds: ['angriff_block_rotation'],
@@ -526,7 +526,7 @@ export const GEGNER_VORLAGEN = {
     region: 1,
     rolle: 'boss',
     hpBereich: [110, 130],
-    schadenBereich: [9, 11],
+    schadenBereich: [12, 14], // A8-Nach-Eichung 2026-07-04 (war 9-11)
     statusAuflagen: [],
     absichtsMuster: 'schlaeger',
     mechanikIds: ['erste_geduld'], // jede 3. Runde zwingend Block (05 §6 Twist)

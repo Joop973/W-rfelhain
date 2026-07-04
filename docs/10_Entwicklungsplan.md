@@ -37,7 +37,7 @@ Ziel: kompletter Region-1-Run mit Karte, Belohnungen, Händlern, Boss, Save — 
 - [x] **A5 [C] Boss 1 Saumhüter**: 2 Phasen, Twist „Erste Geduld" (jede 3. Runde Block), Sonder-Belohnung = Blaupausen-Wahl *(05 §6)* — 2026-07-04 *(mehrfach-Treffer der Phase 2 folgen mit Etappe B)*
 - [x] **A6 [C] Save v2**: Karte/Position/HP/Pity in `runState`, Migration 1→2 aktiv (Kettenpflicht-Test greift), UI lädt gespeicherten Run beim Start *(09 §3)* — 2026-07-04
 - [ ] **A7 [C+D] Handy-UI-Ausbau**: Karten-/Belohnungs-/Händler-Screens, Tutorial-Hinweise — weiter in Platzhalter-Konvention (08 §4.0). **Du testest auf dem echten Handy** (Lesbarkeit ist Design-Kriterium, 08 §1.3)
-- [ ] **A8 [C+D] Region-1-Nach-Eichung**: `sim/` um Gravuren/Segen/Belohnungs-Ökonomie erweitern, Gegner-Werte gegen Zielband 65–70 % nacheichen — die kalibrierte Basis verschiebt sich mit Spieler-Output (Priorität aus 05 §10). Claude misst, **du entscheidest** die Endwerte *(03 §13, 05 §1.2)*
+- [x] **A8 [C] Region-1-Nach-Eichung gemessen**: `sim/region1_run.js` läuft über den echten Spielcode (Karte/Knoten/Belohnungen); Gegner-Schaden nachgeeicht (Normal 8–13, Elite 12–13, Boss 12–14) → Standard 70,5 % im Zielband, Pflege 92,8 % > Gier 21,2 % — Befund: `docs/Region1_Karten_Kalibrierung_Befund.md`, 2026-07-04. **[D] Endwert-Entscheid offen** (inkl. Frage 03-§7-Kurve nachziehen vs. Heilung senken, s. Befund §5) *(03 §13, 05 §1.2)*
 
 **Deine Entscheide in Etappe A [D]:**
 - [ ] Ziehmodell-Default bestätigen (je Zug 5 frisch — 02 §2.2)

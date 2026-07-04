@@ -79,7 +79,7 @@ test('Blaupausen: 16 Stück, je 6 Seiten, verbrauchen sich; Slice-Liste referenz
   }
 });
 
-test('Region-1-Gegner liegen in den kalibrierten Bereichen (05 §1.2)', () => {
+test('Region-1-Gegner liegen in den kalibrierten Bereichen (A8-Nach-Eichung 2026-07-04)', () => {
   const r1 = Object.values(GEGNER_VORLAGEN).filter((g) => g.region === 1);
   assert.ok(r1.length >= 4);
   for (const g of r1) {
@@ -87,8 +87,8 @@ test('Region-1-Gegner liegen in den kalibrierten Bereichen (05 §1.2)', () => {
     const [sMin, sMax] = g.schadenBereich;
     assert.ok(hpMin <= hpMax && sMin <= sMax, g.id);
     if (g.rolle === 'normal') {
-      assert.ok(hpMin >= 30 && hpMax <= 45, g.id); // Normal-HP 30–45
-      assert.ok(sMin >= 6 && sMax <= 10, g.id); // Schaden-Band
+      assert.ok(hpMin >= 30 && hpMax <= 45, g.id); // Normal-HP 30–45 (Anker: 2–3 Züge, unverändert)
+      assert.ok(sMin >= 8 && sMax <= 13, g.id); // Schaden-Band Karten-Struktur (Befund A8)
     }
     if (g.rolle === 'elite') assert.ok(hpMin >= 50 && hpMax <= 65, g.id); // Elite-Mix 50–65
     if (g.rolle === 'boss') assert.ok(hpMin >= 110 && hpMax <= 130, g.id); // Boss 110–130
