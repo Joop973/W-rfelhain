@@ -40,30 +40,19 @@ import {
   TISCHSTURZ_SELBSTSCHADEN,
 } from '../push.js';
 import { kampfbeginn, zieheHand, zugende } from '../ziehstapel.js';
+import { erstelleStartArsenal, KLASSEN, HUETER_BASIS_HP, ATEM_PRO_ZUG } from '../data.js';
 
-// --- Eichwart-Arsenal (12, 04 §2) ------------------------------------------
+// --- Eichwart-Arsenal aus dem Datenkatalog (data.js, 04 §2) ------------------
 
-const ASTSCHNEIDE_WERTE = [1, 2, 3, 4, 5, 6];
-const BORKENSCHILD_WERTE = [1, 1, 2, 2, 3, 3];
-const EICHWART_PASSIV = 2;
+const EICHWART_PASSIV = KLASSEN.eichwart.passiv.wert;
 const HOECHSTWERT_ASTSCHNEIDE = 6;
-const HUETER_HP = 80; // Basis 75 + Eichwart-Mod 5 (03 §1)
-const ATEM_PRO_ZUG = 3;
+const HUETER_HP = HUETER_BASIS_HP + KLASSEN.eichwart.hpMod; // = 80 (03 §1)
 const MAX_ZUEGE_PRO_KAMPF = 40; // Sicherheitsnetz, in der Praxis nicht erreicht
 
 const KAEMPFE_PRO_RUN = 9;
 const GIER_ZIEL_TOP3 = 14; // rerollt, bis Top-3-Schaden-Summe dieses Ziel erreicht
 
-function baueEichwartArsenal() {
-  const arsenal = [];
-  for (let i = 0; i < 8; i += 1) {
-    arsenal.push({ id: `astschneide_${i}`, typ: 'schaden', gemuet: 0, seiten: ASTSCHNEIDE_WERTE.map((wert) => ({ wert })) });
-  }
-  for (let i = 0; i < 4; i += 1) {
-    arsenal.push({ id: `borkenschild_${i}`, typ: 'rinde', gemuet: 0, seiten: BORKENSCHILD_WERTE.map((wert) => ({ wert })) });
-  }
-  return arsenal;
-}
+const baueEichwartArsenal = () => erstelleStartArsenal('eichwart');
 
 // --- Region-1-Gegner (03 §7 Hinweis) ----------------------------------------
 
