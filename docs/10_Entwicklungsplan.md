@@ -52,7 +52,7 @@ Ziel: kompletter Region-1-Run mit Karte, Belohnungen, Händlern, Boss, Save — 
 Ziel: alle Systeme voll aktiv, mehrere Build-Pfade. Endet mit **Balance-Tor 2**.
 
 - [x] **B1 [C] Status-Set voll im Kampf**: Fäule/Brand-Ticks (Zug-Beginn/-Ende, DoT-Tod → Sieg), Morsch/Welk-Stapel + Decay, Kraft-Selbst-Buff, Riss (25 %-Aussetzer), Glanz-Verdopplung — neues Modul `status.js`, in `kampf.js` verdrahtet; Slice-Gravuren um Gift/Zunder/Fäulnis-Hauch/Dürre-Hauch/Markhärtung/Glanz erweitert; Status-Badges in der UI *(02 §2/§8)* — 2026-07-04
-- [ ] **B2 [C] Eigen-Status**: Wetzung/Scharte (effektiver Wert im Wurf), Freilauf/Klemme (Reroll-Ökonomie — `rerollKosten` kann es schon), `eigenStatus`-Slot im Kampf-State *(09 §2.11)*
+- [x] **B2 [C] Eigen-Status**: Wetzung/Scharte setzen den effektiven Wurf-Wert (Untergrenze 1, ermöglichen/brechen Vollmond), Freilauf/Klemme in die Reroll-Ökonomie verdrahtet; State-Slots + Decay/Caps schon aus B1 (`spielerStatus`), UI-Badges ergänzt *(09 §2.11)* — 2026-07-04. **Quellen** (Segen/Schleiferin/Gegner) folgen mit B6/C2/späteren Regionen
 - [ ] **B3 [C] Combos komplett spielbar**: Echo-/Glanz-Seiten als Gravuren im Loop, Vollmond-Prüfung mit echten Höchstwerten, Gleichklang-Anzeige in der UI
 - [ ] **B4 [C] Alle 16 Blaupausen anwendbar** (Slice-Sperre aufheben), inkl. Quell/Labung- und Hort/Prägung-Engines
 - [ ] **B5 [C] Beruhigung/Ermutigung spielbar** + Trösten-Zähler run-weit (zählt für Frühling-Bedingung, Ermutigung ausgeschlossen — 01 §5)

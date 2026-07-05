@@ -4,7 +4,7 @@
 // Slice-Umfang: Region-1-Sequenz (9 Kämpfe, Kampf 9 = Elite), Werte aus der
 // kalibrierten Stufe "mittel" (docs/Welle1_Tor_ReRun_12er_Befund.md).
 
-import { resolveZug, welkMult } from './engine.js';
+import { resolveZug, welkMult, effektiverWert } from './engine.js';
 import {
   schreck,
   bestimmeGesperrteSeitenIndizes,
@@ -191,10 +191,11 @@ export function beginneZug(run, kampf, rng) {
 }
 
 // Reroll = ganze Hand neu werfen (Slice-Vereinfachung; 02 §2.2 Schritt 4).
+// Freilauf/Klemme (Eigen-Status, 02 §7.4) verändern die Übermut-Kosten dieses Rerolls.
 export function rerolle(run, kampf, rng) {
   const { state, tischsturz } = fuehreRerollAus(
     { uebermut: kampf.uebermut, rerollsDiesenZug: kampf.rerollsDiesenZug },
-    {}
+    { freilauf: kampf.spielerStatus.freilauf, klemme: kampf.spielerStatus.klemme }
   );
   kampf.uebermut = state.uebermut;
   kampf.rerollsDiesenZug = state.rerollsDiesenZug;
@@ -249,6 +250,10 @@ export function loeseZugAuf(run, kampf, rng) {
   const passiv = KLASSEN[run.klasse].passiv;
   const passivWert = passiv.typ === 'schaden_flach' ? passiv.wert : 0;
   const spielerKraft = kampf.spielerStatus.kraft; // gilt für alle Schaden-Seiten dieses Zugs
+  // Wetzung/Scharte (Eigen-Status) setzen den effektiven Wert JEDER gewürfelten Seite
+  // (Schaden/Rinde) beim Wurf, Untergrenze 1 (02 §2.2/§8.2). Klassen-Sockel = 0 im Slice,
+  // daher effektiver Wert = Vollmond-Prüfwert; das trennt sich erst mit der Schleiferin (C2).
+  const { wetzung, scharte } = kampf.spielerStatus;
 
   const gespielteSeiten = [];
   const auflage = { morsch: 0, welk: 0, kraft: 0 }; // Pool-fremde Status (resolveZug ignoriert sie)
@@ -266,10 +271,11 @@ export function loeseZugAuf(run, kampf, rng) {
           aussetzer += 1;
           continue;
         }
+        const effWert = effektiverWert(effekt.wert, { wetzung, scharte });
         gespielteSeiten.push({
           typ: 'schaden',
-          effektiverWert: effekt.wert,
-          vollmondWert: effekt.wert,
+          effektiverWert: effWert,
+          vollmondWert: effWert, // Wetzung ermöglicht Vollmond, Scharte bricht ihn
           hoechstwert,
           kraft: spielerKraft,
           passiv: passivWert,
@@ -277,7 +283,7 @@ export function loeseZugAuf(run, kampf, rng) {
         });
         pendingGlanz = false;
       } else if (effekt.typ === 'rinde') {
-        gespielteSeiten.push({ typ: 'rinde', effektiverWert: effekt.wert, hoechstwert });
+        gespielteSeiten.push({ typ: 'rinde', effektiverWert: effektiverWert(effekt.wert, { wetzung, scharte }), hoechstwert });
       } else if (effekt.typ === 'schaden_mult') {
         // Mult-Seite: multipliziert den Pool, ist selbst keine Schaden-Seite (kein Passiv).
         gespielteSeiten.push({ typ: 'schaden', effektiverWert: 0, vollmondWert: 0, hoechstwert, kraft: 0, passiv: 0, mult: effekt.wert });

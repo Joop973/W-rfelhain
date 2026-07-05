@@ -403,7 +403,10 @@ function belohnungsPanel() {
     </section>`;
 }
 
-const STATUS_ICON = { faeule: '☣', brand: '🔥', morsch: '💢', welk: '🥀', kraft: '💪', riss: '⚡' };
+const STATUS_ICON = {
+  faeule: '☣', brand: '🔥', morsch: '💢', welk: '🥀', kraft: '💪', riss: '⚡',
+  wetzung: '🔪', scharte: '🩹', freilauf: '🎲', klemme: '🔒',
+};
 
 function statusBadges(status) {
   return Object.entries(STATUS_ICON)
