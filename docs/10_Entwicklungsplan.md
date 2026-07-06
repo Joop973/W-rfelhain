@@ -58,7 +58,9 @@ Ziel: alle Systeme voll aktiv, mehrere Build-Pfade. Endet mit **Balance-Tor 2**.
 - [x] **B5 [C] Beruhigung/Ermutigung spielbar** + Trösten-Zähler run-weit (zählt für Frühling-Bedingung, Ermutigung ausgeschlossen — 01 §5) *(Pflege-Seiten mit Auto-Ziel im Loop; Zähler-Split troestenZahl/pflegeZahl, Labung liest pflegeZahl; Save v3; Sim n=6000 Standard 67,2 % im Band)* — 2026-07-06
 - [x] **B6 [C] Hain-Segen-Pool**: alle 16 mit Haken-Effekten (Kristallisations-Modifikatoren „Gieriger Griff"/„Ungeduld" brauchen `push.js`-Hooks) *(neues Modul `segen.js`; push-Hooks Verhältnis/Zuschlag/Freischein; Quellen: Belohnungs-Mix 10 %, Elite-Garantie, Boss = 2 Blaupausen + 1 Boss-Segen, Markt; Save v4; Sim n=6000 Standard 67,4 % im Band)* — 2026-07-06
 - [x] **B7 [C+D] Morsch-als-Gegner-Entscheid**: Option A (eingehend-Multiplikator in `engine.js`) vs. B (Fallback Kraft) — Claude baut Prototyp A, **du entscheidest** *(05 §2.1)* — **Option A entschieden** (Sim: A 99,8 % Siegrate/+19 % HP-Verlust selbstbremsend vs. B 96,2 %/+28 % eskalierend; `eingehendMult` in engine.js, 05 §2.1 gesperrt) — 2026-07-06
-- [ ] **B8 [C+D] BALANCE-TOR 2**: Sim-Suite über mehrere Build-Pfade (Wucht-, Status-, Gleichklang-, Pflege-Build) — Kriterium: alle viable, keine Lawine (03 §14), Gier-vs-Pflege hält weiter. Claude misst, **du nimmst ab**
+- [x] **B8 [C+D] BALANCE-TOR 2**: Sim-Suite über mehrere Build-Pfade (Wucht-, Status-, Gleichklang-, Pflege-Build) — Kriterium: alle viable, keine Lawine (03 §14), Gier-vs-Pflege hält weiter. Claude misst, **du nimmst ab** — **ABGENOMMEN** *(Builds 68,9–91,2 %, Lawinen-Faktor ~2,1 ≤ 6, Standard 67,4 % im Band; `sim/build_pfade.js`, Befund: docs/BalanceTor2_Befund.md)* — 2026-07-06
+
+**Etappe B ist damit abgeschlossen** (Tor 2 passiert). Beobachtungspunkt für Etappe C/D: Status-Build in R1 strukturell schwächster Pfad — Region-2-Kalibrierung (Moderbruch) prüft.
 
 **Deine Entscheide in Etappe B [D]:**
 - [ ] Alle `[PROVISORISCH]`-Gravur-/Blaupausen-Werte nach Sim-Befund sperren
