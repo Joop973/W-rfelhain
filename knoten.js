@@ -14,6 +14,7 @@ import {
 import { graviereSeite, wendeBlaupauseAn } from './belohnung.js';
 import { troeste, schreck } from './push.js';
 import { gibSegen, segenEffekt, troestenBonus, zieheSegenOption } from './segen.js';
+import { reifegradMods } from './reifegrad.js';
 
 export const TAU_PRO_REGION = 6; // 03 §8 [GESPERRT]
 export const LAGERFEUER_HEILUNG_ANTEIL = 0.3; // +30 % hpMax [PROVISORISCH]
@@ -50,6 +51,8 @@ export function schmiedePreis(wuerfel, gravurId, seitenIndex, run = null) {
   if (typWechsel) preis = Math.ceil(preis * GRAVUR_WECHSEL_AUFPREIS_FAKTOR); // 04 §3.2
   const rabatt = run && zielStufe === 1 ? segenEffekt(run, 'schmiede_stufe1_rabatt_prozent') : null;
   if (rabatt) preis = Math.ceil(preis * (1 - rabatt.wert / 100));
+  // Reifegrad 4: Schmiede-Preise +20 % (03 §9) — nach Rabatten, auf den Endpreis.
+  if (run) preis = Math.ceil(preis * reifegradMods(run.reifegrad ?? 0).schmiedePreisMult);
   return { zielStufe, preis, typWechsel };
 }
 
@@ -191,10 +194,10 @@ export function waehleEventOption(run, event, optionIndex, rng) {
 
 export function rasteLagerfeuer(run, wahl, wuerfelId = null) {
   if (wahl === 'heilen') {
-    // Warmes Moos (07 §4.2 #4): Lagerfeuer-Heilung +25 %.
+    // Warmes Moos (07 §4.2 #4): Lagerfeuer-Heilung +25 %; Reifegrad 6: −25 % (03 §9).
     const moos = segenEffekt(run, 'lagerfeuer_heilung_prozent');
     const anteil = LAGERFEUER_HEILUNG_ANTEIL * (moos ? 1 + moos.wert / 100 : 1);
-    const menge = Math.round(run.hpMax * anteil);
+    const menge = Math.round(run.hpMax * anteil * reifegradMods(run.reifegrad ?? 0).heilungMult);
     run.hp = Math.min(run.hpMax, run.hp + menge);
     return { ok: true, text: `+${menge} HP` };
   }

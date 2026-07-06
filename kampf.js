@@ -20,6 +20,7 @@ import { verdieneKampfBelohnung, zieheBelohnungsoptionen, zieheBossBelohnung } f
 import { generiereKarte } from './karte.js';
 import { TAU_PRO_REGION } from './knoten.js';
 import { segenEffekt, segenEffekte, segenHaken, troestenBonus } from './segen.js';
+import { reifegradMods } from './reifegrad.js';
 
 const NORMALE_GEGNER = ['astbeisser', 'borkenkriecher', 'moosgnom'];
 const ELITE_GEGNER = 'dornalter';
@@ -27,11 +28,19 @@ const BOSS_GEGNER = 'saumhueter';
 
 // --- Run --------------------------------------------------------------------
 
-export function starteRun(klasseId = 'eichwart', rng) {
+export function starteRun(klasseId = 'eichwart', rng, { reifegrad = 0 } = {}) {
   const hpMax = HUETER_BASIS_HP + KLASSEN[klasseId].hpMod;
+  const arsenal = erstelleStartArsenal(klasseId);
+  // Reifegrad-Start-Malus (03 §9 Stufe 2/9): Schreck auf einen zufälligen Würfel.
+  const { startSchreck } = reifegradMods(reifegrad);
+  if (startSchreck > 0) {
+    const ziel = arsenal[Math.floor(rng.naechsteZahl() * arsenal.length)];
+    ziel.gemuet -= startSchreck;
+  }
   return {
     klasse: klasseId,
-    arsenal: erstelleStartArsenal(klasseId),
+    reifegrad,
+    arsenal,
     hp: hpMax,
     hpMax,
     karte: generiereKarte(rng),
@@ -107,16 +116,23 @@ export function naechsteAbsicht(gegner) {
   return { typ: 'angriff', wert: gegner.schaden, angekuendigt: true }; // schlaeger
 }
 
-function baueGegner(vorlageId, rng, { schadenZuschlag = 0 } = {}) {
+function baueGegner(vorlageId, rng, { schadenZuschlag = 0, reifegrad = 0 } = {}) {
   const vorlage = GEGNER_VORLAGEN[vorlageId];
-  const hp = zufallZwischen(rng, vorlage.hpBereich);
+  const mods = reifegradMods(reifegrad);
+  // Reifegrad-Kurve (03 §9): HP-Mults je Rolle kumulativ mit dem globalen Mult.
+  const rollenHpMult =
+    vorlage.rolle === 'elite' ? mods.eliteHpMult : vorlage.rolle === 'boss' ? mods.bossHpMult : 1;
+  const hp = Math.round(zufallZwischen(rng, vorlage.hpBereich) * rollenHpMult * mods.gegnerHpMult);
   const gegner = {
     vorlageId,
     nameKey: vorlage.nameKey,
     rolle: vorlage.rolle,
     hp,
     hpMax: hp,
-    schaden: zufallZwischen(rng, vorlage.schadenBereich) + schadenZuschlag,
+    schaden:
+      Math.round(
+        zufallZwischen(rng, vorlage.schadenBereich) * (vorlage.rolle !== 'normal' ? mods.eliteBossSchadenMult : 1)
+      ) + schadenZuschlag,
     absichtsMuster: vorlage.absichtsMuster,
     mechanikIds: vorlage.mechanikIds ?? [],
     phasen: vorlage.phasen ?? null,
@@ -142,7 +158,7 @@ export function starteKampf(run, rng, knotenTyp = 'kampf') {
   const gegnerHaken = segenHaken(run, 'gegner_absichtswert');
   const kampf = {
     zieh: kampfbeginn(run.arsenal.map((w) => w.id), rng), // Übermut-Reset implizit unten
-    gegner: baueGegner(vorlageId, rng, { schadenZuschlag: gegnerHaken?.wert ?? 0 }),
+    gegner: baueGegner(vorlageId, rng, { schadenZuschlag: gegnerHaken?.wert ?? 0, reifegrad: run.reifegrad ?? 0 }),
     uebermut: 0, // Reset je Kampf, nur Sofort-Mechanik (02 §2.1/§7)
     rerollsDiesenZug: 0,
     zugNummer: 0,
@@ -246,7 +262,8 @@ export function rerolle(run, kampf, rng) {
       const w = findeWuerfel(run, neu.id);
       w.gemuet = neu.gemuet;
     });
-    run.hp -= TISCHSTURZ_SELBSTSCHADEN;
+    // Reifegrad 7: Tischsturz-Selbstschaden +2 (03 §9).
+    run.hp -= TISCHSTURZ_SELBSTSCHADEN + reifegradMods(run.reifegrad ?? 0).tischsturzZuschlag;
     kampf.reihe = [];
     kampf.zuletztGespielteIds = [];
     kampf.zieh = zugende({ ...kampf.zieh, hand: kampf.hand });
@@ -466,7 +483,11 @@ export function loeseZugAuf(run, kampf, rng) {
   if (auflage.kraft > 0) legeStatusAuf(kampf.spielerStatus, 'kraft', auflage.kraft);
 
   // Labung heilt (Cap hpMax), Prägung münzt — beide Engines wirken beim Auflösen.
-  if (geheilt > 0) run.hp = Math.min(run.hpMax, run.hp + geheilt);
+  // Reifegrad 6: Heilung −25 % (03 §9) — trifft alle Heilquellen.
+  if (geheilt > 0) {
+    geheilt = Math.floor(geheilt * reifegradMods(run.reifegrad ?? 0).heilungMult);
+    run.hp = Math.min(run.hpMax, run.hp + geheilt);
+  }
   if (gepraegt > 0) run.waehrungen.muenzen += gepraegt;
   kampf.geheilt = geheilt;
   kampf.gepraegt = gepraegt;

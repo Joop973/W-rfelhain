@@ -11,6 +11,7 @@ export function leeresMeta() {
     endenErreicht: [], // 'fruehling' | 'stiller_hain' | 'verloeschen' (C6/D4 füllen)
     runsGespielt: 0,
     runsGewonnen: 0,
+    maxReifegrad: 0, // höchste freigeschaltete Ascension-Stufe (03 §9, C4)
   };
 }
 
@@ -19,11 +20,15 @@ export function leeresMeta() {
 // 1 Trost-Ring für eine Niederlage mit erkennbarem Fortschritt (≥ 3 Kämpfe),
 // 0 für frühe Abbrüche. Dimensioniert gegen die Freischalt-Kosten 3/5/8/12:
 // Dorfschamane nach ~2 Runs, Rodbauer nach ~6 guten Runs.
-export function verdieneJahresringe(meta, { sieg = false, kaempfe = 0 } = {}) {
+export function verdieneJahresringe(meta, { sieg = false, kaempfe = 0, reifegrad = 0 } = {}) {
   const ringe = sieg ? 2 : kaempfe >= 3 ? 1 : 0;
   meta.jahresringe += ringe;
   meta.runsGespielt += 1;
-  if (sieg) meta.runsGewonnen += 1;
+  if (sieg) {
+    meta.runsGewonnen += 1;
+    // Ascension-Kette (03 §9): Sieg auf Stufe N schaltet Stufe N+1 frei (Cap 10).
+    meta.maxReifegrad = Math.max(meta.maxReifegrad ?? 0, Math.min(10, reifegrad + 1));
+  }
   return ringe;
 }
 

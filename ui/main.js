@@ -64,6 +64,7 @@ let marktWahl = null; // { aktion: 'blaupause'|'entfernen'|'troesten', blaupause
 let lagerfeuerWahl = null; // 'troesten' | 'vollenden'
 let knotenKontext = null; // Angebot/Event des aktiven Knotens
 let klassenWahl = false; // Klassen-Auswahl vor neuem Run (C2/C3)
+let reifegradWahl = 0; // gewählte Ascension-Stufe für den nächsten Run (C4)
 
 const wurzel = document.getElementById('spiel');
 
@@ -84,6 +85,7 @@ function speichereZwischenKnoten() {
       pflegeZahl: run.pflegeZahl,
       hainSegen: run.hainSegen,
       welkGrad: run.welkGrad,
+      reifegrad: run.reifegrad ?? 0,
     });
     save.metaState = meta; // Meta überlebt Run-Wechsel (C1)
     speichere(save);
@@ -126,6 +128,7 @@ function ladeGespeichertenRun() {
       pflegeZahl: rs.pflegeZahl ?? rs.troestenZahl ?? 0,
       hainSegen: rs.hainSegen ?? [],
       welkGrad: rs.welkGrad ?? 0,
+      reifegrad: rs.reifegrad ?? 0,
       verloren: false,
       abgeschlossen: findeKnotenTyp(rs) === 'boss',
     };
@@ -142,11 +145,11 @@ function findeKnotenTyp(rs) {
 
 // --- Aktionen ----------------------------------------------------------------------
 
-function neuerRun(klasseId = 'eichwart') {
+function neuerRun(klasseId = 'eichwart', reifegrad = 0) {
   // Nur den Run löschen — der Stammbaum (meta) überlebt (C1). Der nächste
   // speichereZwischenKnoten schreibt meta wieder in den frischen Save.
   try { loesche(); } catch { /* ignorieren */ }
-  run = starteRun(klasseId, rng);
+  run = starteRun(klasseId, rng, { reifegrad });
   kampf = null;
   modus = 'karte';
   belohnungsWahl = schmiedeWahl = marktWahl = lagerfeuerWahl = knotenKontext = null;
@@ -595,13 +598,17 @@ function renderKlassenWahl() {
   const knoepfe = meta.freigeschalteteKlassen
     .map((id) => `<button data-klasse="${id}">${uebersetze(KLASSEN[id].nameKey)} (${HUETER_BASIS_HP + KLASSEN[id].hpMod} ❤)</button>`)
     .join(' ');
-  return `<section class="ph ph--klassenwahl"><strong>Hüter wählen</strong><p>${knoepfe}</p></section>`;
+  const stufen = (meta.maxReifegrad ?? 0) > 0
+    ? `<p>Reifegrad: ${Array.from({ length: (meta.maxReifegrad ?? 0) + 1 }, (_, i) =>
+        `<button data-reifegrad="${i}" ${i === reifegradWahl ? 'disabled' : ''}>${i}</button>`).join(' ')}</p>`
+    : '';
+  return `<section class="ph ph--klassenwahl"><strong>Hüter wählen</strong>${stufen}<p>${knoepfe}</p></section>`;
 }
 
 // Stammbaum-Panel (C1): kaufbare Meta-Knoten am Run-Ende (09 §2.9).
 function renderStammbaum() {
   const zeilen = Object.values(STAMMBAUM_KNOTEN).map((k) => {
-    const pruefung = pruefeStammbaumKauf(meta, k.id, { reifegrad: 0 });
+    const pruefung = pruefeStammbaumKauf(meta, k.id, { reifegrad: meta.maxReifegrad ?? 0 });
     if (meta.stammbaum.includes(k.id)) {
       return `<p>✅ ${uebersetze(k.textKey)}</p>`;
     }
@@ -613,7 +620,7 @@ function renderStammbaum() {
 }
 
 function klickStammbaum(knotenId) {
-  const ergebnis = kaufeStammbaumKnoten(meta, knotenId, { reifegrad: 0 });
+  const ergebnis = kaufeStammbaumKnoten(meta, knotenId, { reifegrad: meta.maxReifegrad ?? 0 });
   letztesEreignis = ergebnis.ok
     ? `${uebersetze(ergebnis.knoten.textKey)} — gekauft.`
     : 'Noch nicht kaufbar.';
@@ -626,7 +633,7 @@ function render() {
   if ((run.verloren || run.abgeschlossen) && !belohnungOffen && modus !== 'kampf') {
     const titel = run.abgeschlossen ? 'Region 1 durchquert — der Saumhüter fällt' : 'Der Hüter fällt';
     if (!run.jahresringeVergebenFertig) {
-      run.jahresringeVergeben = verdieneJahresringe(meta, { sieg: run.abgeschlossen, kaempfe: run.kampfNummer });
+      run.jahresringeVergeben = verdieneJahresringe(meta, { sieg: run.abgeschlossen, kaempfe: run.kampfNummer, reifegrad: run.reifegrad ?? 0 });
       run.jahresringeVergebenFertig = true;
       speichereNurMeta(); // Meta sofort sichern; toter Run wandert NICHT in den Save
     }
@@ -692,7 +699,8 @@ function verdrahte() {
   binde('[data-lagerfeuer]', (el) => lagerfeuerAktion(el.dataset.lagerfeuer));
   binde('[data-lagerfeuer-ziel]', (el) => lagerfeuerAktion(lagerfeuerWahl, el.dataset.lagerfeuerZiel));
   binde('[data-stammbaum]', (el) => klickStammbaum(el.dataset.stammbaum));
-  binde('[data-klasse]', (el) => { klassenWahl = false; neuerRun(el.dataset.klasse); });
+  binde('[data-klasse]', (el) => { klassenWahl = false; neuerRun(el.dataset.klasse, reifegradWahl); });
+  binde('[data-reifegrad]', (el) => { reifegradWahl = Number(el.dataset.reifegrad); render(); });
   const aktionen = {
     reroll: klickReroll,
     aufloesen: klickAufloesen,
@@ -701,7 +709,7 @@ function verdrahte() {
     ueberspringen: ueberspringeBelohnung,
     verlassen: zurKarte,
     neu: () => {
-      if (meta.freigeschalteteKlassen.length > 1 && !klassenWahl) {
+      if ((meta.freigeschalteteKlassen.length > 1 || (meta.maxReifegrad ?? 0) > 0) && !klassenWahl) {
         klassenWahl = true;
         render();
       } else {
