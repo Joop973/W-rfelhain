@@ -315,6 +315,7 @@ export const GRAVUR_WECHSEL_AUFPREIS_FAKTOR = 1.5;
 export const SLICE_GRAVUREN = [
   'wucht', 'schaerfe', 'borke',
   'gift', 'zunder', 'faeulnis_hauch', 'duerre_hauch', 'markhaertung', 'glanz_gravur',
+  'echo_gravur', // seit B3 (Echo im Loop). Beruhigung/Ermutigung/Doppelschlag/Bruchstelle → B5.
 ];
 
 // --- Blaupausen (04 §4, Schema 09 §2.3) ---------------------------------------

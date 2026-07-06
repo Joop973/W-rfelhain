@@ -259,6 +259,7 @@ export function loeseZugAuf(run, kampf, rng) {
   const auflage = { morsch: 0, welk: 0, kraft: 0 }; // Pool-fremde Status (resolveZug ignoriert sie)
   let pendingGlanz = false;
   let aussetzer = 0;
+  let letzterSchadenEffWert = 0; // effektiver Wert der zuletzt gelegten echten Schaden-Seite (für Echo-Gleichklang)
 
   for (const id of kampf.reihe) {
     const w = findeWuerfel(run, id);
@@ -282,19 +283,30 @@ export function loeseZugAuf(run, kampf, rng) {
           glanz: pendingGlanz, // Glanz verdoppelt die nächste gespielte Schaden-Seite
         });
         pendingGlanz = false;
+        letzterSchadenEffWert = effWert;
+      } else if (effekt.typ === 'echo') {
+        // Echo kopiert den Beitrag der unmittelbar links platzierten Schaden-Seite
+        // (Cap 1× Quelle, resolveZug); zählt für Gleichklang mit deren Wert. Der
+        // Echo-Wurf selbst zeigt seinen 0-Wert → bricht Vollmond (vollmondWert 0).
+        gespielteSeiten.push({ typ: 'schaden', istEcho: true, effektiverWert: letzterSchadenEffWert, vollmondWert: 0, hoechstwert });
+        letzterSchadenEffWert = 0;
       } else if (effekt.typ === 'rinde') {
         gespielteSeiten.push({ typ: 'rinde', effektiverWert: effektiverWert(effekt.wert, { wetzung, scharte }), hoechstwert });
+        letzterSchadenEffWert = 0;
       } else if (effekt.typ === 'schaden_mult') {
         // Mult-Seite: multipliziert den Pool, ist selbst keine Schaden-Seite (kein Passiv).
         gespielteSeiten.push({ typ: 'schaden', effektiverWert: 0, vollmondWert: 0, hoechstwert, kraft: 0, passiv: 0, mult: effekt.wert });
       } else if (effekt.typ === 'faeule' || effekt.typ === 'brand') {
         // resolveZug summiert diese als Pool = Auflege-Menge; bricht Vollmond.
         gespielteSeiten.push({ typ: effekt.typ, stapel: effekt.wert, hoechstwert });
+        letzterSchadenEffWert = 0;
       } else if (effekt.typ === 'glanz') {
         gespielteSeiten.push({ typ: 'glanz', hoechstwert }); // Nicht-Schaden-Seite: bricht Vollmond
         pendingGlanz = true;
+        letzterSchadenEffWert = 0;
       } else if (effekt.typ === 'morsch' || effekt.typ === 'welk' || effekt.typ === 'kraft') {
         gespielteSeiten.push({ typ: effekt.typ, hoechstwert }); // bricht Vollmond, kein Pool
+        letzterSchadenEffWert = 0;
         auflage[effekt.typ] += effekt.wert;
       }
       // Echo/Beruhigung/Ermutigung folgen mit B3/B5.
@@ -306,6 +318,7 @@ export function loeseZugAuf(run, kampf, rng) {
   const morschStapel = Math.min(4, kampf.gegner.status.morsch + auflage.morsch);
   const welkStapel = kampf.spielerStatus.welk;
   const pools = resolveZug(gespielteSeiten, { morschStapel, welkStapel, region: 1 });
+  kampf.combos = pools.combos; // Gleichklang/Vollmond für die Anzeige (UI)
 
   // Status-Auflage auf den Gegner (Fäule/Brand/Morsch/Welk) bzw. Spieler (Kraft-Selbst-Buff).
   if (pools.faeule > 0) legeStatusAuf(kampf.gegner.status, 'faeule', pools.faeule);

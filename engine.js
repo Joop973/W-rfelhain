@@ -120,5 +120,12 @@ export function resolveZug(gespielteSeiten, kontext = {}) {
     vollmondBurst,
   });
 
+  // Combo-Metadaten für die Anzeige (UI); ändert die Pools nicht.
+  pools.combos = {
+    gleichklangAnzahl: gleichklangAnzahl >= 2 ? gleichklangAnzahl : 0,
+    gleichklangMult: gleichklangAnzahl >= 2 ? gleichklangMult(gleichklangAnzahl) : 1,
+    vollmond: vollmondBurst > 0,
+    vollmondBurst,
+  };
   return pools;
 }

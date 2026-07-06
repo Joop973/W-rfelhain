@@ -178,6 +178,10 @@ function klickAufloesen() {
   const pools = loeseZugAuf(run, kampf, rng);
   if (!pools) return;
   letztesEreignis = `Paket aufgelöst: ${pools.schaden} Schaden, ${pools.rinde} Rinde.`;
+  const c = pools.combos;
+  if (c?.gleichklangAnzahl >= 2) letztesEreignis += ` Gleichklang ×${c.gleichklangMult} (${c.gleichklangAnzahl} gleiche)!`;
+  if (c?.vollmond) letztesEreignis += ` 🌕 Vollmond +${c.vollmondBurst}!`;
+  if (kampf.aussetzer > 0) letztesEreignis += ` (${kampf.aussetzer}× Riss-Aussetzer.)`;
   if (kampf.phase === 'sieg') {
     letztesEreignis += kampf.sauberSieg ? ' Sauberer Sieg (+1 Gemüt auf Gespielte).' : '';
     if (kampf.kristallisiert > 0) letztesEreignis += ` ${kampf.kristallisiert} Übermut kristallisiert zu Schreck.`;
