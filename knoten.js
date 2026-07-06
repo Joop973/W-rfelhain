@@ -114,6 +114,7 @@ export function troesteDienst(run, wuerfelId) {
   const wuerfel = findeWuerfel(run, wuerfelId);
   wuerfel.gemuet = troeste(wuerfel).gemuet;
   run.troestenZahl = (run.troestenZahl ?? 0) + 1; // zählt für Frühling (01 §5)
+  run.pflegeZahl = (run.pflegeZahl ?? 0) + 1; // speist Labung (04 §4.1)
   return { ok: true };
 }
 
@@ -148,6 +149,7 @@ export function waehleEventOption(run, event, optionIndex, rng) {
       ziel.gemuet = troeste(ziel).gemuet;
     }
     run.troestenZahl = (run.troestenZahl ?? 0) + effekt.troesten;
+    run.pflegeZahl = (run.pflegeZahl ?? 0) + effekt.troesten;
     ergebnis.push(`${effekt.troesten}× Trösten`);
   }
   if (effekt.gemuet) {
@@ -176,6 +178,7 @@ export function rasteLagerfeuer(run, wahl, wuerfelId = null) {
     const wuerfel = findeWuerfel(run, wuerfelId);
     wuerfel.gemuet = troeste(wuerfel).gemuet;
     run.troestenZahl = (run.troestenZahl ?? 0) + 1;
+    run.pflegeZahl = (run.pflegeZahl ?? 0) + 1;
     return { ok: true, text: '+2 Gemüt' };
   }
   if (wahl === 'vollenden') {

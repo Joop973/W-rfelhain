@@ -193,7 +193,7 @@ function simuliere(policy, n, rng) {
   };
 }
 
-const N = 2000;
+const N = Number(process.env.SIM_N ?? 2000);
 const POLICIES = ['pflege', 'standard', 'gier_klug'];
 const LABEL = { pflege: 'Pflege', standard: 'Standard', gier_klug: 'Gier (klug)' };
 

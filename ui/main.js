@@ -71,6 +71,7 @@ function speichereZwischenKnoten() {
       belohnungenOhneBlaupause: run.belohnungenOhneBlaupause,
       entfernteWuerfel: run.entfernteWuerfel,
       troestenZahl: run.troestenZahl,
+      pflegeZahl: run.pflegeZahl,
     });
     speichere(save);
   } catch {
@@ -96,6 +97,7 @@ function ladeGespeichertenRun() {
       belohnungenOhneBlaupause: rs.belohnungenOhneBlaupause ?? 0,
       entfernteWuerfel: rs.entfernteWuerfel ?? 0,
       troestenZahl: rs.troestenZahl ?? 0,
+      pflegeZahl: rs.pflegeZahl ?? rs.troestenZahl ?? 0,
       verloren: false,
       abgeschlossen: findeKnotenTyp(rs) === 'boss',
     };
@@ -183,6 +185,7 @@ function klickAufloesen() {
   if (c?.vollmond) letztesEreignis += ` 🌕 Vollmond +${c.vollmondBurst}!`;
   if (kampf.geheilt > 0) letztesEreignis += ` 💧 Labung +${kampf.geheilt} HP.`;
   if (kampf.gepraegt > 0) letztesEreignis += ` 🪙 Prägung +${kampf.gepraegt} Münzen.`;
+  if (kampf.getroestet > 0) letztesEreignis += ` 🍃 ${kampf.getroestet}× getröstet (+2 Gemüt).`;
   if (kampf.aussetzer > 0) letztesEreignis += ` (${kampf.aussetzer}× Riss-Aussetzer.)`;
   if (kampf.phase === 'sieg') {
     letztesEreignis += kampf.sauberSieg ? ' Sauberer Sieg (+1 Gemüt auf Gespielte).' : '';

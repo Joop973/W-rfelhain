@@ -310,12 +310,12 @@ export const GRAVUR_WECHSEL_AUFPREIS_FAKTOR = 1.5;
 
 // Slice-Gravuren, deren Effekte der Kampf-Loop ausführen kann: Mult/Aufschlag
 // (Wucht/Schärfe/Borke) + Status/Glanz seit Etappe B1 (Gift/Zunder/Fäulnis-Hauch/
-// Dürre-Hauch/Markhärtung/Glanz). Echo/Beruhigung/Ermutigung/Doppelschlag/
-// Bruchstelle folgen mit B3/B5. [PROVISORISCH]
+// Dürre-Hauch/Markhärtung/Glanz). Doppelschlag/Bruchstelle folgen später. [PROVISORISCH]
 export const SLICE_GRAVUREN = [
   'wucht', 'schaerfe', 'borke',
   'gift', 'zunder', 'faeulnis_hauch', 'duerre_hauch', 'markhaertung', 'glanz_gravur',
-  'echo_gravur', // seit B3 (Echo im Loop). Beruhigung/Ermutigung/Doppelschlag/Bruchstelle → B5.
+  'echo_gravur', // seit B3 (Echo im Loop)
+  'beruhigungs_gravur', 'ermutigungs_gravur', // seit B5 (Pflege-Seiten im Loop)
 ];
 
 // --- Blaupausen (04 §4, Schema 09 §2.3) ---------------------------------------

@@ -6,9 +6,11 @@
 
 import { erstelleStartArsenal, HUETER_BASIS_HP, KLASSEN } from './data.js';
 
-export const SAVE_VERSION = 2; // [GESPERRT] Pflichtfeld, monoton steigend
+export const SAVE_VERSION = 3; // [GESPERRT] Pflichtfeld, monoton steigend
 // v2 (2026-07-04): + karte, positionKnotenId, hp, belohnungenOhneBlaupause,
 // entfernteWuerfel, troestenZahl (Etappe A3–A6, Karten-Run).
+// v3 (2026-07-06): + pflegeZahl — Gemüt-Pflege-Zähler inkl. Ermutigung,
+// speist Labung (Etappe B5; troestenZahl bleibt der Frühling-Zähler ohne Ermutigung).
 export const SAVE_KEY = 'wuerfelhain_save'; // fester Key, Migration statt Save-Verlust (09 §3.3)
 
 // --- Neuen Run anlegen (Struktur 09 §3.1) -----------------------------------
@@ -34,6 +36,7 @@ export function erstelleNeuenSave(klasseId = 'eichwart', jetzt = () => new Date(
       belohnungenOhneBlaupause: 0,
       entfernteWuerfel: 0,
       troestenZahl: 0,
+      pflegeZahl: 0,
       aktiveFluechte: [],
       sauberSiegStreak: 0,
     },
@@ -99,6 +102,16 @@ export const MIGRATIONEN = {
       belohnungenOhneBlaupause: save.runState.belohnungenOhneBlaupause ?? 0,
       entfernteWuerfel: 0,
       troestenZahl: 0,
+    },
+  }),
+  // v2 → v3: pflegeZahl ergänzen. Bester Schätzer für Bestands-Saves ist die
+  // bisherige troestenZahl (bis v2 gab es keine Ermutigungs-Ereignisse im Loop).
+  2: (save) => ({
+    ...save,
+    saveVersion: 3,
+    runState: {
+      ...save.runState,
+      pflegeZahl: save.runState.pflegeZahl ?? save.runState.troestenZahl ?? 0,
     },
   }),
 };

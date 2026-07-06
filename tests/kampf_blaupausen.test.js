@@ -46,7 +46,7 @@ test('Labung (Quell) heilt Basis + 1 je Trösten, harter Cap +8', () => {
   const run = starteRun('eichwart', rng);
   wendeBlaupauseAn(run.arsenal[0], 'quell'); // 6× Labung-Seiten Basis 3
   run.hp = 20; // Raum zum Heilen
-  run.troestenZahl = 2; // → +2 Bonus
+  run.pflegeZahl = 2; // → +2 Bonus (Labung liest pflegeZahl, B5)
   const kampf = starteKampf(run, rng);
   beginneZug(run, kampf, rng);
   const id = run.arsenal[0].id;
@@ -63,7 +63,7 @@ test('Labung-Cap: Bonus deckelt bei +8 (max Heilung 11 bei Basis 3)', () => {
   const run = starteRun('eichwart', rng);
   wendeBlaupauseAn(run.arsenal[0], 'quell');
   run.hp = 5;
-  run.troestenZahl = 20; // weit über Cap
+  run.pflegeZahl = 20; // weit über Cap
   const kampf = starteKampf(run, rng);
   const id = run.arsenal[0].id;
   beginneZug(run, kampf, rng);

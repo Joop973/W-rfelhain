@@ -39,7 +39,8 @@ export function starteRun(klasseId = 'eichwart', rng) {
     waehrungen: { muenzen: 0, eicheln: 0, tau: TAU_PRO_REGION }, // Tau je Region (03 §8)
     belohnungenOhneBlaupause: 0, // Blaupause-Pity-Zähler (03 §10)
     entfernteWuerfel: 0, // treibt die Entfernen-Preiseskalation (07 §3.3)
-    troestenZahl: 0, // run-weite Trösten-Ereignisse (01 §5)
+    troestenZahl: 0, // run-weite Trösten-Ereignisse für Frühling — OHNE Ermutigung (01 §5)
+    pflegeZahl: 0, // alle Gemüt-Pflege-Ereignisse (inkl. Ermutigung) — speist Labung (04 §4.1)
     verloren: false,
     abgeschlossen: false, // Boss besiegt
   };
@@ -262,6 +263,17 @@ export function loeseZugAuf(run, kampf, rng) {
   let letzterSchadenEffWert = 0; // effektiver Wert der zuletzt gelegten echten Schaden-Seite (für Echo-Gleichklang)
   let geheilt = 0; // Labung (Quell) — Tau-Engine, direkt auf run.hp
   let gepraegt = 0; // Prägung (Hort) — Münzen-Engine, direkt auf run.waehrungen
+  let getroestet = 0; // Beruhigung/Ermutigung dieses Zugs (Anzeige)
+
+  // Auto-Ziel der Pflege-Seiten (Slice): Hand-Würfel mit dem niedrigsten Gemüt.
+  // Beruhigung ist reaktiv und verlangt Schreck > 0 (02 §6.3); Ermutigung ist
+  // universell (02 §6.4). Beide: +`wert` Gemüt (universelle Trösten-Regel +2).
+  const pflegeZiel = (nurMitSchreck) => {
+    const kandidaten = kampf.hand
+      .map((id) => findeWuerfel(run, id))
+      .filter((w) => !nurMitSchreck || schreck(w.gemuet) > 0);
+    return kandidaten.sort((a, b) => a.gemuet - b.gemuet)[0] ?? null;
+  };
 
   for (const id of kampf.reihe) {
     const w = findeWuerfel(run, id);
@@ -313,8 +325,9 @@ export function loeseZugAuf(run, kampf, rng) {
         letzterSchadenEffWert = 0;
         auflage[effekt.typ] += effekt.wert;
       } else if (effekt.typ === 'labung') {
-        // Quell/Tau-Engine (04 §4.1): Basis + 1 je run-weitem Trösten, harter Cap +8.
-        const bonus = Math.min(8, run.troestenZahl ?? 0);
+        // Quell/Tau-Engine (04 §4.1): Basis + 1 je Gemüt-Pflege-Ereignis (inkl.
+        // Ermutigung — Default der Kopplungsfrage), harter Cap +8.
+        const bonus = Math.min(8, run.pflegeZahl ?? run.troestenZahl ?? 0);
         geheilt += effekt.wert + bonus;
         gespielteSeiten.push({ typ: 'labung', hoechstwert }); // Nicht-Schaden: bricht Vollmond
         letzterSchadenEffWert = 0;
@@ -328,8 +341,21 @@ export function loeseZugAuf(run, kampf, rng) {
         legeStatusAuf(kampf.spielerStatus, 'riss', effekt.wert);
         gespielteSeiten.push({ typ: 'riss', hoechstwert });
         letzterSchadenEffWert = 0;
+      } else if (effekt.typ === 'beruhigung' || effekt.typ === 'ermutigung') {
+        // Pflege-Seiten (02 §6.3/§6.4): +Gemüt auf den ängstlichsten Hand-Würfel.
+        // Beruhigung verpufft ohne Schreck-Ziel (reaktiv); Ermutigung wirkt immer.
+        // Zähler: troestenZahl (Frühling, 01 §5) zählt Ermutigung NICHT mit;
+        // pflegeZahl (Labung-Futter, 04 §4.1) zählt beide.
+        const ziel = pflegeZiel(effekt.typ === 'beruhigung');
+        if (ziel) {
+          ziel.gemuet += effekt.wert;
+          getroestet += 1;
+          run.pflegeZahl = (run.pflegeZahl ?? 0) + 1;
+          if (effekt.typ === 'beruhigung') run.troestenZahl = (run.troestenZahl ?? 0) + 1;
+        }
+        gespielteSeiten.push({ typ: effekt.typ, hoechstwert }); // Nicht-Schaden: bricht Vollmond
+        letzterSchadenEffWert = 0;
       }
-      // Beruhigung/Ermutigung folgen mit B5.
     }
   }
 
@@ -352,6 +378,7 @@ export function loeseZugAuf(run, kampf, rng) {
   if (gepraegt > 0) run.waehrungen.muenzen += gepraegt;
   kampf.geheilt = geheilt;
   kampf.gepraegt = gepraegt;
+  kampf.getroestet = getroestet;
 
   // Gegner-Block halbiert eingehenden Schaden (Slice-Minimal, 05 §4 Wächter).
   const effektiverSchaden = kampf.gegner.absicht.typ === 'block' ? Math.floor(pools.schaden / 2) : pools.schaden;
