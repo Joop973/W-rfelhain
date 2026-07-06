@@ -221,6 +221,7 @@ Pro Würfel-Typ 3 Gemüt-Varianten (§1.5): `ruhig` / `froh` / `aengstlich`.
 | `wuerfel.beruhigung` | Beruhigung/Pflege | ×3 | 3 |
 
 - **Erweiterbar:** je weitere Blaupause/Klassen-Sonderwürfel (04/06) +3 Boxen. Zähl-Platzhalter: **~7 Typen × 3 = 21** `[PROVISORISCH]`.
+  - **Stand Code (Etappe B):** der Slice instanziiert bereits 9 Würfel-Typen (`schaden`, `rinde`, `faeule`, `brand`, `schliff`, `stuetze`, `widerhall`, `zuversicht`, `ermutigung`) → **9 × 3 = 27 Boxen** real. `quell`/`beruhigung` aus der Tabelle sind Alias-Rollen der Blaupausen-Würfel; die verbindliche Liste ergibt sich aus 04, sobald alle 16 Blaupausen verdrahtet sind (B4).
 - Gesperrte Seiten (Schreck) werden **nicht** als eigener Würfel-Sprite gebaut, sondern als Overlay auf `aengstlich` (§4.5, `overlay.gesperrt`).
 
 ### 4.2 Seiten-Icons — `16×16` (1 b) `[PROVISORISCH]`
@@ -284,9 +285,10 @@ Diegetisch als „Zeug auf dem Tisch" (§1.2), wo ohne Lesbarkeits-Verlust mögl
 
 Für Anzeige an Gegner/Würfel und in Tooltips.
 
-`status.faeule` · `status.brand` · `status.morsch` · `status.welk` · `status.kraft` · `status.riss` · `status.glanz` · `combo.gleichklang` · `combo.echo` · `combo.vollmond` · `fx.kristallisation.marke`
+`status.faeule` · `status.brand` · `status.morsch` · `status.welk` · `status.kraft` · `status.riss` · `status.glanz` · `status.wetzung` · `status.scharte` · `status.freilauf` · `status.klemme` · `combo.gleichklang` · `combo.echo` · `combo.vollmond` · `fx.kristallisation.marke`
 
-→ **11 Boxen.** (Teils Doppelnutzung mit §4.2-Icons möglich — bei Umsetzung deduplizieren.)
+→ **15 Boxen.** (Teils Doppelnutzung mit §4.2-Icons möglich — bei Umsetzung deduplizieren.)
+- **Eigen-Status (B2):** `wetzung`/`scharte` (effektiver Wurf-Wert ±) und `freilauf`/`klemme` (Reroll-Ökonomie) sind seit Etappe B in der UI als Badges aktiv (09 §2.11) und brauchen eigene Icons — in der Erst-Zählung (§4.11: 11) noch nicht enthalten.
 
 ### 4.7 Währungs- & Meta-Icons — `16×16` `[PROVISORISCH]`
 
@@ -334,7 +336,7 @@ Keine Bild-Platzhalter — Datei-Slots. `.ogg` + Fallback (§2.4). Platzhalter =
 | Gegner & Bosse (§4.3) | ~45 |
 | Hintergründe/Tisch (§4.4) | ~9 |
 | UI/HUD (§4.5) | ~12 |
-| Status/Combo (§4.6) | ~11 |
+| Status/Combo (§4.6) | ~15 (inkl. 4 Eigen-Status aus B2) |
 | Währung/Meta (§4.7) | 6 |
 | Karte/Knoten (§4.8) | 10 |
 | VFX (§4.9) | ~6 |
