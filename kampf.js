@@ -4,7 +4,7 @@
 // Slice-Umfang: Region-1-Sequenz (9 Kämpfe, Kampf 9 = Elite), Werte aus der
 // kalibrierten Stufe "mittel" (docs/Welle1_Tor_ReRun_12er_Befund.md).
 
-import { resolveZug, welkMult, effektiverWert, eingehendMult } from './engine.js';
+import { resolveZug, welkMult, effektiverWert, vollmondPruefwert, eingehendMult } from './engine.js';
 import {
   schreck,
   bestimmeGesperrteSeitenIndizes,
@@ -159,6 +159,9 @@ export function starteKampf(run, rng, knotenTyp = 'kampf') {
     // Loser Ast (07 §4.2 #6): 1 übermut-freier Reroll je KAMPF.
     freischeineKampf: segenEffekt(run, 'freilauf_pro_kampf')?.wert ?? 0,
     griffGenutztDiesenZug: false, // Gieriger Griff: 1 freier bezahlter Reroll je ZUG
+    // Dorfschamane "Zuversicht" (06 §3): 1 Ermutigung je Kampf kostet 0 Atem.
+    gratisErmutigungRest: KLASSEN[run.klasse].passiv.gratisErmutigungProKampf ?? 0,
+    gratisErmutigungGenutztFuer: null,
     phase: 'zug', // zug | gegnerzug | sieg | niederlage
   };
 
@@ -220,9 +223,12 @@ export function rerolle(run, kampf, rng) {
   // lokal), damit der Kampf-Vorrat für spätere Züge erhalten bleibt.
   const griffFrei = segenEffekt(run, 'erster_bezahlter_reroll_frei') != null && !kampf.griffGenutztDiesenZug;
   const astFrei = (kampf.freischeineKampf ?? 0) > 0;
+  // Schleiferin "Schliff" (06 §5): +1 Gratis-Reroll je Zug — wirkt wie
+  // permanenter Freilauf 1 und verrechnet sich regulär gegen Klemme (02 §7.5).
+  const passivFreilauf = KLASSEN[run.klasse].passiv.extraGratisRerolls ?? 0;
   const { state, tischsturz, freischeinGenutzt } = fuehreRerollAus(
     { uebermut: kampf.uebermut, rerollsDiesenZug: kampf.rerollsDiesenZug },
-    { freilauf: kampf.spielerStatus.freilauf, klemme: kampf.spielerStatus.klemme },
+    { freilauf: kampf.spielerStatus.freilauf + passivFreilauf, klemme: kampf.spielerStatus.klemme },
     { freischein: griffFrei || astFrei }
   );
   if (freischeinGenutzt) {
@@ -257,12 +263,22 @@ export function rerolle(run, kampf, rng) {
 }
 
 // Platzieren links→rechts, 1 Atem je Seite (02 §2.2 Schritt 5).
+// Dorfschamane: die erste Ermutigungs-Seite je Kampf kostet 0 Atem (06 §3).
 export function platziere(run, kampf, wuerfelId) {
   if (kampf.phase !== 'zug') return false;
   if (kampf.atem <= 0) return false;
   if (!kampf.hand.includes(wuerfelId) || kampf.reihe.includes(wuerfelId)) return false;
+  const wuerfel = findeWuerfel(run, wuerfelId);
+  const seite = wuerfel.seiten[kampf.wuerfe[wuerfelId]?.seitenIndex ?? 0];
+  const istErmutigung = seite?.effekt?.some((e) => e.typ === 'ermutigung') ?? false;
+  let kosten = wuerfel.atem;
+  if (istErmutigung && kampf.gratisErmutigungRest > 0 && kampf.gratisErmutigungGenutztFuer == null) {
+    kosten = 0;
+    kampf.gratisErmutigungRest -= 1;
+    kampf.gratisErmutigungGenutztFuer = wuerfelId;
+  }
   kampf.reihe.push(wuerfelId);
-  kampf.atem -= findeWuerfel(run, wuerfelId).atem;
+  kampf.atem -= kosten;
   return true;
 }
 
@@ -270,7 +286,13 @@ export function nimmZurueck(run, kampf, wuerfelId) {
   const index = kampf.reihe.indexOf(wuerfelId);
   if (index === -1) return false;
   kampf.reihe.splice(index, 1);
-  kampf.atem += findeWuerfel(run, wuerfelId).atem;
+  if (kampf.gratisErmutigungGenutztFuer === wuerfelId) {
+    // Gratis-Platzierung zurücknehmen: kein Atem zurück, Freischein wieder da.
+    kampf.gratisErmutigungGenutztFuer = null;
+    kampf.gratisErmutigungRest += 1;
+  } else {
+    kampf.atem += findeWuerfel(run, wuerfelId).atem;
+  }
   return true;
 }
 
@@ -280,12 +302,20 @@ export function nimmZurueck(run, kampf, wuerfelId) {
 export function loeseZugAuf(run, kampf, rng) {
   if (kampf.phase !== 'zug') return null;
   const passiv = KLASSEN[run.klasse].passiv;
-  const passivWert = passiv.typ === 'schaden_flach' ? passiv.wert : 0;
+  // Flaches Klassen-Passiv je Schaden-Seite (06): Eichwart/Rodbauer bedingungslos,
+  // Dorfschamane "Zuversicht" nur für Würfel mit Gemüt ≥ 0 (Schreck streicht den Bonus).
+  const passivFuer = (wuerfel) => {
+    if (passiv.typ === 'schaden_flach') return passiv.wert;
+    if (passiv.typ === 'zuversicht') return wuerfel.gemuet >= (passiv.nurGemuetAb ?? 0) ? passiv.schadenFlach : 0;
+    return 0;
+  };
   const spielerKraft = kampf.spielerStatus.kraft; // gilt für alle Schaden-Seiten dieses Zugs
   // Wetzung/Scharte (Eigen-Status) setzen den effektiven Wert JEDER gewürfelten Seite
-  // (Schaden/Rinde) beim Wurf, Untergrenze 1 (02 §2.2/§8.2). Klassen-Sockel = 0 im Slice,
-  // daher effektiver Wert = Vollmond-Prüfwert; das trennt sich erst mit der Schleiferin (C2).
+  // (Schaden/Rinde) beim Wurf, Untergrenze 1 (02 §2.2/§8.2). Schleiferin-Schliff ist
+  // der permanente Klassen-Sockel: hebt den effektiven Wert, speist Vollmond aber
+  // NICHT (02 §10.3 / 06 §5 Vollmond-Ausnahme) — daher getrennter Prüfwert.
   const { wetzung, scharte } = kampf.spielerStatus;
+  const klassenSockel = passiv.typ === 'schliff' ? passiv.klassenSockel : 0;
 
   const gespielteSeiten = [];
   const auflage = { morsch: 0, welk: 0, kraft: 0 }; // Pool-fremde Status (resolveZug ignoriert sie)
@@ -320,14 +350,16 @@ export function loeseZugAuf(run, kampf, rng) {
           aussetzer += 1;
           continue;
         }
-        const effWert = effektiverWert(effekt.wert, { wetzung, scharte });
+        const effWert = effektiverWert(effekt.wert, { wetzung, scharte, klassenSockel });
         gespielteSeiten.push({
           typ: 'schaden',
           effektiverWert: effWert,
-          vollmondWert: effWert, // Wetzung ermöglicht Vollmond, Scharte bricht ihn
+          // Wetzung ermöglicht Vollmond, Scharte bricht ihn; der Schliff-Sockel
+          // zählt bewusst nicht mit (Vollmond-Ausnahme, 06 §5).
+          vollmondWert: vollmondPruefwert(effekt.wert, { wetzung, scharte }),
           hoechstwert,
           kraft: spielerKraft,
-          passiv: passivWert,
+          passiv: passivFuer(w),
           glanz: pendingGlanz, // Glanz verdoppelt die nächste gespielte Schaden-Seite
         });
         pendingGlanz = false;
@@ -340,7 +372,7 @@ export function loeseZugAuf(run, kampf, rng) {
         letzterSchadenEffWert = 0;
       } else if (effekt.typ === 'rinde') {
         // Rindenring (07 §4.2 #2): der erste gespielte Rinde-Würfel je Zug gibt +2 Block.
-        let rindeWert = effektiverWert(effekt.wert, { wetzung, scharte });
+        let rindeWert = effektiverWert(effekt.wert, { wetzung, scharte, klassenSockel }); // Schliff hebt alle Pools
         if (!ersteRindeGespielt && segenEffekt(run, 'erster_rinde_wuerfel_bonus')) {
           rindeWert += segenEffekt(run, 'erster_rinde_wuerfel_bonus').wert;
         }
@@ -408,6 +440,8 @@ export function loeseZugAuf(run, kampf, rng) {
     welkStapel,
     region: 1,
     vollmondBurstMult: borke ? 1 + borke.wert / 100 : 1,
+    // Glöckner "Widerhall" (06 §4): +flach auf den Pool, wenn Gleichklang zündet.
+    gleichklangFlachBonus: passiv.typ === 'widerhall' ? passiv.schadenFlach : 0,
   });
   kampf.combos = pools.combos; // Gleichklang/Vollmond für die Anzeige (UI)
 
@@ -544,8 +578,12 @@ function beendeKampf(run, kampf, sieg, rng) {
     gespielteWuerfelGesamt: gespielteWuerfel,
     zuletztGespielteIds: kampf.zuletztGespielteIds,
     uebermutRest: kampf.uebermut,
-    // Geduldiger Wächter: Sauberer Sieg +2 statt +1 (07 §4.2 #7).
-    sauberSiegBonus: segenEffekt(run, 'sauber_sieg_gemuet')?.wert ?? 1,
+    // Sauberer Sieg +2 statt +1: Segen "Geduldiger Wächter" (07 §4.2 #7) oder
+    // Dorfschamane-Passiv (06 §3) — nicht stapelnd, der höhere gilt.
+    sauberSiegBonus: Math.max(
+      segenEffekt(run, 'sauber_sieg_gemuet')?.wert ?? 1,
+      KLASSEN[run.klasse].passiv.sauberSiegBonus ?? 1
+    ),
     kristallisation: {
       // Ungeduld-Haken: 2:1 statt 1:1; Gieriger-Griff-Haken: +1 Schreck-Rest.
       verhaeltnis: segenHaken(run, 'kristallisation_verhaeltnis')?.wert ?? 1,

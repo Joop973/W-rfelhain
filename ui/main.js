@@ -63,6 +63,7 @@ let schmiedeWahl = null; // { gravurId, wuerfelId? }
 let marktWahl = null; // { aktion: 'blaupause'|'entfernen'|'troesten', blaupause? }
 let lagerfeuerWahl = null; // 'troesten' | 'vollenden'
 let knotenKontext = null; // Angebot/Event des aktiven Knotens
+let klassenWahl = false; // Klassen-Auswahl vor neuem Run (C2/C3)
 
 const wurzel = document.getElementById('spiel');
 
@@ -141,11 +142,11 @@ function findeKnotenTyp(rs) {
 
 // --- Aktionen ----------------------------------------------------------------------
 
-function neuerRun() {
+function neuerRun(klasseId = 'eichwart') {
   // Nur den Run löschen — der Stammbaum (meta) überlebt (C1). Der nächste
   // speichereZwischenKnoten schreibt meta wieder in den frischen Save.
   try { loesche(); } catch { /* ignorieren */ }
-  run = starteRun('eichwart', rng);
+  run = starteRun(klasseId, rng);
   kampf = null;
   modus = 'karte';
   belohnungsWahl = schmiedeWahl = marktWahl = lagerfeuerWahl = knotenKontext = null;
@@ -212,6 +213,7 @@ function klickAufloesen() {
   const c = pools.combos;
   if (c?.gleichklangAnzahl >= 2) letztesEreignis += ` Gleichklang ×${c.gleichklangMult} (${c.gleichklangAnzahl} gleiche)!`;
   if (c?.vollmond) letztesEreignis += ` 🌕 Vollmond +${c.vollmondBurst}!`;
+  if (c?.widerhallBonus > 0) letztesEreignis += ` 🔔 Widerhall +${c.widerhallBonus}!`;
   if (kampf.geheilt > 0) letztesEreignis += ` 💧 Labung +${kampf.geheilt} HP.`;
   if (kampf.gepraegt > 0) letztesEreignis += ` 🪙 Prägung +${kampf.gepraegt} Münzen.`;
   if (kampf.getroestet > 0) letztesEreignis += ` 🍃 ${kampf.getroestet}× getröstet (+2 Gemüt).`;
@@ -588,6 +590,14 @@ function renderLagerfeuer() {
     </section>`;
 }
 
+// Klassen-Wahl vor neuem Run (C2/C3): nur freigeschaltete Klassen wählbar.
+function renderKlassenWahl() {
+  const knoepfe = meta.freigeschalteteKlassen
+    .map((id) => `<button data-klasse="${id}">${uebersetze(KLASSEN[id].nameKey)} (${HUETER_BASIS_HP + KLASSEN[id].hpMod} ❤)</button>`)
+    .join(' ');
+  return `<section class="ph ph--klassenwahl"><strong>Hüter wählen</strong><p>${knoepfe}</p></section>`;
+}
+
 // Stammbaum-Panel (C1): kaufbare Meta-Knoten am Run-Ende (09 §2.9).
 function renderStammbaum() {
   const zeilen = Object.values(STAMMBAUM_KNOTEN).map((k) => {
@@ -626,7 +636,7 @@ function render() {
         <p>Arsenal-Schreck: ${arsenalSchreckSumme(run)} · Trösten: ${run.troestenZahl} · 🪙 ${run.waehrungen.muenzen}</p>
         <p>🪵 +${run.jahresringeVergeben || 0} Jahresringe (gesamt ${meta.jahresringe})</p>
         ${renderStammbaum()}
-        <button data-aktion="neu">Neuer Run</button>
+        ${klassenWahl ? renderKlassenWahl() : '<button data-aktion="neu">Neuer Run</button>'}
       </div>`;
     verdrahte();
     return;
@@ -682,6 +692,7 @@ function verdrahte() {
   binde('[data-lagerfeuer]', (el) => lagerfeuerAktion(el.dataset.lagerfeuer));
   binde('[data-lagerfeuer-ziel]', (el) => lagerfeuerAktion(lagerfeuerWahl, el.dataset.lagerfeuerZiel));
   binde('[data-stammbaum]', (el) => klickStammbaum(el.dataset.stammbaum));
+  binde('[data-klasse]', (el) => { klassenWahl = false; neuerRun(el.dataset.klasse); });
   const aktionen = {
     reroll: klickReroll,
     aufloesen: klickAufloesen,
@@ -689,7 +700,14 @@ function verdrahte() {
     weiter: klickWeiter,
     ueberspringen: ueberspringeBelohnung,
     verlassen: zurKarte,
-    neu: neuerRun,
+    neu: () => {
+      if (meta.freigeschalteteKlassen.length > 1 && !klassenWahl) {
+        klassenWahl = true;
+        render();
+      } else {
+        neuerRun();
+      }
+    },
   };
   binde('[data-aktion]', (el) => aktionen[el.dataset.aktion]());
 }

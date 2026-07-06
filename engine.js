@@ -53,15 +53,18 @@ export function seitenBasis(seite) {
 }
 
 // Pool-Stufe: ×Gleichklang → ×Morsch → ×Welk → +Vollmond-Burst → floor (03 §2 Schritte 5–9).
+// gleichklangFlachBonus: Glöckner-Passiv "Widerhall" (06 §4) — +flach auf den
+// Pool, wenn Gleichklang zündet (≥ 2 gleiche), 1×/Zug, additiv vor floor.
 export function wendePoolModifikatoren(
   poolSumme,
-  { gleichklangAnzahl = 0, morschStapel = 0, welkStapel = 0, vollmondBurst = 0 } = {}
+  { gleichklangAnzahl = 0, morschStapel = 0, welkStapel = 0, vollmondBurst = 0, gleichklangFlachBonus = 0 } = {}
 ) {
   let pool = poolSumme;
   pool *= gleichklangMult(gleichklangAnzahl);
   pool *= morschMult(morschStapel);
   pool *= welkMult(welkStapel);
   pool += vollmondBurst;
+  if (gleichklangAnzahl >= 2) pool += gleichklangFlachBonus;
   return Math.max(0, Math.floor(pool));
 }
 
@@ -78,7 +81,7 @@ function groessteGleicheGruppe(werte) {
 // vollmondBurstMult: flacher Aufschlag auf den additiven Burst (Segen
 // "Splitternde Borke" ×1,5, 07 §4.2 #9) — nie multiplikativ auf den Pool.
 export function resolveZug(gespielteSeiten, kontext = {}) {
-  const { morschStapel = 0, welkStapel = 0, region = 1, vollmondBurstMult = 1 } = kontext;
+  const { morschStapel = 0, welkStapel = 0, region = 1, vollmondBurstMult = 1, gleichklangFlachBonus = 0 } = kontext;
   const pools = { schaden: 0, rinde: 0, faeule: 0, brand: 0 };
 
   let schadenPoolLaufend = 0;
@@ -131,6 +134,7 @@ export function resolveZug(gespielteSeiten, kontext = {}) {
     morschStapel,
     welkStapel,
     vollmondBurst,
+    gleichklangFlachBonus,
   });
 
   // Combo-Metadaten für die Anzeige (UI); ändert die Pools nicht.
@@ -139,6 +143,7 @@ export function resolveZug(gespielteSeiten, kontext = {}) {
     gleichklangMult: gleichklangAnzahl >= 2 ? gleichklangMult(gleichklangAnzahl) : 1,
     vollmond: vollmondBurst > 0,
     vollmondBurst,
+    widerhallBonus: gleichklangAnzahl >= 2 ? gleichklangFlachBonus : 0,
   };
   return pools;
 }
