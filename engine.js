@@ -32,6 +32,14 @@ export function morschMult(stapel) {
   return 1 + 0.2 * Math.min(stapel, 4);
 }
 
+// Morsch als Gegner-Mechanik, Option A (05 §2.1) [PROVISORISCH — B7-Prototyp]:
+// Gegner-Morsch auf dem Hüter wirkt symmetrisch auf EINGEHENDEN Schaden —
+// +20 %/Stapel aus Gegner-Angriffen, Cap 4, vor Block. Paralleler Multiplikator
+// zur Spieler-seitigen Pool-Regel (morschMult), bewusst gleiche Kurve.
+export function eingehendMult(morschStapel) {
+  return morschMult(morschStapel);
+}
+
 export function welkMult(stapel) {
   return 1 - 0.1 * Math.min(stapel, 4);
 }

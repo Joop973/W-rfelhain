@@ -4,7 +4,7 @@
 // Slice-Umfang: Region-1-Sequenz (9 Kämpfe, Kampf 9 = Elite), Werte aus der
 // kalibrierten Stufe "mittel" (docs/Welle1_Tor_ReRun_12er_Befund.md).
 
-import { resolveZug, welkMult, effektiverWert } from './engine.js';
+import { resolveZug, welkMult, effektiverWert, eingehendMult } from './engine.js';
 import {
   schreck,
   bestimmeGesperrteSeitenIndizes,
@@ -489,7 +489,11 @@ export function fuehreGegnerzugAus(run, kampf, rng) {
   let erlitten = 0;
   let blockRest = kampf.block;
   if (absicht.typ === 'angriff') {
-    const roh = Math.floor((absicht.wert + status.kraft) * welkMult(status.welk));
+    // Gegner-Kraft hebt, Spieler-Welk auf dem Gegner senkt; Gegner-Morsch auf
+    // dem HÜTER verstärkt den Einschlag (Option A, 05 §2.1) — alles vor Block.
+    const roh = Math.floor(
+      (absicht.wert + status.kraft) * welkMult(status.welk) * eingehendMult(kampf.spielerStatus.morsch)
+    );
     erlitten = Math.max(0, roh - kampf.block);
     blockRest = Math.max(0, kampf.block - roh);
     run.hp -= erlitten;
