@@ -14,6 +14,7 @@ import {
   pruefeStammbaumKauf,
   kaufeStammbaumKnoten,
 } from '../meta.js';
+import { bestimmeEnde, endSchreck, merkeEnde } from '../enden.js';
 import {
   starteRun,
   starteKampf,
@@ -631,16 +632,21 @@ function klickStammbaum(knotenId) {
 function render() {
   const belohnungOffen = kampf?.phase === 'sieg' && kampf.belohnung && !kampf.belohnung.erledigt;
   if ((run.verloren || run.abgeschlossen) && !belohnungOffen && modus !== 'kampf') {
-    const titel = run.abgeschlossen ? 'Region 1 durchquert — der Saumhüter fällt' : 'Der Hüter fällt';
+    // Enden-Klassifikation (01 §5, C6): nur bei Sieg — Niederlage hat kein Ende.
+    // bossBefriedet ist bis zum Endboss (D3) ein Platzhalter (default true).
+    const ende = run.abgeschlossen ? bestimmeEnde(run) : null;
+    const titel = ende ? uebersetze(ende.titelKey) : 'Der Hüter fällt';
     if (!run.jahresringeVergebenFertig) {
       run.jahresringeVergeben = verdieneJahresringe(meta, { sieg: run.abgeschlossen, kaempfe: run.kampfNummer, reifegrad: run.reifegrad ?? 0 });
       run.jahresringeVergebenFertig = true;
+      if (ende) merkeEnde(meta, ende.id); // speist u. a. die Rodbauer-Bedingung
       speichereNurMeta(); // Meta sofort sichern; toter Run wandert NICHT in den Save
     }
     wurzel.innerHTML = `
       <div class="ph ph--ende">
         <h2>${titel}</h2>
-        <p>Arsenal-Schreck: ${arsenalSchreckSumme(run)} · Trösten: ${run.troestenZahl} · 🪙 ${run.waehrungen.muenzen}</p>
+        ${ende ? `<p class="ph ph--ende-text">${uebersetze(ende.textKey)}</p>` : ''}
+        <p>End-Schreck: ${endSchreck(run)} · Trösten: ${run.troestenZahl} · 🪙 ${run.waehrungen.muenzen}</p>
         <p>🪵 +${run.jahresringeVergeben || 0} Jahresringe (gesamt ${meta.jahresringe})</p>
         ${renderStammbaum()}
         ${klassenWahl ? renderKlassenWahl() : '<button data-aktion="neu">Neuer Run</button>'}

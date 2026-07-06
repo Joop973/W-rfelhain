@@ -131,6 +131,14 @@ export const DE = {
   'stammbaum.klasse_schleiferin.text': 'Schleiferin freischalten — die Würfel-Meisterin (Schliff-Sockel, Extra-Reroll)',
   'stammbaum.klasse_rodbauer.text': 'Rodbauer freischalten — der Experten-Griff (Brandrodung, kein Block)',
   'stammbaum.klasse_rodbauer.bedingung': 'Erst nach einem Frühling-Ende oder mit Reifegrad 3',
+
+  // Enden (01 §5) — Texte [PROVISORISCH], Redaktion in D4 (Ton ist Chefsache)
+  'ende.fruehling.titel': 'Der neue Frühling',
+  'ende.fruehling.text': 'Du hast nicht erschlagen, du hast getröstet. Die Gier löst sich, die alte Eiche darf endlich sterben — und ein neuer Trieb bricht durch die Rinde.',
+  'ende.stiller_hain.titel': 'Der stille Hain',
+  'ende.stiller_hain.text': 'Der Kreislauf ist gebrochen, aber der Hain trägt Narben. Die tote Eiche wird zur Ruhe gebettet, ein Samen gepflanzt. Kein Frühling — aber ein Ende der Dürre.',
+  'ende.hohles_erbe.titel': 'Das hohle Erbe',
+  'ende.hohles_erbe.text': 'Du hast gewonnen — und nimmst seinen Platz. Die Rinde schließt sich um dich, deine Stimme wird die neue Großmutter-Eiche. Die Dürre pausiert. Sie kehrt wieder.',
 };
 
 // Fallback-Auflösung (09 §5): fehlender Key → de, sonst Key selbst.
