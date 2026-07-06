@@ -181,6 +181,8 @@ function klickAufloesen() {
   const c = pools.combos;
   if (c?.gleichklangAnzahl >= 2) letztesEreignis += ` Gleichklang ×${c.gleichklangMult} (${c.gleichklangAnzahl} gleiche)!`;
   if (c?.vollmond) letztesEreignis += ` 🌕 Vollmond +${c.vollmondBurst}!`;
+  if (kampf.geheilt > 0) letztesEreignis += ` 💧 Labung +${kampf.geheilt} HP.`;
+  if (kampf.gepraegt > 0) letztesEreignis += ` 🪙 Prägung +${kampf.gepraegt} Münzen.`;
   if (kampf.aussetzer > 0) letztesEreignis += ` (${kampf.aussetzer}× Riss-Aussetzer.)`;
   if (kampf.phase === 'sieg') {
     letztesEreignis += kampf.sauberSieg ? ' Sauberer Sieg (+1 Gemüt auf Gespielte).' : '';

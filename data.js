@@ -473,7 +473,14 @@ export const BLAUPAUSEN = {
 };
 
 // Welle-1-Slice: nur diese Blaupausen aktiv, Rest bleibt Datenkatalog (04 §4).
-export const SLICE_BLAUPAUSEN = ['quell', 'hort', 'hartholz', 'eichenwall', 'markstein'];
+// Etappe B4: alle 16 Blaupausen sind spielbar (Slice-Sperre aufgehoben, 04 §4).
+// Quell/Labung + Hort/Prägung haben ihre Engines im Kampf-Loop; Fläche zählt im
+// Ein-Gegner-Slice als Schaden; Ermutigung/Beruhigung folgen mit B5.
+export const SLICE_BLAUPAUSEN = [
+  'quell', 'hort', 'hartholz', 'splitterklinge', 'eichenwall', 'giftranke',
+  'schwelbrand', 'morschmacher', 'duerrhauch', 'markstein', 'hallklinge',
+  'glanzkorn', 'weitwurf', 'gleichmass', 'sanftholz', 'wildwuchs',
+];
 
 // --- Gegner — Region 1 + Boss 1 (05 §5/§6, kalibriert §1.2) --------------------
 // Bereiche statt Festwerten (Schema 09 §2.6 erlaubt Zusatzfelder); der

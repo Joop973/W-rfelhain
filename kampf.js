@@ -260,13 +260,17 @@ export function loeseZugAuf(run, kampf, rng) {
   let pendingGlanz = false;
   let aussetzer = 0;
   let letzterSchadenEffWert = 0; // effektiver Wert der zuletzt gelegten echten Schaden-Seite (für Echo-Gleichklang)
+  let geheilt = 0; // Labung (Quell) — Tau-Engine, direkt auf run.hp
+  let gepraegt = 0; // Prägung (Hort) — Münzen-Engine, direkt auf run.waehrungen
 
   for (const id of kampf.reihe) {
     const w = findeWuerfel(run, id);
     const seite = w.seiten[kampf.wuerfe[id].seitenIndex];
     const hoechstwert = Math.max(...w.seiten.map((s) => s.wert));
     for (const effekt of seite.effekt) {
-      if (effekt.typ === 'schaden') {
+      // Fläche (Weitwurf) trifft im Ein-Gegner-Slice wie eine Schaden-Seite;
+      // Mehrfach-Ziele folgen mit den mehrgliedrigen Gegnern (spätere Region).
+      if (effekt.typ === 'schaden' || effekt.typ === 'flaeche') {
         // Riss: 25 % Zünd-Aussetzer je gespielter Seite (02 §8.1) — Seite zählt 0.
         if (kampf.spielerStatus.riss > 0 && rng.naechsteZahl() < 0.25) {
           aussetzer += 1;
@@ -308,8 +312,24 @@ export function loeseZugAuf(run, kampf, rng) {
         gespielteSeiten.push({ typ: effekt.typ, hoechstwert }); // bricht Vollmond, kein Pool
         letzterSchadenEffWert = 0;
         auflage[effekt.typ] += effekt.wert;
+      } else if (effekt.typ === 'labung') {
+        // Quell/Tau-Engine (04 §4.1): Basis + 1 je run-weitem Trösten, harter Cap +8.
+        const bonus = Math.min(8, run.troestenZahl ?? 0);
+        geheilt += effekt.wert + bonus;
+        gespielteSeiten.push({ typ: 'labung', hoechstwert }); // Nicht-Schaden: bricht Vollmond
+        letzterSchadenEffWert = 0;
+      } else if (effekt.typ === 'praegung') {
+        // Hort/Münzen-Engine (04 §4.2): feste Münzen je gespielter Seite (1 Atem ist die Bremse).
+        gepraegt += effekt.wert;
+        gespielteSeiten.push({ typ: 'praegung', hoechstwert });
+        letzterSchadenEffWert = 0;
+      } else if (effekt.typ === 'riss') {
+        // Eigen-Riss (Wildwuchs, 04 §4): die Seite legt Riss auf den Spieler selbst.
+        legeStatusAuf(kampf.spielerStatus, 'riss', effekt.wert);
+        gespielteSeiten.push({ typ: 'riss', hoechstwert });
+        letzterSchadenEffWert = 0;
       }
-      // Echo/Beruhigung/Ermutigung folgen mit B3/B5.
+      // Beruhigung/Ermutigung folgen mit B5.
     }
   }
 
@@ -326,6 +346,12 @@ export function loeseZugAuf(run, kampf, rng) {
   if (auflage.morsch > 0) legeStatusAuf(kampf.gegner.status, 'morsch', auflage.morsch);
   if (auflage.welk > 0) legeStatusAuf(kampf.gegner.status, 'welk', auflage.welk);
   if (auflage.kraft > 0) legeStatusAuf(kampf.spielerStatus, 'kraft', auflage.kraft);
+
+  // Labung heilt (Cap hpMax), Prägung münzt — beide Engines wirken beim Auflösen.
+  if (geheilt > 0) run.hp = Math.min(run.hpMax, run.hp + geheilt);
+  if (gepraegt > 0) run.waehrungen.muenzen += gepraegt;
+  kampf.geheilt = geheilt;
+  kampf.gepraegt = gepraegt;
 
   // Gegner-Block halbiert eingehenden Schaden (Slice-Minimal, 05 §4 Wächter).
   const effektiverSchaden = kampf.gegner.absicht.typ === 'block' ? Math.floor(pools.schaden / 2) : pools.schaden;
