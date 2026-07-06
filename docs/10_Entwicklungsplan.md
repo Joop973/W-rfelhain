@@ -76,7 +76,7 @@ Ziel: alle Systeme voll aktiv, mehrere Build-Pfade. Endet mit **Balance-Tor 2**.
 - [x] **C3 [C] Klassen-Freischalt-Reihenfolge** (3/5/8/12 Jahresringe, Rodbauer hinter Bedingung — 06 §7) *(Stammbaum-Knoten aus C1 tragen Kosten + Rodbauer-Bedingung; Klassen-Wahl vor neuem Run zeigt nur Freigeschaltete)* — 2026-07-06
 - [x] **C4 [C] Reifegrade 1–10** (kumulative Mods, 03 §9) + Ziel-Siegraten-Sims je Stufe *(`reifegrad.js` mit nachgeeichten Werten — Kurve 68,5/61,1/46,6/40,9/32,7 % auf Stufe 0/3/6/9/10, Befund: docs/Reifegrad_Kalibrierung_Befund.md; Ascension-Kette via meta.maxReifegrad, UI-Picker)* — 2026-07-06
 - [ ] **C5 [C+D] Heimat-Hain/Samen** (Anschluss „Stiller Hain"-Ende) — noch dünn in den Artefakten, ggf. Design-Chat-Runde vorab
-- [ ] **C6 [C] Run-weite Enden-Zähler**: End-Schreck + Trösten-Zahl tracken, Schwellen ~10/~40 provisorisch verdrahten
+- [x] **C6 [C] Run-weite Enden-Zähler**: End-Schreck + Trösten-Zahl tracken, Schwellen ~10/~40 provisorisch verdrahten *(`enden.js`: Klassifikation ≤10/≥40 + Trösten ≥8, Befriedungs-Gate als D3-Platzhalter; Sieg-Screen zeigt Ende, meta.endenErreicht speist Rodbauer-Bedingung)* — 2026-07-06
 - [ ] **C7 [C+D] Klassen-Balance-Sim**: jede Klasse gegen den Korridor 15–17 (06 §8), Rodbauer-Überlebbarkeit R1, Dorfschamane vs. Frühling-Trivialisierung. Claude misst, **du entscheidest**
 
 ---
