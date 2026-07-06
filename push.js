@@ -42,8 +42,9 @@ export function push(wuerfel) {
 }
 
 // Universelle Trösten-Regel: 1 Trösten = +2 Gemüt, gleich auf welchem Kanal (02 §6.1).
-export function troeste(wuerfel) {
-  return { ...wuerfel, gemuet: wuerfel.gemuet + 2 };
+// bonus: Segen "Klarer Quell" hebt universell auf +3 (07 §4.2 #10).
+export function troeste(wuerfel, bonus = 0) {
+  return { ...wuerfel, gemuet: wuerfel.gemuet + 2 + bonus };
 }
 
 // Beruhigung ist reaktiv — greift nur bei Würfeln mit Schreck > 0 (02 §6.3).
@@ -57,8 +58,9 @@ export function ermutige(wuerfel) {
   return { wuerfel: troeste(wuerfel), angewendet: true };
 }
 
-export function wendeSauberenSiegAn(gespielteWuerfel) {
-  return gespielteWuerfel.map((w) => ({ ...w, gemuet: w.gemuet + 1 }));
+// bonus: Segen "Geduldiger Wächter" hebt den Sauberer-Sieg-Bonus auf +2 (07 §4.2 #7).
+export function wendeSauberenSiegAn(gespielteWuerfel, bonus = 1) {
+  return gespielteWuerfel.map((w) => ({ ...w, gemuet: w.gemuet + bonus }));
 }
 
 // --- Reroll-Ökonomie & Tischsturz (02 §7) ---------------------------------
@@ -77,9 +79,13 @@ export function rerollKosten(rerollNummer, { freilauf = 0, klemme = 0 } = {}) {
 
 // kampfState: { uebermut, rerollsDiesenZug }. Löst bei Übermut > Kipp-Punkt
 // sofort Tischsturz aus; der Reset gilt nur für diese Sofort-Mechanik (02 §7).
-export function fuehreRerollAus(kampfState, eigenStatus = {}) {
+// freischein: macht einen bezahlten Reroll kostenlos (Segen "Gieriger Griff"
+// je Zug / "Loser Ast" je Kampf, 07 §4.2) — freischeinGenutzt meldet Verbrauch.
+export function fuehreRerollAus(kampfState, eigenStatus = {}, { freischein = false } = {}) {
   const rerollNummer = kampfState.rerollsDiesenZug + 1;
-  const kosten = rerollKosten(rerollNummer, eigenStatus);
+  let kosten = rerollKosten(rerollNummer, eigenStatus);
+  const freischeinGenutzt = freischein && kosten > 0;
+  if (freischeinGenutzt) kosten = 0;
   const uebermutNach = kampfState.uebermut + kosten;
   const tischsturz = uebermutNach > KIPP_PUNKT;
   return {
@@ -90,6 +96,7 @@ export function fuehreRerollAus(kampfState, eigenStatus = {}) {
     },
     kosten,
     tischsturz,
+    freischeinGenutzt,
   };
 }
 
@@ -107,8 +114,14 @@ export function loeseTischsturzAus(handWuerfel) {
 // Tischsturz und Kristallisation schließen sich pro Kampf aus: löste der letzte
 // Reroll einen Tischsturz aus, ist uebermut bereits auf 0 zurückgesetzt (s. o.),
 // sodass hier nichts mehr zu verteilen bleibt — keine Sonderfallprüfung nötig.
-export function kristallisiereUebermut(uebermutRest, gespielteWuerfelLetzterZug) {
-  const rest = uebermutRest * KRISTALLISATION_VERHAELTNIS;
+// Segen-Haken (07 §4.2): verhaeltnis 2 = "Ungeduld" (2:1 statt 1:1),
+// zuschlag +1 = "Gieriger Griff" (+1 Schreck-Rest, nur wenn überhaupt Rest da ist).
+export function kristallisiereUebermut(
+  uebermutRest,
+  gespielteWuerfelLetzterZug,
+  { verhaeltnis = KRISTALLISATION_VERHAELTNIS, zuschlag = 0 } = {}
+) {
+  const rest = uebermutRest > 0 ? uebermutRest * verhaeltnis + zuschlag : 0;
   if (rest <= 0 || gespielteWuerfelLetzterZug.length === 0) {
     return gespielteWuerfelLetzterZug;
   }
@@ -125,10 +138,14 @@ export function verarbeiteKampfende({
   gespielteWuerfelGesamt = [],
   zuletztGespielteIds = [],
   uebermutRest = 0,
+  sauberSiegBonus = 1,
+  kristallisation = {},
 } = {}) {
-  const nachSauberemSieg = sauberSieg ? wendeSauberenSiegAn(gespielteWuerfelGesamt) : gespielteWuerfelGesamt;
+  const nachSauberemSieg = sauberSieg
+    ? wendeSauberenSiegAn(gespielteWuerfelGesamt, sauberSiegBonus)
+    : gespielteWuerfelGesamt;
   const zuletztGespielte = nachSauberemSieg.filter((w) => zuletztGespielteIds.includes(w.id));
-  const kristallisiert = kristallisiereUebermut(uebermutRest, zuletztGespielte);
+  const kristallisiert = kristallisiereUebermut(uebermutRest, zuletztGespielte, kristallisation);
   const kristallisiertNachId = new Map(kristallisiert.map((w) => [w.id, w]));
   return nachSauberemSieg.map((w) => kristallisiertNachId.get(w.id) ?? w);
 }

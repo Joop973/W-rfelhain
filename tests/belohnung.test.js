@@ -37,7 +37,7 @@ test('Ziehung liefert immer 3 Optionen aus dem Slice-Katalog', () => {
     const optionen = zieheBelohnungsoptionen(run, rng);
     assert.equal(optionen.length, 3);
     for (const o of optionen) {
-      assert.ok(['blaupause', 'gravur', 'muenzen'].includes(o.typ));
+      assert.ok(['blaupause', 'gravur', 'muenzen', 'segen'].includes(o.typ)); // Segen seit B6 im Mix (07 §1.3)
       if (o.typ === 'blaupause') assert.ok(BLAUPAUSEN[o.blaupauseId]);
       if (o.typ === 'gravur') assert.ok(GRAVUREN[o.gravurId]);
     }

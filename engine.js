@@ -66,9 +66,11 @@ function groessteGleicheGruppe(werte) {
 // Löst ein komplettes Zug-Paket auf: Pools Schaden/Rinde/Fäule/Brand.
 // gespielteSeiten: [{ typ, effektiverWert, vollmondWert?, hoechstwert, kraft?, passiv?,
 //                      glanz?, mult?, istEcho?, stapel? }], links→rechts.
-// kontext: { morschStapel, welkStapel, region }.
+// kontext: { morschStapel, welkStapel, region, vollmondBurstMult }.
+// vollmondBurstMult: flacher Aufschlag auf den additiven Burst (Segen
+// "Splitternde Borke" ×1,5, 07 §4.2 #9) — nie multiplikativ auf den Pool.
 export function resolveZug(gespielteSeiten, kontext = {}) {
-  const { morschStapel = 0, welkStapel = 0, region = 1 } = kontext;
+  const { morschStapel = 0, welkStapel = 0, region = 1, vollmondBurstMult = 1 } = kontext;
   const pools = { schaden: 0, rinde: 0, faeule: 0, brand: 0 };
 
   let schadenPoolLaufend = 0;
@@ -111,7 +113,10 @@ export function resolveZug(gespielteSeiten, kontext = {}) {
   const gleichklangAnzahl = groessteGleicheGruppe(
     gespielteSeiten.filter((s) => s.typ === 'schaden').map((s) => s.effektiverWert)
   );
-  const vollmondBurst = vollmondMoeglich && schadenSeitenGespielt > 0 ? VOLLMOND_BURST[region - 1] ?? 0 : 0;
+  const vollmondBurst =
+    vollmondMoeglich && schadenSeitenGespielt > 0
+      ? Math.floor((VOLLMOND_BURST[region - 1] ?? 0) * vollmondBurstMult)
+      : 0;
 
   pools.schaden = wendePoolModifikatoren(schadenPoolLaufend, {
     gleichklangAnzahl,

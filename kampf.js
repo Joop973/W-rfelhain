@@ -19,6 +19,7 @@ import { GEGNER_VORLAGEN, KLASSEN, HUETER_BASIS_HP, ATEM_PRO_ZUG, erstelleStartA
 import { verdieneKampfBelohnung, zieheBelohnungsoptionen, zieheBossBelohnung } from './belohnung.js';
 import { generiereKarte } from './karte.js';
 import { TAU_PRO_REGION } from './knoten.js';
+import { segenEffekt, segenEffekte, segenHaken, troestenBonus } from './segen.js';
 
 const NORMALE_GEGNER = ['astbeisser', 'borkenkriecher', 'moosgnom'];
 const ELITE_GEGNER = 'dornalter';
@@ -41,6 +42,8 @@ export function starteRun(klasseId = 'eichwart', rng) {
     entfernteWuerfel: 0, // treibt die Entfernen-Preiseskalation (07 §3.3)
     troestenZahl: 0, // run-weite Trösten-Ereignisse für Frühling — OHNE Ermutigung (01 §5)
     pflegeZahl: 0, // alle Gemüt-Pflege-Ereignisse (inkl. Ermutigung) — speist Labung (04 §4.1)
+    hainSegen: [], // besessene Segen-IDs, einmalig je Run (07 §4)
+    welkGrad: 0, // globaler Welk-Grad (09 §2.10, rein visuell — Dürre-Same treibt ihn)
     verloren: false,
     abgeschlossen: false, // Boss besiegt
   };
@@ -104,7 +107,7 @@ export function naechsteAbsicht(gegner) {
   return { typ: 'angriff', wert: gegner.schaden, angekuendigt: true }; // schlaeger
 }
 
-function baueGegner(vorlageId, rng) {
+function baueGegner(vorlageId, rng, { schadenZuschlag = 0 } = {}) {
   const vorlage = GEGNER_VORLAGEN[vorlageId];
   const hp = zufallZwischen(rng, vorlage.hpBereich);
   const gegner = {
@@ -113,7 +116,7 @@ function baueGegner(vorlageId, rng) {
     rolle: vorlage.rolle,
     hp,
     hpMax: hp,
-    schaden: zufallZwischen(rng, vorlage.schadenBereich),
+    schaden: zufallZwischen(rng, vorlage.schadenBereich) + schadenZuschlag,
     absichtsMuster: vorlage.absichtsMuster,
     mechanikIds: vorlage.mechanikIds ?? [],
     phasen: vorlage.phasen ?? null,
@@ -135,9 +138,11 @@ export function starteKampf(run, rng, knotenTyp = 'kampf') {
       : knotenTyp === 'elite'
         ? ELITE_GEGNER
         : NORMALE_GEGNER[Math.floor(rng.naechsteZahl() * NORMALE_GEGNER.length)];
-  return {
+  // Doppelter-Morgen-Haken (07 §4.2 #11): Gegner starten mit +1 Absichtswert.
+  const gegnerHaken = segenHaken(run, 'gegner_absichtswert');
+  const kampf = {
     zieh: kampfbeginn(run.arsenal.map((w) => w.id), rng), // Übermut-Reset implizit unten
-    gegner: baueGegner(vorlageId, rng),
+    gegner: baueGegner(vorlageId, rng, { schadenZuschlag: gegnerHaken?.wert ?? 0 }),
     uebermut: 0, // Reset je Kampf, nur Sofort-Mechanik (02 §2.1/§7)
     rerollsDiesenZug: 0,
     zugNummer: 0,
@@ -151,8 +156,22 @@ export function starteKampf(run, rng, knotenTyp = 'kampf') {
     tischsturzImKampf: false,
     gespielteImKampf: [],
     zuletztGespielteIds: [],
+    // Loser Ast (07 §4.2 #6): 1 übermut-freier Reroll je KAMPF.
+    freischeineKampf: segenEffekt(run, 'freilauf_pro_kampf')?.wert ?? 0,
+    griffGenutztDiesenZug: false, // Gieriger Griff: 1 freier bezahlter Reroll je ZUG
     phase: 'zug', // zug | gegnerzug | sieg | niederlage
   };
+
+  // Kampfbeginn-Wetzung (Wetzstein 1 Würfel / Doppelter Morgen 2 Würfel) und
+  // Kampfbeginn-Klemme (Krone-Haken). Slice-Vereinfachung: Eigen-Status liegen
+  // spielerweit (B2-Modell), die Würfel-Anzahl wird als Stapelhöhe übersetzt.
+  for (const wetzungSegen of segenEffekte(run, 'kampfbeginn_wetzung')) {
+    legeStatusAuf(kampf.spielerStatus, 'wetzung', wetzungSegen.wuerfel * wetzungSegen.stapel);
+  }
+  const klemmeHaken = segenHaken(run, 'kampfbeginn_klemme');
+  if (klemmeHaken) legeStatusAuf(kampf.spielerStatus, 'klemme', klemmeHaken.wuerfel * klemmeHaken.stapel);
+
+  return kampf;
 }
 
 function findeWuerfel(run, id) {
@@ -182,7 +201,9 @@ export function beginneZug(run, kampf, rng) {
   }
   kampf.zugNummer += 1;
   kampf.rerollsDiesenZug = 0;
-  kampf.atem = ATEM_PRO_ZUG;
+  kampf.griffGenutztDiesenZug = false;
+  // Ungeduld (07 §4.2 #13): +1 Atem je Zug — der Haken (Kristallisation 2:1) sitzt am Kampfende.
+  kampf.atem = ATEM_PRO_ZUG + (segenEffekt(run, 'atem_pro_zug')?.wert ?? 0);
   kampf.reihe = [];
   kampf.zieh = zieheHand(kampf.zieh, rng);
   kampf.hand = [...kampf.zieh.hand];
@@ -194,10 +215,20 @@ export function beginneZug(run, kampf, rng) {
 // Reroll = ganze Hand neu werfen (Slice-Vereinfachung; 02 §2.2 Schritt 4).
 // Freilauf/Klemme (Eigen-Status, 02 §7.4) verändern die Übermut-Kosten dieses Rerolls.
 export function rerolle(run, kampf, rng) {
-  const { state, tischsturz } = fuehreRerollAus(
+  // Freischeine (07 §4.2): Gieriger Griff macht den ersten BEZAHLTEN Reroll je
+  // Zug frei; Loser Ast hält 1 freien Reroll je Kampf vor. Griff zuerst (zug-
+  // lokal), damit der Kampf-Vorrat für spätere Züge erhalten bleibt.
+  const griffFrei = segenEffekt(run, 'erster_bezahlter_reroll_frei') != null && !kampf.griffGenutztDiesenZug;
+  const astFrei = (kampf.freischeineKampf ?? 0) > 0;
+  const { state, tischsturz, freischeinGenutzt } = fuehreRerollAus(
     { uebermut: kampf.uebermut, rerollsDiesenZug: kampf.rerollsDiesenZug },
-    { freilauf: kampf.spielerStatus.freilauf, klemme: kampf.spielerStatus.klemme }
+    { freilauf: kampf.spielerStatus.freilauf, klemme: kampf.spielerStatus.klemme },
+    { freischein: griffFrei || astFrei }
   );
+  if (freischeinGenutzt) {
+    if (griffFrei) kampf.griffGenutztDiesenZug = true;
+    else kampf.freischeineKampf -= 1;
+  }
   kampf.uebermut = state.uebermut;
   kampf.rerollsDiesenZug = state.rerollsDiesenZug;
 
@@ -264,6 +295,7 @@ export function loeseZugAuf(run, kampf, rng) {
   let geheilt = 0; // Labung (Quell) — Tau-Engine, direkt auf run.hp
   let gepraegt = 0; // Prägung (Hort) — Münzen-Engine, direkt auf run.waehrungen
   let getroestet = 0; // Beruhigung/Ermutigung dieses Zugs (Anzeige)
+  let ersteRindeGespielt = false; // Rindenring-Segen: erster Rinde-Würfel je Zug
 
   // Auto-Ziel der Pflege-Seiten (Slice): Hand-Würfel mit dem niedrigsten Gemüt.
   // Beruhigung ist reaktiv und verlangt Schreck > 0 (02 §6.3); Ermutigung ist
@@ -307,7 +339,13 @@ export function loeseZugAuf(run, kampf, rng) {
         gespielteSeiten.push({ typ: 'schaden', istEcho: true, effektiverWert: letzterSchadenEffWert, vollmondWert: 0, hoechstwert });
         letzterSchadenEffWert = 0;
       } else if (effekt.typ === 'rinde') {
-        gespielteSeiten.push({ typ: 'rinde', effektiverWert: effektiverWert(effekt.wert, { wetzung, scharte }), hoechstwert });
+        // Rindenring (07 §4.2 #2): der erste gespielte Rinde-Würfel je Zug gibt +2 Block.
+        let rindeWert = effektiverWert(effekt.wert, { wetzung, scharte });
+        if (!ersteRindeGespielt && segenEffekt(run, 'erster_rinde_wuerfel_bonus')) {
+          rindeWert += segenEffekt(run, 'erster_rinde_wuerfel_bonus').wert;
+        }
+        ersteRindeGespielt = true;
+        gespielteSeiten.push({ typ: 'rinde', effektiverWert: rindeWert, hoechstwert });
         letzterSchadenEffWert = 0;
       } else if (effekt.typ === 'schaden_mult') {
         // Mult-Seite: multipliziert den Pool, ist selbst keine Schaden-Seite (kein Passiv).
@@ -348,7 +386,7 @@ export function loeseZugAuf(run, kampf, rng) {
         // pflegeZahl (Labung-Futter, 04 §4.1) zählt beide.
         const ziel = pflegeZiel(effekt.typ === 'beruhigung');
         if (ziel) {
-          ziel.gemuet += effekt.wert;
+          ziel.gemuet += effekt.wert + troestenBonus(run); // Klarer Quell: universell +3 statt +2
           getroestet += 1;
           run.pflegeZahl = (run.pflegeZahl ?? 0) + 1;
           if (effekt.typ === 'beruhigung') run.troestenZahl = (run.troestenZahl ?? 0) + 1;
@@ -363,8 +401,28 @@ export function loeseZugAuf(run, kampf, rng) {
   // Welk auf dem Spieler (vom Gegner) senkt den eigenen Pool; Spieler-Welk trifft den Gegner.
   const morschStapel = Math.min(4, kampf.gegner.status.morsch + auflage.morsch);
   const welkStapel = kampf.spielerStatus.welk;
-  const pools = resolveZug(gespielteSeiten, { morschStapel, welkStapel, region: 1 });
+  // Splitternde Borke (07 §4.2 #9): Vollmond-Burst +50 % — flach auf den Burst.
+  const borke = segenEffekt(run, 'vollmond_burst_prozent');
+  const pools = resolveZug(gespielteSeiten, {
+    morschStapel,
+    welkStapel,
+    region: 1,
+    vollmondBurstMult: borke ? 1 + borke.wert / 100 : 1,
+  });
   kampf.combos = pools.combos; // Gleichklang/Vollmond für die Anzeige (UI)
+
+  // Borke-Haken: jeder Zug MIT Schaden-Seiten, aber OHNE Vollmond → Scharte 1
+  // (Slice: spielerweiter Eigen-Status, decayt am Rundenende).
+  if (borke && !pools.combos.vollmond && gespielteSeiten.some((s) => s.typ === 'schaden' && !s.mult)) {
+    legeStatusAuf(kampf.spielerStatus, 'scharte', 1);
+  }
+
+  // Stiller Hain (07 §4.2 #14): +15 % Schaden, solange Arsenal-Gesamt-Schreck = 0
+  // (flach, konditional; schaltet sich bei Schreck > 0 selbst ab).
+  const hain = segenEffekt(run, 'schaden_prozent_bei_null_schreck');
+  if (hain && arsenalSchreckSumme(run) === 0) {
+    pools.schaden = Math.floor(pools.schaden * (1 + hain.wert / 100));
+  }
 
   // Status-Auflage auf den Gegner (Fäule/Brand/Morsch/Welk) bzw. Spieler (Kraft-Selbst-Buff).
   if (pools.faeule > 0) legeStatusAuf(kampf.gegner.status, 'faeule', pools.faeule);
@@ -383,7 +441,8 @@ export function loeseZugAuf(run, kampf, rng) {
   // Gegner-Block halbiert eingehenden Schaden (Slice-Minimal, 05 §4 Wächter).
   const effektiverSchaden = kampf.gegner.absicht.typ === 'block' ? Math.floor(pools.schaden / 2) : pools.schaden;
   kampf.gegner.hp = Math.max(0, kampf.gegner.hp - effektiverSchaden);
-  kampf.block = pools.rinde;
+  // Hamsterherz-Übertrag (bereits auf Cap 5 gedeckelt) stapelt mit frischer Rinde.
+  kampf.block = (segenEffekt(run, 'rinde_uebertrag') ? kampf.block : 0) + pools.rinde;
   kampf.aussetzer = aussetzer;
 
   // Zugende-Status: eigener Brand tickt (02 §2.2 Schritt 8).
@@ -428,12 +487,17 @@ export function fuehreGegnerzugAus(run, kampf, rng) {
   // Gegner handelt: Kraft-Buff hebt, Welk-Debuff senkt den Angriffswert (02 §8).
   const { absicht } = kampf.gegner;
   let erlitten = 0;
+  let blockRest = kampf.block;
   if (absicht.typ === 'angriff') {
     const roh = Math.floor((absicht.wert + status.kraft) * welkMult(status.welk));
     erlitten = Math.max(0, roh - kampf.block);
+    blockRest = Math.max(0, kampf.block - roh);
     run.hp -= erlitten;
   }
-  kampf.block = 0; // Rinde verfällt (02 §2.2 Schritt 9)
+  // Rinde verfällt (02 §2.2 Schritt 9) — außer Hamsterherz (07 §4.2 #12):
+  // bis zu `cap` Rest-Block überdauert den Zug (der Cap ist die Bremse).
+  const hamster = segenEffekt(run, 'rinde_uebertrag');
+  kampf.block = hamster ? Math.min(hamster.cap, blockRest) : 0;
 
   // Gegnerzug-Ende: Brand tickt (kann ihn töten).
   const brand = tickeBrand(status);
@@ -476,6 +540,13 @@ function beendeKampf(run, kampf, sieg, rng) {
     gespielteWuerfelGesamt: gespielteWuerfel,
     zuletztGespielteIds: kampf.zuletztGespielteIds,
     uebermutRest: kampf.uebermut,
+    // Geduldiger Wächter: Sauberer Sieg +2 statt +1 (07 §4.2 #7).
+    sauberSiegBonus: segenEffekt(run, 'sauber_sieg_gemuet')?.wert ?? 1,
+    kristallisation: {
+      // Ungeduld-Haken: 2:1 statt 1:1; Gieriger-Griff-Haken: +1 Schreck-Rest.
+      verhaeltnis: segenHaken(run, 'kristallisation_verhaeltnis')?.wert ?? 1,
+      zuschlag: segenHaken(run, 'kristallisation_zuschlag')?.wert ?? 0,
+    },
   });
   for (const neu of verarbeitet) {
     findeWuerfel(run, neu.id).gemuet = neu.gemuet;
@@ -485,10 +556,21 @@ function beendeKampf(run, kampf, sieg, rng) {
   kampf.phase = 'sieg';
 
   const rolle = kampf.gegner.rolle;
+  // Dürre-Same (07 §4.2 #16): +2 Münzen je Kill (Ein-Gegner-Slice: je Kampf-Sieg).
+  const killGeld = segenEffekt(run, 'muenzen_pro_kill');
+  if (killGeld) run.waehrungen.muenzen += killGeld.wert;
   kampf.belohnung = {
-    einkommen: verdieneKampfBelohnung(run, rng, { elite: rolle !== 'normal' }),
-    // Boss-Sonder-Belohnung: garantierte Blaupausen-Wahl (05 §6).
-    optionen: rolle === 'boss' ? zieheBossBelohnung(run, rng) : zieheBelohnungsoptionen(run, rng),
+    einkommen: verdieneKampfBelohnung(run, rng, {
+      elite: rolle !== 'normal',
+      // Geduldiger-Wächter-Haken: Kämpfe mit HP-Verlust geben keinen Eicheln-Bonus.
+      hpVerlust: run.hp < kampf.hpBeiKampfbeginn,
+    }),
+    // Boss-Sonder-Belohnung: Blaupausen + 1 Boss-Segen (05 §6, 07 §4.3);
+    // Elite garantiert ≥1 Segen-Angebot (07 §4.3).
+    optionen:
+      rolle === 'boss'
+        ? zieheBossBelohnung(run, rng)
+        : zieheBelohnungsoptionen(run, rng, { garantierterSegen: rolle === 'elite' }),
   };
 
   run.kampfNummer += 1;

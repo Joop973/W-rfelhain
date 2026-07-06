@@ -3,25 +3,33 @@
 // DOM-frei, reine Daten-Operationen (09 §1). Bezüge: 03 §8/§10, 04 §1.1/§3, 09 §2.5.
 
 import { BLAUPAUSEN, GRAVUREN, SLICE_BLAUPAUSEN, SLICE_GRAVUREN } from './data.js';
+import { gibSegen, segenEffekt, segenHaken, zieheSegenOption } from './segen.js';
 
 export const BLAUPAUSE_PITY_N = 6; // spätestens nach N Belohnungen ohne Blaupause [PROVISORISCH]
 export const ELITE_FAKTOR = 1.8; // Elite ≈ 1,8× Normal (07 §2.2) [PROVISORISCH]
 
 const SELTENHEITS_GEWICHT = { haeufig: 6, selten: 3, episch: 1 }; // [PROVISORISCH]
-// Typ-Mix je Options-Slot [PROVISORISCH]: Gravur 45 % · Blaupause 35 % · Münzen-Bonus 20 %.
+// Typ-Mix je Options-Slot [PROVISORISCH]: Gravur 40 % · Blaupause 30 % ·
+// Münzen-Bonus 20 % · Segen 10 % (Kampf-Belohnung enthält Segen, 07 §1.3/§4.3).
 const OPTIONS_MIX = [
-  { typ: 'gravur', gewicht: 45 },
-  { typ: 'blaupause', gewicht: 35 },
+  { typ: 'gravur', gewicht: 40 },
+  { typ: 'blaupause', gewicht: 30 },
   { typ: 'muenzen', gewicht: 20 },
+  { typ: 'segen', gewicht: 10 },
 ];
 
 // --- Einkommen (03 §8 gesperrt: Münzen ~14–16/Kampf, Eicheln ~8/Kampf) --------
 
-export function verdieneKampfBelohnung(run, rng, { elite = false } = {}) {
+export function verdieneKampfBelohnung(run, rng, { elite = false, hpVerlust = false } = {}) {
   const faktor = elite ? ELITE_FAKTOR : 1;
+  let eicheln = Math.round(8 * faktor);
+  // Fleißiges Eichhorn: +3 Eicheln je Kampf (07 §4.2 #3).
+  eicheln += segenEffekt(run, 'eicheln_einkommen')?.wert ?? 0;
+  // Geduldiger-Wächter-Haken: Kämpfe MIT HP-Verlust geben keinen Eicheln-Bonus.
+  if (hpVerlust && segenHaken(run, 'kein_eicheln_bonus_bei_hp_verlust')) eicheln = 0;
   const einkommen = {
     muenzen: Math.round((14 + rng.naechsteZahl() * 2) * faktor),
-    eicheln: Math.round(8 * faktor),
+    eicheln,
   };
   run.waehrungen.muenzen += einkommen.muenzen;
   run.waehrungen.eicheln += einkommen.eicheln;
@@ -60,13 +68,20 @@ function zieheMuenzenOption(rng) {
 
 // 3 Optionen je Belohnungs-Knoten (03 §10). Pity: nach BLAUPAUSE_PITY_N
 // Ziehungen ohne angebotene Blaupause ist eine Option garantiert Blaupause.
-export function zieheBelohnungsoptionen(run, rng) {
+// garantierterSegen: Elite garantiert ≥1 Segen-Angebot (07 §4.3).
+export function zieheBelohnungsoptionen(run, rng, { garantierterSegen = false } = {}) {
   const optionen = [];
   for (let i = 0; i < 3; i += 1) {
     const { typ } = gewichteteWahl(OPTIONS_MIX, rng);
     if (typ === 'blaupause') optionen.push(zieheBlaupausenOption(rng));
     else if (typ === 'gravur') optionen.push(zieheGravurOption(rng));
+    else if (typ === 'segen') optionen.push(zieheSegenOption(run, rng) ?? zieheMuenzenOption(rng));
     else optionen.push(zieheMuenzenOption(rng));
+  }
+
+  if (garantierterSegen && !optionen.some((o) => o.typ === 'segen')) {
+    const segen = zieheSegenOption(run, rng);
+    if (segen) optionen[optionen.length - 1] = segen;
   }
 
   const enthaeltBlaupause = optionen.some((o) => o.typ === 'blaupause');
@@ -80,17 +95,19 @@ export function zieheBelohnungsoptionen(run, rng) {
   return optionen;
 }
 
-// Boss-Sonder-Belohnung: garantierte Blaupausen-Wahl (05 §6 Boss 1) —
-// 3 verschiedene Blaupausen; Segen-Alternative folgt mit dem Segen-System. [PROVISORISCH]
+// Boss-Sonder-Belohnung (05 §6, 07 §4.3): 2 Blaupausen + 1 Boss-Segen —
+// Boss-Segen gibt es NUR hier (1 Wahl je Boss). [PROVISORISCH]
 export function zieheBossBelohnung(run, rng) {
   const pool = [...SLICE_BLAUPAUSEN];
   const optionen = [];
-  for (let i = 0; i < 3 && pool.length > 0; i += 1) {
+  for (let i = 0; i < 2 && pool.length > 0; i += 1) {
     const kandidaten = pool.map((id) => ({ id, gewicht: SELTENHEITS_GEWICHT[BLAUPAUSEN[id].seltenheit] }));
     const { id } = gewichteteWahl(kandidaten, rng);
     pool.splice(pool.indexOf(id), 1);
     optionen.push({ typ: 'blaupause', blaupauseId: id, nameKey: BLAUPAUSEN[id].nameKey });
   }
+  const bossSegen = zieheSegenOption(run, rng, { nurBoss: true });
+  if (bossSegen) optionen.push(bossSegen);
   run.belohnungenOhneBlaupause = 0;
   return optionen;
 }
@@ -152,6 +169,8 @@ export function wendeBelohnungAn(run, option, ziel = {}) {
     wendeBlaupauseAn(ziel.wuerfel, option.blaupauseId);
   } else if (option.typ === 'gravur') {
     graviereSeite(ziel.wuerfel, option.gravurId, ziel.seitenIndex);
+  } else if (option.typ === 'segen') {
+    gibSegen(run, option.segenId);
   }
   return run;
 }

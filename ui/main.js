@@ -29,6 +29,7 @@ import {
   erstelleMarktAngebot,
   kaufeWuerfel,
   kaufeMarktBlaupause,
+  kaufeMarktSegen,
   entfernenPreis,
   entferneWuerfel,
   troesteDienst,
@@ -72,6 +73,8 @@ function speichereZwischenKnoten() {
       entfernteWuerfel: run.entfernteWuerfel,
       troestenZahl: run.troestenZahl,
       pflegeZahl: run.pflegeZahl,
+      hainSegen: run.hainSegen,
+      welkGrad: run.welkGrad,
     });
     speichere(save);
   } catch {
@@ -98,6 +101,8 @@ function ladeGespeichertenRun() {
       entfernteWuerfel: rs.entfernteWuerfel ?? 0,
       troestenZahl: rs.troestenZahl ?? 0,
       pflegeZahl: rs.pflegeZahl ?? rs.troestenZahl ?? 0,
+      hainSegen: rs.hainSegen ?? [],
+      welkGrad: rs.welkGrad ?? 0,
       verloren: false,
       abgeschlossen: findeKnotenTyp(rs) === 'boss',
     };
@@ -146,7 +151,7 @@ function klickKnoten(knotenId) {
     letztesEreignis = 'Die Schmiede glüht. Gravuren gegen Münzen.';
   } else if (knoten.typ === 'markt') {
     modus = 'markt';
-    knotenKontext = erstelleMarktAngebot(rng);
+    knotenKontext = erstelleMarktAngebot(rng, run);
     letztesEreignis = 'Ein Markt am Wegesrand.';
   } else if (knoten.typ === 'event') {
     modus = 'event';
@@ -214,15 +219,22 @@ function klickGegnerzug() {
 function optionLabel(option) {
   if (option.typ === 'muenzen') return `+${option.betrag} Münzen`;
   if (option.typ === 'blaupause') return `Blaupause: ${uebersetze(option.nameKey)}`;
+  if (option.typ === 'segen') {
+    const haken = option.hakenTextKey ? ` — Haken: ${uebersetze(option.hakenTextKey)}` : '';
+    return `Segen: ${uebersetze(option.textKey)}${haken}`;
+  }
   return `Gravur: ${uebersetze(option.nameKey)}`;
 }
 
 function waehleBelohnung(index) {
   const option = kampf.belohnung.optionen[index];
-  if (option.typ === 'muenzen') {
-    wendeBelohnungAn(run, option);
+  if (option.typ === 'muenzen' || option.typ === 'segen') {
+    wendeBelohnungAn(run, option); // Segen brauchen kein Ziel — run-weiter Modifikator
     kampf.belohnung.erledigt = true;
-    letztesEreignis = `${option.betrag} Münzen eingestrichen.`;
+    letztesEreignis =
+      option.typ === 'segen'
+        ? `Segen aufgenommen: ${uebersetze(option.textKey)}`
+        : `${option.betrag} Münzen eingestrichen.`;
   } else {
     belohnungsWahl = { option };
   }
@@ -277,6 +289,14 @@ function marktKaufWuerfel(index) {
   render();
 }
 
+function marktKaufSegen() {
+  const s = knotenKontext.segen;
+  const ergebnis = kaufeMarktSegen(run, s.segenId, s.preisEicheln);
+  letztesEreignis = ergebnis.ok ? `Segen aufgenommen: ${uebersetze(s.textKey)}` : 'Zu wenige Eicheln.';
+  if (ergebnis.ok) knotenKontext.segen = null;
+  render();
+}
+
 function marktZiel(wuerfelId) {
   if (marktWahl.aktion === 'blaupause') {
     const b = knotenKontext.blaupause;
@@ -326,11 +346,15 @@ function pips(anzahl, voll, label) {
 }
 
 function statuszeile() {
+  const segen = (run.hainSegen ?? [])
+    .map((id) => `<span class="ph ph--segen" title="${uebersetze(`segen.${id}.text`)}">🌿 ${uebersetze(`segen.${id}.text`).split(':')[0]}</span>`)
+    .join(' ');
   return `
     <section class="status">
       <span>❤ ${run.hp}/${run.hpMax}</span>
       <span>🪙 ${run.waehrungen.muenzen} · 🌰 ${run.waehrungen.eicheln} · 💧 ${run.waehrungen.tau}</span>
       <span>Schreck Σ ${arsenalSchreckSumme(run)}</span>
+      ${segen ? `<span class="segen-leiste">${segen}</span>` : ''}
     </section>`;
 }
 
@@ -463,7 +487,7 @@ function renderSchmiede() {
         <strong>Seite wählen (${uebersetze(wuerfel.nameKey)})</strong>
         <div class="picker">
           ${wuerfel.seiten.map((s, i) => {
-            const angebot = schmiedePreis(wuerfel, schmiedeWahl.gravurId, i);
+            const angebot = schmiedePreis(wuerfel, schmiedeWahl.gravurId, i, run);
             return `
               <button class="ph ph--seite" data-schmiede-seite="${i}" ${angebot ? '' : 'disabled'}>
                 <span class="wert">${s.wert}</span>
@@ -501,6 +525,7 @@ function renderMarkt() {
       <div class="picker">
         ${k.wuerfel.map((a, i) => `<button data-markt-wuerfel="${i}">${uebersetze(`wuerfel.${a.vorlageId}.name`)} (${a.preisEicheln} 🌰)</button>`).join('')}
         ${k.blaupause ? `<button data-markt-aktion="blaupause">Blaupause ${uebersetze(k.blaupause.nameKey)} (${k.blaupause.preisEicheln} 🌰)</button>` : ''}
+        ${k.segen ? `<button data-markt-aktion="segen">Segen ${uebersetze(k.segen.textKey).split(':')[0]} (${k.segen.preisEicheln} 🌰)</button>` : ''}
         <button data-markt-aktion="entfernen">Würfel entfernen (${entfernenPreis(run)} 🪙)</button>
         <button data-markt-aktion="troesten">Trösten-Dienst (${TROESTEN_DIENST_TAU} 💧)</button>
       </div>
@@ -593,7 +618,11 @@ function verdrahte() {
   binde('[data-schmiede-wuerfel]', (el) => { schmiedeWahl = { ...schmiedeWahl, wuerfelId: el.dataset.schmiedeWuerfel }; render(); });
   binde('[data-schmiede-seite]', (el) => schmiedeKauf(Number(el.dataset.schmiedeSeite)));
   binde('[data-markt-wuerfel]', (el) => marktKaufWuerfel(Number(el.dataset.marktWuerfel)));
-  binde('[data-markt-aktion]', (el) => { marktWahl = { aktion: el.dataset.marktAktion }; render(); });
+  binde('[data-markt-aktion]', (el) => {
+    if (el.dataset.marktAktion === 'segen') return marktKaufSegen();
+    marktWahl = { aktion: el.dataset.marktAktion };
+    render();
+  });
   binde('[data-markt-ziel]', (el) => marktZiel(el.dataset.marktZiel));
   binde('[data-event-opt]', (el) => eventOption(Number(el.dataset.eventOpt)));
   binde('[data-lagerfeuer]', (el) => lagerfeuerAktion(el.dataset.lagerfeuer));

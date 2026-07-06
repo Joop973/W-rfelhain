@@ -4,6 +4,7 @@
 import {
   GRAVUREN,
   BLAUPAUSEN,
+  HAIN_SEGEN,
   SLICE_GRAVUREN,
   SLICE_BLAUPAUSEN,
   EVENTS,
@@ -12,6 +13,7 @@ import {
 } from './data.js';
 import { graviereSeite, wendeBlaupauseAn } from './belohnung.js';
 import { troeste, schreck } from './push.js';
+import { gibSegen, segenEffekt, troestenBonus, zieheSegenOption } from './segen.js';
 
 export const TAU_PRO_REGION = 6; // 03 §8 [GESPERRT]
 export const LAGERFEUER_HEILUNG_ANTEIL = 0.3; // +30 % hpMax [PROVISORISCH]
@@ -36,7 +38,8 @@ export function erstelleSchmiedeAngebot() {
 }
 
 // Preis/Zielstufe für eine Gravur auf einer konkreten Seite; null = Cap erreicht.
-export function schmiedePreis(wuerfel, gravurId, seitenIndex) {
+// run (optional): für Segen-Rabatte — Krone des alten Hüters halbiert Stufe-1-Preise (07 §4.2 #15).
+export function schmiedePreis(wuerfel, gravurId, seitenIndex, run = null) {
   const gravur = GRAVUREN[gravurId];
   const aktuelleStufe = wuerfel.stufen[seitenIndex];
   const gleicheGravur = aktuelleStufe > 0 && wuerfel.seiten[seitenIndex].gravurId === gravurId;
@@ -45,12 +48,14 @@ export function schmiedePreis(wuerfel, gravurId, seitenIndex) {
   let preis = gravur.stufen[zielStufe - 1].preisMuenzen;
   const typWechsel = aktuelleStufe > 0 && !gleicheGravur;
   if (typWechsel) preis = Math.ceil(preis * GRAVUR_WECHSEL_AUFPREIS_FAKTOR); // 04 §3.2
+  const rabatt = run && zielStufe === 1 ? segenEffekt(run, 'schmiede_stufe1_rabatt_prozent') : null;
+  if (rabatt) preis = Math.ceil(preis * (1 - rabatt.wert / 100));
   return { zielStufe, preis, typWechsel };
 }
 
 export function kaufeGravur(run, gravurId, wuerfelId, seitenIndex) {
   const wuerfel = findeWuerfel(run, wuerfelId);
-  const angebot = schmiedePreis(wuerfel, gravurId, seitenIndex);
+  const angebot = schmiedePreis(wuerfel, gravurId, seitenIndex, run);
   if (!angebot) return { ok: false, grund: 'cap' };
   if (run.waehrungen.muenzen < angebot.preis) return { ok: false, grund: 'muenzen' };
   run.waehrungen.muenzen -= angebot.preis;
@@ -60,7 +65,10 @@ export function kaufeGravur(run, gravurId, wuerfelId, seitenIndex) {
 
 // --- Markt (07 §3.2/§3.3) --------------------------------------------------------
 
-export function erstelleMarktAngebot(rng) {
+const SEGEN_PREIS = { haeufig: 70, selten: 95, episch: 120 }; // Eicheln (07 §2.3: ~70–120) [PROVISORISCH]
+
+// run (optional): Segen-Angebot 0–1, nur noch nicht besessene (07 §3.2/§4.3 "Markt kann selten Segen führen").
+export function erstelleMarktAngebot(rng, run = null) {
   const wuerfelVorlagen = ['astschneide', 'borkenschild'];
   const anzahlWuerfel = 1 + Math.floor(rng.naechsteZahl() * 2); // 1–2
   const wuerfel = [];
@@ -75,7 +83,20 @@ export function erstelleMarktAngebot(rng) {
     const id = SLICE_BLAUPAUSEN[Math.floor(rng.naechsteZahl() * SLICE_BLAUPAUSEN.length)];
     blaupause = { blaupauseId: id, nameKey: BLAUPAUSEN[id].nameKey, preisEicheln: BLAUPAUSEN_PREIS[BLAUPAUSEN[id].seltenheit] };
   }
-  return { wuerfel, blaupause };
+  let segen = null;
+  if (run && rng.naechsteZahl() < 0.35) {
+    const option = zieheSegenOption(run, rng);
+    if (option) segen = { ...option, preisEicheln: SEGEN_PREIS[HAIN_SEGEN[option.segenId].seltenheit] };
+  }
+  return { wuerfel, blaupause, segen };
+}
+
+export function kaufeMarktSegen(run, segenId, preisEicheln) {
+  if (run.waehrungen.eicheln < preisEicheln) return { ok: false, grund: 'eicheln' };
+  const ergebnis = gibSegen(run, segenId);
+  if (!ergebnis.ok) return ergebnis;
+  run.waehrungen.eicheln -= preisEicheln;
+  return { ok: true };
 }
 
 export function kaufeWuerfel(run, vorlageId, preisEicheln) {
@@ -112,7 +133,7 @@ export function troesteDienst(run, wuerfelId) {
   if (run.waehrungen.tau < TROESTEN_DIENST_TAU) return { ok: false, grund: 'tau' };
   run.waehrungen.tau -= TROESTEN_DIENST_TAU;
   const wuerfel = findeWuerfel(run, wuerfelId);
-  wuerfel.gemuet = troeste(wuerfel).gemuet;
+  wuerfel.gemuet = troeste(wuerfel, troestenBonus(run)).gemuet;
   run.troestenZahl = (run.troestenZahl ?? 0) + 1; // zählt für Frühling (01 §5)
   run.pflegeZahl = (run.pflegeZahl ?? 0) + 1; // speist Labung (04 §4.1)
   return { ok: true };
@@ -146,7 +167,7 @@ export function waehleEventOption(run, event, optionIndex, rng) {
     // Trösten trifft den ängstlichsten Würfel (bzw. einen zufälligen bei Gleichstand 0).
     for (let i = 0; i < effekt.troesten; i += 1) {
       const ziel = [...run.arsenal].sort((a, b) => schreck(b.gemuet) - schreck(a.gemuet))[0];
-      ziel.gemuet = troeste(ziel).gemuet;
+      ziel.gemuet = troeste(ziel, troestenBonus(run)).gemuet;
     }
     run.troestenZahl = (run.troestenZahl ?? 0) + effekt.troesten;
     run.pflegeZahl = (run.pflegeZahl ?? 0) + effekt.troesten;
@@ -170,13 +191,16 @@ export function waehleEventOption(run, event, optionIndex, rng) {
 
 export function rasteLagerfeuer(run, wahl, wuerfelId = null) {
   if (wahl === 'heilen') {
-    const menge = Math.round(run.hpMax * LAGERFEUER_HEILUNG_ANTEIL);
+    // Warmes Moos (07 §4.2 #4): Lagerfeuer-Heilung +25 %.
+    const moos = segenEffekt(run, 'lagerfeuer_heilung_prozent');
+    const anteil = LAGERFEUER_HEILUNG_ANTEIL * (moos ? 1 + moos.wert / 100 : 1);
+    const menge = Math.round(run.hpMax * anteil);
     run.hp = Math.min(run.hpMax, run.hp + menge);
     return { ok: true, text: `+${menge} HP` };
   }
   if (wahl === 'troesten') {
     const wuerfel = findeWuerfel(run, wuerfelId);
-    wuerfel.gemuet = troeste(wuerfel).gemuet;
+    wuerfel.gemuet = troeste(wuerfel, troestenBonus(run)).gemuet;
     run.troestenZahl = (run.troestenZahl ?? 0) + 1;
     run.pflegeZahl = (run.pflegeZahl ?? 0) + 1;
     return { ok: true, text: '+2 Gemüt' };

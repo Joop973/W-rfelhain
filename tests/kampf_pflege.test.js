@@ -83,8 +83,8 @@ test('Save-Migration v2→v3 ergänzt pflegeZahl aus troestenZahl', () => {
   const runState = { ...starteRun('eichwart', rng), troestenZahl: 4 };
   delete runState.pflegeZahl; // echter v2-Save kennt das Feld nicht
   const v2 = { saveVersion: 2, runState };
-  const v3 = migriere(v2);
-  assert.equal(v3.saveVersion, 3);
-  assert.equal(v3.runState.pflegeZahl, 4);
-  assert.equal(v3.runState.troestenZahl, 4);
+  const migriert = migriere(v2); // Kette läuft bis zur aktuellen SAVE_VERSION durch
+  assert.ok(migriert.saveVersion >= 3);
+  assert.equal(migriert.runState.pflegeZahl, 4);
+  assert.equal(migriert.runState.troestenZahl, 4);
 });
