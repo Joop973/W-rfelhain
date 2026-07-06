@@ -8,6 +8,13 @@ import { uebersetze } from '../i18n/de.js';
 import { KLASSEN, HUETER_BASIS_HP } from '../data.js';
 import { erstelleNeuenSave, speichere, lade, loesche } from '../save.js';
 import {
+  STAMMBAUM_KNOTEN,
+  normalisiereMeta,
+  verdieneJahresringe,
+  pruefeStammbaumKauf,
+  kaufeStammbaumKnoten,
+} from '../meta.js';
+import {
   starteRun,
   starteKampf,
   beginneZug,
@@ -47,6 +54,7 @@ const KNOTEN_LABEL = {
 
 let run = null;
 let kampf = null;
+let meta = normalisiereMeta(null); // Meta-Progression, überlebt Run-Enden (C1)
 let modus = 'karte'; // karte | kampf | schmiede | markt | event | lagerfeuer
 let letztesEreignis = '';
 // UI-Auswahlzustände
@@ -76,15 +84,29 @@ function speichereZwischenKnoten() {
       hainSegen: run.hainSegen,
       welkGrad: run.welkGrad,
     });
+    save.metaState = meta; // Meta überlebt Run-Wechsel (C1)
     speichere(save);
   } catch {
     /* kein localStorage (z. B. file://) — ignorieren */
   }
 }
 
+// Am Run-Ende: frische Save-Hülle (karte: null → kein Wiederaufnehmen eines
+// toten Runs), aber mit aktuellem Meta-Stand (C1).
+function speichereNurMeta() {
+  try {
+    const save = erstelleNeuenSave(run?.klasse ?? 'eichwart');
+    save.metaState = meta;
+    speichere(save);
+  } catch {
+    /* kein localStorage — ignorieren */
+  }
+}
+
 function ladeGespeichertenRun() {
   try {
     const save = lade();
+    if (save?.metaState) meta = normalisiereMeta(save.metaState);
     if (!save?.runState?.karte) return false;
     const rs = save.runState;
     const hpMax = HUETER_BASIS_HP + KLASSEN[rs.klasse].hpMod;
@@ -120,6 +142,8 @@ function findeKnotenTyp(rs) {
 // --- Aktionen ----------------------------------------------------------------------
 
 function neuerRun() {
+  // Nur den Run löschen — der Stammbaum (meta) überlebt (C1). Der nächste
+  // speichereZwischenKnoten schreibt meta wieder in den frischen Save.
   try { loesche(); } catch { /* ignorieren */ }
   run = starteRun('eichwart', rng);
   kampf = null;
@@ -564,14 +588,44 @@ function renderLagerfeuer() {
     </section>`;
 }
 
+// Stammbaum-Panel (C1): kaufbare Meta-Knoten am Run-Ende (09 §2.9).
+function renderStammbaum() {
+  const zeilen = Object.values(STAMMBAUM_KNOTEN).map((k) => {
+    const pruefung = pruefeStammbaumKauf(meta, k.id, { reifegrad: 0 });
+    if (meta.stammbaum.includes(k.id)) {
+      return `<p>✅ ${uebersetze(k.textKey)}</p>`;
+    }
+    const hinweis = pruefung.grund === 'bedingung' ? ` — ${uebersetze(k.bedingungTextKey)}` : '';
+    return `<p><button data-stammbaum="${k.id}" ${pruefung.ok ? '' : 'disabled'}>
+      ${uebersetze(k.textKey)} (${k.kosten.jahresringe} 🪵)</button>${hinweis}</p>`;
+  });
+  return `<section class="ph ph--stammbaum"><strong>Stammbaum</strong>${zeilen.join('')}</section>`;
+}
+
+function klickStammbaum(knotenId) {
+  const ergebnis = kaufeStammbaumKnoten(meta, knotenId, { reifegrad: 0 });
+  letztesEreignis = ergebnis.ok
+    ? `${uebersetze(ergebnis.knoten.textKey)} — gekauft.`
+    : 'Noch nicht kaufbar.';
+  speichereNurMeta();
+  render();
+}
+
 function render() {
   const belohnungOffen = kampf?.phase === 'sieg' && kampf.belohnung && !kampf.belohnung.erledigt;
   if ((run.verloren || run.abgeschlossen) && !belohnungOffen && modus !== 'kampf') {
     const titel = run.abgeschlossen ? 'Region 1 durchquert — der Saumhüter fällt' : 'Der Hüter fällt';
+    if (!run.jahresringeVergebenFertig) {
+      run.jahresringeVergeben = verdieneJahresringe(meta, { sieg: run.abgeschlossen, kaempfe: run.kampfNummer });
+      run.jahresringeVergebenFertig = true;
+      speichereNurMeta(); // Meta sofort sichern; toter Run wandert NICHT in den Save
+    }
     wurzel.innerHTML = `
       <div class="ph ph--ende">
         <h2>${titel}</h2>
         <p>Arsenal-Schreck: ${arsenalSchreckSumme(run)} · Trösten: ${run.troestenZahl} · 🪙 ${run.waehrungen.muenzen}</p>
+        <p>🪵 +${run.jahresringeVergeben || 0} Jahresringe (gesamt ${meta.jahresringe})</p>
+        ${renderStammbaum()}
         <button data-aktion="neu">Neuer Run</button>
       </div>`;
     verdrahte();
@@ -627,6 +681,7 @@ function verdrahte() {
   binde('[data-event-opt]', (el) => eventOption(Number(el.dataset.eventOpt)));
   binde('[data-lagerfeuer]', (el) => lagerfeuerAktion(el.dataset.lagerfeuer));
   binde('[data-lagerfeuer-ziel]', (el) => lagerfeuerAktion(lagerfeuerWahl, el.dataset.lagerfeuerZiel));
+  binde('[data-stammbaum]', (el) => klickStammbaum(el.dataset.stammbaum));
   const aktionen = {
     reroll: klickReroll,
     aufloesen: klickAufloesen,

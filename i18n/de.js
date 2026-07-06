@@ -124,6 +124,13 @@ export const DE = {
   'event.trockene_quelle.text': 'Ein Quellbecken, rissig und leer. Ganz unten glänzt etwas.',
   'event.trockene_quelle.opt1': 'Bis zum Grund graben (+30 Münzen, Scharte-Fluch auf einen Würfel)',
   'event.trockene_quelle.opt2': 'Tau sammeln, was bleibt (+3 Tau)',
+
+  // Stammbaum (Meta, 09 §2.9)
+  'stammbaum.klasse_dorfschamane.text': 'Dorfschamane freischalten — der Pflege-Lehrer (Zuversicht, Gratis-Ermutigung)',
+  'stammbaum.klasse_gloeckner.text': 'Glöckner freischalten — der Gleichklang-Läuter (Widerhall)',
+  'stammbaum.klasse_schleiferin.text': 'Schleiferin freischalten — die Würfel-Meisterin (Schliff-Sockel, Extra-Reroll)',
+  'stammbaum.klasse_rodbauer.text': 'Rodbauer freischalten — der Experten-Griff (Brandrodung, kein Block)',
+  'stammbaum.klasse_rodbauer.bedingung': 'Erst nach einem Frühling-Ende oder mit Reifegrad 3',
 };
 
 // Fallback-Auflösung (09 §5): fehlender Key → de, sonst Key selbst.
