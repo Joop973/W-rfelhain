@@ -72,8 +72,8 @@ Ziel: alle Systeme voll aktiv, mehrere Build-Pfade. Endet mit **Balance-Tor 2**.
 ## Etappe C — Welle 4: Meta
 
 - [x] **C1 [C] Jahresringe + Stammbaum** (Meta-Save, dauerhafte Freischaltungen, 09 §2.9) *(neues Modul `meta.js`; Einkommen PROVISORISCH Sieg 2/Niederlage 1/Abbruch 0; Stammbaum = 4 Klassen-Knoten inkl. Rodbauer-Bedingung; Meta überlebt „Neuer Run", Ende-Screen mit Ring-Vergabe + Kauf-Panel)* — 2026-07-06
-- [ ] **C2 [C] Klassen 2–5 spielbar**: Dorfschamane (Zuversicht + Gratis-Ermutigung), Glöckner (Widerhall), Schleiferin (Schliff-Sockel + Vollmond-Ausnahme + Extra-Reroll), Rodbauer (Brandrodung) — Daten liegen schon in `data.js`, Passive brauchen `kampf.js`/`engine.js`-Anbindung
-- [ ] **C3 [C] Klassen-Freischalt-Reihenfolge** (3/5/8/12 Jahresringe, Rodbauer hinter Bedingung — 06 §7)
+- [x] **C2 [C] Klassen 2–5 spielbar**: Dorfschamane (Zuversicht + Gratis-Ermutigung), Glöckner (Widerhall), Schleiferin (Schliff-Sockel + Vollmond-Ausnahme + Extra-Reroll), Rodbauer (Brandrodung) — Daten liegen schon in `data.js`, Passive brauchen `kampf.js`/`engine.js`-Anbindung *(alle 4 Passive im Loop; Klassen-Sockel trennt jetzt effektiverWert/vollmondPruefwert; 8 Tests)* — 2026-07-06
+- [x] **C3 [C] Klassen-Freischalt-Reihenfolge** (3/5/8/12 Jahresringe, Rodbauer hinter Bedingung — 06 §7) *(Stammbaum-Knoten aus C1 tragen Kosten + Rodbauer-Bedingung; Klassen-Wahl vor neuem Run zeigt nur Freigeschaltete)* — 2026-07-06
 - [ ] **C4 [C] Reifegrade 1–10** (kumulative Mods, 03 §9) + Ziel-Siegraten-Sims je Stufe
 - [ ] **C5 [C+D] Heimat-Hain/Samen** (Anschluss „Stiller Hain"-Ende) — noch dünn in den Artefakten, ggf. Design-Chat-Runde vorab
 - [ ] **C6 [C] Run-weite Enden-Zähler**: End-Schreck + Trösten-Zahl tracken, Schwellen ~10/~40 provisorisch verdrahten
