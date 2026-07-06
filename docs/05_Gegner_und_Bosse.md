@@ -67,14 +67,16 @@ Wirkung, Modelle und Caps aus 02 §8.1 / 03 §6 (dort `[GESPERRT]`). Hier: **wie
 
 **Glanz** ist **kein** Gegner-Werkzeug (Spieler-/Segen-seitiger Buff, 02 §8.1) → hier nur der Vollständigkeit halber ausgenommen. Damit bleiben **6** gegner-taugliche Status.
 
-### 2.1 Morsch als Gegner-Mechanik — Design-Entscheidung `[PROVISORISCH]`
+### 2.1 Morsch als Gegner-Mechanik — Design-Entscheidung `[GESPERRT — Option A, entschieden 2026-07-06]`
 
-03 §6 definiert Morsch/Welk als additive Modifikatoren **nur auf den Schaden-Pool des Hüters**. Ein Gegner, der dem Hüter Morsch aufdrückt, hätte darin **keine** Wirkung (der Hüter füllt keinen eigenen eingehenden Pool). Zwei saubere Optionen:
+03 §6 definiert Morsch/Welk als additive Modifikatoren **nur auf den Schaden-Pool des Hüters**. Ein Gegner, der dem Hüter Morsch aufdrückt, hätte darin **keine** Wirkung (der Hüter füllt keinen eigenen eingehenden Pool). Zwei saubere Optionen standen zur Wahl:
 
-- **(A, gewählt):** Gegner-Morsch wirkt **symmetrisch** auf **eingehenden** Schaden — Hüter nimmt +20 %/Stapel aus Gegner-Angriffen. Braucht einen parallelen „eingehend"-Multiplikator in `engine.js`. **Neue Mechanik, `[PROVISORISCH]`, Sim/Code prüft.**
-- **(B, Fallback):** Gegner benutzen **kein** Morsch; Morsch bleibt reines Spieler-Werkzeug. Verwundbarkeit stattdessen über **Kraft**-Self-Buff des Gegners abgebildet.
+- **(A, GEWÄHLT — B7-Entscheid):** Gegner-Morsch wirkt **symmetrisch** auf **eingehenden** Schaden — Hüter nimmt +20 %/Stapel aus Gegner-Angriffen (Cap 4, Decay −1/Runde, verrechnet **vor** Block). Implementiert als `eingehendMult` in `engine.js`, verdrahtet in `fuehreGegnerzugAus`.
+- ~~(B, Fallback): Gegner benutzen kein Morsch; Verwundbarkeit über Kraft-Self-Buff.~~ **Verworfen.**
 
-Bis zur Code-Klärung: Morsch bei Gegnern **sparsam** (nur R4/R6-Elite), damit ein Streichen der Option den Roster nicht bricht.
+**Sim-Befund (sim/morsch_gegner_ab.js, n=5000, Region-1-Elite):** A hält 99,8 % Siegrate bei +19 % HP-Verlust — selbstbremsender Druck, Block bleibt Konterspiel. B fiel auf 96,2 % bei +28 % HP-Verlust mit unbegrenzt wachsendem Maximaltreffer (additive Uhr, bestraft langsame Builds überproportional — Konflikt mit 03 §14).
+
+Roster-Konsequenz: Morsch bei Gegnern weiterhin **sparsam** (R4/R6-Elite, Boss-Spitzen) — jetzt als bewusste Dosierung, nicht mehr als Absicherung.
 
 ---
 
