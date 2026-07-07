@@ -109,10 +109,37 @@ export function aktivePhase(gegner) {
   return aktiv;
 }
 
+// "Dein Spiegel" (Endboss Phase 3, 05 §7): Module aus den Top-N ängstlichsten
+// Arsenal-Würfeln — Schaden = Summe der gesperrten (höchsten) Seiten × k (k=1),
+// Spiegel-Status = 1 Scharte/Klemme je 3 Schreck (Cap 2, alternierend).
+// N = min(3, Würfel mit Schreck > 0); N = 0 → ruhige Spiegelung (Standard-Moveset).
+export function baueSpiegelModule(run) {
+  const aengstliche = run.arsenal
+    .filter((w) => schreck(w.gemuet) > 0)
+    .sort((a, b) => schreck(b.gemuet) - schreck(a.gemuet))
+    .slice(0, 3);
+  return aengstliche.map((w, index) => {
+    const gesperrt = bestimmeGesperrteSeitenIndizes(w);
+    const schadenSumme = gesperrt.reduce((s, i) => s + w.seiten[i].wert, 0);
+    const spiegelStapel = Math.min(2, Math.floor(schreck(w.gemuet) / 3));
+    return {
+      wuerfelId: w.id,
+      // Modul ohne gesperrte Seiten (Schreck 1-2) schlägt mit dem Grund-Schreck zu.
+      schaden: gesperrt.length > 0 ? schadenSumme : schreck(w.gemuet) * 2,
+      status: spiegelStapel > 0 ? { typ: index % 2 === 0 ? 'scharte' : 'klemme', stapel: spiegelStapel, mit: 'angriff' } : null,
+    };
+  });
+}
+
 export function naechsteAbsicht(gegner) {
   // Boss-Twist "Erste Geduld" (05 §6): jede dritte Boss-Runde zwingend Block.
   if (gegner.mechanikIds?.includes('erste_geduld') && gegner.zyklus % 3 === 2) {
     return { typ: 'block', wert: gegner.schaden, angekuendigt: true };
+  }
+  // "Dein Spiegel": in Phase 3 rotiert der Endboss durch die Module (05 §7).
+  if (gegner.spiegelModule?.length) {
+    const modul = gegner.spiegelModule[gegner.zyklus % gegner.spiegelModule.length];
+    return { typ: 'angriff', wert: modul.schaden, spiegelModul: modul, angekuendigt: true };
   }
   const phase = aktivePhase(gegner);
   let muster = phase?.absichtsMuster ?? gegner.absichtsMuster;
@@ -175,6 +202,7 @@ function baueGegner(vorlageId, rng, { schadenZuschlag = 0, reifegrad = 0 } = {})
     statusAuflagen: vorlage.statusAuflagen ?? [],
     treffer: vorlage.treffer ?? 1,
     mechanikIds: vorlage.mechanikIds ?? [],
+    bossSchreck: vorlage.bossSchreckStart ?? null, // Trösten-Konto des Endboss (05 §8)
     phasen: vorlage.phasen ?? null,
     status: leererStatus(), // vom Spieler auflegbare Status (Fäule/Brand/Morsch/Welk)
     zyklus: 0,
@@ -485,6 +513,22 @@ export function loeseZugAuf(run, kampf, rng) {
         gespielteSeiten.push({ typ: 'riss', hoechstwert });
         letzterSchadenEffWert = 0;
       } else if (effekt.typ === 'beruhigung' || effekt.typ === 'ermutigung') {
+        // Trösten-Auflösung (05 §8, D3): in der Spiegel-Phase des Endboss richten
+        // sich Pflege-Seiten GEGEN den Boss — jedes Ereignis senkt bossSchreck um 2;
+        // bei <= 0 ist er befriedet und der Kampf endet ohne Kill (Frühling-Pfad).
+        if (
+          kampf.gegner.bossSchreck != null &&
+          kampf.gegner.bossSchreck > 0 &&
+          kampf.gegner.spiegelModule != null
+        ) {
+          kampf.gegner.bossSchreck -= 2;
+          kampf.bossGetroestet = (kampf.bossGetroestet ?? 0) + 1;
+          run.troestenZahl = (run.troestenZahl ?? 0) + 1; // gezieltes Trösten (01 §5)
+          run.pflegeZahl = (run.pflegeZahl ?? 0) + 1;
+          gespielteSeiten.push({ typ: effekt.typ, hoechstwert });
+          letzterSchadenEffWert = 0;
+          continue;
+        }
         // Pflege-Seiten (02 §6.3/§6.4): +Gemüt auf den ängstlichsten Hand-Würfel.
         // Beruhigung verpufft ohne Schreck-Ziel (reaktiv); Ermutigung wirkt immer.
         // Zähler: troestenZahl (Frühling, 01 §5) zählt Ermutigung NICHT mit;
@@ -548,6 +592,19 @@ export function loeseZugAuf(run, kampf, rng) {
   kampf.geheilt = geheilt;
   kampf.gepraegt = gepraegt;
   kampf.getroestet = getroestet;
+
+  // Befriedung (05 §8): bossSchreck <= 0 in der Spiegel-Phase → der Kampf endet
+  // ohne Kill; der Hüter wird getröstet, nicht erschlagen.
+  if (kampf.gegner.bossSchreck != null && kampf.gegner.bossSchreck <= 0 && kampf.gegner.spiegelModule != null) {
+    kampf.befriedet = true;
+    run.bossBefriedet = true;
+    kampf.zuletztGespielteIds = [...kampf.reihe];
+    kampf.zieh = zugende({ ...kampf.zieh, hand: kampf.hand });
+    kampf.hand = [];
+    kampf.reihe = [];
+    beendeKampf(run, kampf, true, rng);
+    return pools;
+  }
 
   // Gegner-Block halbiert eingehenden Schaden (Slice-Minimal, 05 §4 Wächter).
   const effektiverSchaden = kampf.gegner.absicht.typ === 'block' ? Math.floor(pools.schaden / 2) : pools.schaden;
@@ -649,6 +706,11 @@ export function fuehreGegnerzugAus(run, kampf, rng) {
         aufgelegt.push(auflage.typ);
       }
     }
+    // Spiegel-Modul (05 §7): die zurückkehrende Furcht des gespiegelten Würfels.
+    if (absicht.spiegelModul?.status) {
+      legeAufHueter(absicht.spiegelModul.status);
+      aufgelegt.push(absicht.spiegelModul.status.typ);
+    }
   }
   // Rinde verfällt (02 §2.2 Schritt 9) — außer Hamsterherz (07 §4.2 #12):
   // bis zu `cap` Rest-Block überdauert den Zug (der Cap ist die Bremse).
@@ -674,6 +736,22 @@ export function fuehreGegnerzugAus(run, kampf, rng) {
   // Boss-Twists am Rundenende (05 §6, D2):
   // Auflodern: Grundschaden +1 kumulativ — der Kampf MUSS vorankommen.
   if (kampf.gegner.mechanikIds?.includes('auflodern')) kampf.gegner.schaden += 1;
+  // "Das hohle Echo" (Endboss, 05 §6): heilt um das Rest-Übermut des Hüters —
+  // Gier füttert ihn wörtlich; boss-lokal, rührt die Kristallisation nicht an.
+  if (kampf.gegner.mechanikIds?.includes('hohles_echo') && kampf.uebermut > 0) {
+    kampf.gegner.hp = Math.min(kampf.gegner.hpMax, kampf.gegner.hp + kampf.uebermut);
+    kampf.hohlesEchoGeheilt = kampf.uebermut; // Anzeige
+  }
+  // "Dein Spiegel" (05 §7): beim Eintritt in Phase 3 (< 33 %) werden die Module
+  // einmalig aus dem AKTUELLEN Arsenal gebaut; N = 0 → ruhige Spiegelung.
+  if (
+    kampf.gegner.mechanikIds?.includes('dein_spiegel') &&
+    kampf.gegner.spiegelModule == null &&
+    kampf.gegner.hp > 0 &&
+    kampf.gegner.hp / kampf.gegner.hpMax <= 0.33
+  ) {
+    kampf.gegner.spiegelModule = baueSpiegelModule(run);
+  }
   // Enge Pforte: Übermut > 0 ins Rundenende → +1 Schreck auf einen zufälligen
   // Würfel (angekündigte Gier-Strafe; rein spieler-erzeugt, Anti-Brick).
   if (kampf.gegner.mechanikIds?.includes('enge_pforte') && kampf.uebermut > 0) {
@@ -747,6 +825,16 @@ function beendeKampf(run, kampf, sieg, rng) {
   kampf.phase = 'sieg';
 
   const rolle = kampf.gegner.rolle;
+  // Endboss (05 §6): keine Item-Belohnung — die Sonder-Belohnung ist das Ende.
+  // Gilt nur für den ECHTEN Region-6-Boss; maxRegion < 6 (Sim-Pins) beendet den
+  // Run regulär mit Belohnung.
+  const istEndboss = rolle === 'boss' && (run.region ?? 1) >= REGION_MAX;
+  if (istEndboss) {
+    kampf.belohnung = null;
+    run.kampfNummer += 1;
+    run.abgeschlossen = true;
+    return;
+  }
   // Dürre-Same (07 §4.2 #16): +2 Münzen je Kill (Ein-Gegner-Slice: je Kampf-Sieg).
   const killGeld = segenEffekt(run, 'muenzen_pro_kill');
   if (killGeld) run.waehrungen.muenzen += killGeld.wert;
@@ -766,10 +854,12 @@ function beendeKampf(run, kampf, sieg, rng) {
 
   run.kampfNummer += 1;
   if (rolle === 'boss') {
+    // Endboss ist oben abgehandelt. Sim-Pin (maxRegion < 6): Run endet hier
+    // regulär MIT Belohnung; sonst Übergang in die nächste Region (D1).
     if ((run.region ?? 1) >= (run.maxRegion ?? REGION_MAX)) {
-      run.abgeschlossen = true; // letzter Boss — der Run ist durch
+      run.abgeschlossen = true;
     } else {
-      betreteNaechsteRegion(run, rng); // weiter in die nächste Region (D1)
+      betreteNaechsteRegion(run, rng);
       kampf.regionGeschafft = run.region; // Anzeige: "Region N erreicht"
     }
   }

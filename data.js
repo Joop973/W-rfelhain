@@ -769,11 +769,26 @@ export const GEGNER_VORLAGEN = {
       { abHpAnteil: 0.5, absichtsMuster: 'wetterwechsler', statusAuflagen: [{ typ: 'scharte', stapel: 2, mit: 'angriff' }, { typ: 'klemme', stapel: 2, mit: 'angriff' }, { typ: 'riss', stapel: 1, mit: 'angriff' }] },
     ],
   },
+  // Endboss (05 §6/§7/§8, D3): drei Phasen — "Die Stimme" (lesbar, kaum Status),
+  // "Der Riss" (Debuff-Bündelung mit Doppel-Spitzen), "Dein Spiegel"
+  // (personalisiert aus dem ängstlichsten Arsenal; ruhig bei Schreck 0).
+  // Twist "Das hohle Echo": heilt je Rundenende um das Rest-Übermut des Hüters.
+  // bossSchreckStart: Trösten-Konto für die Befriedung (05 §8, Start 12–16 [SIM]).
   frueherer_hueter: {
     id: 'frueherer_hueter', nameKey: 'boss.frueherer_hueter.name', region: 6, rolle: 'boss',
     hpBereich: [750, 850], schadenBereich: [38, 44],
-    statusAuflagen: [], // Phase 1 "Die Stimme": kaum Status — Phasen 2/3 + Twist folgen mit D3
-    absichtsMuster: 'wetterwechsler', mechanikIds: [],
+    statusAuflagen: [],
+    absichtsMuster: 'wetterwechsler', mechanikIds: ['hohles_echo', 'dein_spiegel'],
+    bossSchreckStart: 14,
+    phasen: [
+      { abHpAnteil: 1.0, absichtsMuster: 'wetterwechsler' }, // "Die Stimme"
+      { abHpAnteil: 0.66, absichtsMuster: 'wetterwechsler', treffer: 2, statusAuflagen: [
+        { typ: 'scharte', stapel: 2, mit: 'angriff' },
+        { typ: 'klemme', stapel: 2, mit: 'angriff' },
+        { typ: 'welk', stapel: 2, mit: 'angriff' },
+      ] }, // "Der Riss" — Riss/Morsch "gelegentlich" vereinfacht [PROVISORISCH]
+      { abHpAnteil: 0.33, absichtsMuster: 'wetterwechsler', statusAuflagen: [] }, // "Dein Spiegel" — Module via kampf.js
+    ],
   },
 };
 

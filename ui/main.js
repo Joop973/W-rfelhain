@@ -237,6 +237,12 @@ function klickAufloesen() {
   if (kampf.gepraegt > 0) letztesEreignis += ` 🪙 Prägung +${kampf.gepraegt} Münzen.`;
   if (kampf.getroestet > 0) letztesEreignis += ` 🍃 ${kampf.getroestet}× getröstet (+2 Gemüt).`;
   if (kampf.aussetzer > 0) letztesEreignis += ` (${kampf.aussetzer}× Riss-Aussetzer.)`;
+  if (kampf.bossGetroestet > 0 && !kampf.befriedet) {
+    letztesEreignis += ` 🕊 Du tröstest den Hüter — sein Schreck sinkt auf ${kampf.gegner.bossSchreck}.`;
+  }
+  if (kampf.befriedet) {
+    letztesEreignis = '🕊 Der frühere Hüter wird still. Die Gier löst sich — du hast ihn getröstet, nicht erschlagen.';
+  }
   if (kampf.phase === 'sieg') {
     letztesEreignis += kampf.sauberSieg ? ' Sauberer Sieg (+1 Gemüt auf Gespielte).' : '';
     if (kampf.kristallisiert > 0) letztesEreignis += ` ${kampf.kristallisiert} Übermut kristallisiert zu Schreck.`;
@@ -255,6 +261,10 @@ function klickGegnerzug() {
       ? `Der Gegner trifft für ${ergebnis.erlitten}.`
       : 'Der Gegner holt aus — kein Schaden durchgedrungen.';
     if (ergebnis.aufgelegt?.length) letztesEreignis += ` Er legt ${ergebnis.aufgelegt.join(' + ')} auf dich!`;
+    if (kampf.hohlesEchoGeheilt) {
+      letztesEreignis += ` 🌑 Das hohle Echo: dein Übermut heilt ihn um ${kampf.hohlesEchoGeheilt}.`;
+      kampf.hohlesEchoGeheilt = 0;
+    }
     if (dot > 0) letztesEreignis += ` (Status: ${dot} an den Gegner.)`;
   }
   if (kampf.phase === 'zug') beginneZug(run, kampf, rng);

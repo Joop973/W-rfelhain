@@ -4,8 +4,8 @@
 //
 // Schwellen [PROVISORISCH — 01 §5, Sim/Spielgefühl eicht]: ≤10 / ≥40, Trösten ≥8.
 // "Der neue Frühling" verlangt zusätzlich die Trösten-Auflösung des Endkampfs
-// (bossBefriedet) — der Endboss kommt mit D3; bis dahin liefert der Aufrufer
-// den Platzhalter true (Region-1-Slice hat keinen befriedbaren Endgegner).
+// (bossBefriedet, 05 §8) — seit D3 real: der Endboss trägt ein bossSchreck-Konto,
+// Pflege-Seiten in seiner Spiegel-Phase senken es; <= 0 = befriedet.
 
 import { schreck } from './push.js';
 
@@ -24,8 +24,9 @@ export function endSchreck(run) {
 }
 
 // Klassifiziert das Run-Ende (nur bei Sieg sinnvoll — Niederlage hat kein Ende,
-// 01 §5 misst "bei Fall des früheren Hüters").
-export function bestimmeEnde(run, { bossBefriedet = true } = {}) {
+// 01 §5 misst "bei Fall des früheren Hüters"). Seit D3 ist das Befriedungs-Gate
+// scharf: run.bossBefriedet setzt der Endkampf über die Trösten-Auflösung (05 §8).
+export function bestimmeEnde(run, { bossBefriedet = run.bossBefriedet === true } = {}) {
   const schreckSumme = endSchreck(run);
   if (
     schreckSumme <= ENDE_SCHRECK_NIEDRIG &&

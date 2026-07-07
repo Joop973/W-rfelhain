@@ -29,6 +29,8 @@ function runMit(schreckSumme, troestenZahl) {
 
 test('Der neue Frühling: Schreck ≤ 10 UND Trösten ≥ 8 UND Boss befriedet', () => {
   const run = runMit(ENDE_SCHRECK_NIEDRIG, ENDE_TROESTEN_SCHWELLE);
+  assert.equal(bestimmeEnde(run).id, 'stiller_hain'); // ohne Befriedung kein Frühling (D3 scharf)
+  run.bossBefriedet = true;
   assert.equal(bestimmeEnde(run).id, 'fruehling');
   // Ohne Befriedung (ab D3 real) → Default-Ende.
   assert.equal(bestimmeEnde(run, { bossBefriedet: false }).id, 'stiller_hain');
