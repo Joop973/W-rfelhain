@@ -717,29 +717,57 @@ export const GEGNER_VORLAGEN = {
   },
 
   // --- Bosse 2–6 (05 §6) — D1: Grundmuster; Phasen/Twists folgen mit D2/D3 -------
+  // Boss 2 (05 §6): Sieche-Grundmuster; Phase 2 (<60 %) eskaliert die Fäule-
+  // Auflage (+1 je Boss-Zyklus); Twist "Ausbreitung": Fäule auf dem Hüter
+  // decayt nicht, solange der Boss > 30 % HP hat.
   modermutter_brut: {
     id: 'modermutter_brut', nameKey: 'boss.modermutter_brut.name', region: 2, rolle: 'boss',
     hpBereich: [180, 210], schadenBereich: [10, 12],
     statusAuflagen: [{ typ: 'faeule', stapel: 3, mit: 'sieche' }],
-    absichtsMuster: 'sieche', mechanikIds: [], // Twist "Ausbreitung" folgt mit D2
+    absichtsMuster: 'sieche', mechanikIds: ['ausbreitung'],
+    phasen: [
+      { abHpAnteil: 1.0, absichtsMuster: 'sieche' },
+      { abHpAnteil: 0.6, absichtsMuster: 'sieche', statusAuflagen: [{ typ: 'faeule', stapel: 3, mit: 'sieche', eskaliert: true }] },
+    ],
   },
+  // Boss 3 (05 §6): Rasende 3× + Brand; Phase 2 (<66 %) Kraft-Eskalation,
+  // Phase 3 (<33 %) Brand + Kraft gleichzeitig; Twist "Auflodern": +1 Grund-
+  // schaden je Rundenende, Gegengewicht: Brand auf ihm zündet doppelt.
   schwelbrand: {
     id: 'schwelbrand', nameKey: 'boss.schwelbrand.name', region: 3, rolle: 'boss',
     hpBereich: [280, 320], schadenBereich: [16, 19],
-    statusAuflagen: [{ typ: 'brand', stapel: 4, mit: 'angriff' }, { typ: 'kraft', stapel: 1, mit: 'selbst' }],
-    absichtsMuster: 'rasende', treffer: 3, mechanikIds: [], // Twist "Auflodern" folgt mit D2
+    statusAuflagen: [{ typ: 'brand', stapel: 4, mit: 'angriff' }],
+    absichtsMuster: 'rasende', treffer: 3, mechanikIds: ['auflodern'],
+    phasen: [
+      { abHpAnteil: 1.0, absichtsMuster: 'rasende', treffer: 3 },
+      { abHpAnteil: 0.66, absichtsMuster: 'rasende', treffer: 3, statusAuflagen: [{ typ: 'kraft', stapel: 2, mit: 'selbst' }] },
+      { abHpAnteil: 0.33, absichtsMuster: 'rasende', treffer: 3, statusAuflagen: [{ typ: 'brand', stapel: 4, mit: 'angriff' }, { typ: 'kraft', stapel: 2, mit: 'selbst' }] },
+    ],
   },
+  // Boss 4 (05 §6): Sieche mit Welk+Scharte; Phase 2 (<50 %) plus Morsch-Spitze;
+  // Twist "Auszehrung": passives Welk 1 je Rundenbeginn (Cap 4, Anti-Brick).
   auszehrer_fuerst: {
     id: 'auszehrer_fuerst', nameKey: 'boss.auszehrer_fuerst.name', region: 4, rolle: 'boss',
     hpBereich: [400, 450], schadenBereich: [22, 25],
     statusAuflagen: [{ typ: 'welk', stapel: 3, mit: 'sieche' }, { typ: 'scharte', stapel: 1, mit: 'sieche' }],
-    absichtsMuster: 'schlaeger_sieche', mechanikIds: [], // Twist "Auszehrung" folgt mit D2
+    absichtsMuster: 'schlaeger_sieche', mechanikIds: ['auszehrung'],
+    phasen: [
+      { abHpAnteil: 1.0, absichtsMuster: 'schlaeger_sieche' },
+      { abHpAnteil: 0.5, absichtsMuster: 'sieche', statusAuflagen: [{ typ: 'welk', stapel: 3, mit: 'sieche' }, { typ: 'scharte', stapel: 1, mit: 'sieche' }, { typ: 'morsch', stapel: 1, mit: 'sieche' }] },
+    ],
   },
+  // Boss 5 (05 §6): Wetterwechsler mit Scharte/Klemme; Phase 2 (<50 %) plus
+  // Riss (Dauer-erneuert via legeStatusAuf); Twist "Enge Pforte": Übermut > 0
+  // ins Rundenende → +1 Schreck auf einen zufälligen Würfel.
   graupfoertnerin_boss: {
     id: 'graupfoertnerin_boss', nameKey: 'boss.graupfoertnerin.name', region: 5, rolle: 'boss',
     hpBereich: [550, 620], schadenBereich: [30, 34],
     statusAuflagen: [{ typ: 'scharte', stapel: 2, mit: 'angriff' }, { typ: 'klemme', stapel: 2, mit: 'angriff' }],
-    absichtsMuster: 'wetterwechsler', mechanikIds: [], // Twist "Enge Pforte" folgt mit D2
+    absichtsMuster: 'wetterwechsler', mechanikIds: ['enge_pforte'],
+    phasen: [
+      { abHpAnteil: 1.0, absichtsMuster: 'wetterwechsler' },
+      { abHpAnteil: 0.5, absichtsMuster: 'wetterwechsler', statusAuflagen: [{ typ: 'scharte', stapel: 2, mit: 'angriff' }, { typ: 'klemme', stapel: 2, mit: 'angriff' }, { typ: 'riss', stapel: 1, mit: 'angriff' }] },
+    ],
   },
   frueherer_hueter: {
     id: 'frueherer_hueter', nameKey: 'boss.frueherer_hueter.name', region: 6, rolle: 'boss',

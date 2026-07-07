@@ -98,19 +98,31 @@ function zufallZwischen(rng, [min, max]) {
   return Math.round(min + rng.naechsteZahl() * (max - min));
 }
 
+// Aktive Boss-Phase (05 §6): tiefste erreichte HP-Schwelle gewinnt. Phasen
+// können Muster, Status-Auflagen und Treffer-Zahl wechseln (D2).
+export function aktivePhase(gegner) {
+  if (!gegner.phasen) return null;
+  let aktiv = null;
+  for (const phase of gegner.phasen) {
+    if (gegner.hp / gegner.hpMax <= phase.abHpAnteil) aktiv = phase;
+  }
+  return aktiv;
+}
+
 export function naechsteAbsicht(gegner) {
   // Boss-Twist "Erste Geduld" (05 §6): jede dritte Boss-Runde zwingend Block.
   if (gegner.mechanikIds?.includes('erste_geduld') && gegner.zyklus % 3 === 2) {
     return { typ: 'block', wert: gegner.schaden, angekuendigt: true };
   }
-  let muster = gegner.absichtsMuster;
-  // Boss-Phasen (05 §6): unter der HP-Schwelle wechselt das Muster.
-  if (gegner.phasen) {
-    for (const phase of gegner.phasen) {
-      if (gegner.hp / gegner.hpMax <= phase.abHpAnteil) muster = phase.absichtsMuster;
-    }
+  const phase = aktivePhase(gegner);
+  let muster = phase?.absichtsMuster ?? gegner.absichtsMuster;
+  const treffer = phase?.treffer ?? gegner.treffer ?? 1;
+  // Wächter-Mehrfach (Saumhüter Phase 2): Wächter-Rotation, Angriffe als Doppel.
+  if (muster === 'waechter_mehrfach') {
+    return gegner.zyklus % 2 === 0
+      ? { typ: 'block', wert: gegner.schaden, angekuendigt: true }
+      : { typ: 'angriff', wert: gegner.schaden, treffer: 2, angekuendigt: true };
   }
-  if (muster === 'waechter_mehrfach') muster = 'waechter'; // mehrfach-Treffer folgen mit Etappe B
   const zyklus = gegner.zyklus;
   if (muster === 'waechter') {
     // blockt zuerst, schlägt dann (05 §4) — Block halbiert eingehenden Schaden.
@@ -137,7 +149,7 @@ export function naechsteAbsicht(gegner) {
   }
   // Rasende: mehrere kleine Treffer (Summe = Schaden; Block wirkt je Treffer).
   if (muster === 'rasende') {
-    return { typ: 'angriff', wert: gegner.schaden, treffer: gegner.treffer ?? 2, angekuendigt: true };
+    return { typ: 'angriff', wert: gegner.schaden, treffer: treffer > 1 ? treffer : 2, angekuendigt: true };
   }
   return { typ: 'angriff', wert: gegner.schaden, angekuendigt: true }; // schlaeger
 }
@@ -237,8 +249,23 @@ function wirf(wuerfel, rng) {
 
 // Zugbeginn: 5 frisch ziehen, werfen (Schreck-Sperrung greift vor dem Wurf).
 export function beginneZug(run, kampf, rng) {
+  // Boss-Twist "Auszehrung" (Auszehrer-Fürst, 05 §6): passives Welk 1 je
+  // Rundenbeginn (Cap 4 via legeStatusAuf) — Prozent-Malus, sperrt nichts.
+  if (kampf.gegner?.mechanikIds?.includes('auszehrung') && kampf.gegner.hp > 0) {
+    legeStatusAuf(kampf.spielerStatus, 'welk', 1);
+  }
   // Rundenbeginn-Status: eigene Fäule tickt (02 §2.2 Schritt 1).
+  const faeuleVorTick = kampf.spielerStatus.faeule;
   const faeuleSchaden = tickeFaeule(kampf.spielerStatus);
+  // Boss-Twist "Ausbreitung" (Modermutter-Brut, 05 §6): Fäule decayt nicht,
+  // solange der Boss über 30 % HP hat — der Tick-Schaden bleibt, der −1 entfällt.
+  if (
+    kampf.gegner?.mechanikIds?.includes('ausbreitung') &&
+    kampf.gegner.hp > kampf.gegner.hpMax * 0.3 &&
+    faeuleVorTick > 0
+  ) {
+    kampf.spielerStatus.faeule = faeuleVorTick;
+  }
   if (faeuleSchaden > 0) {
     run.hp -= faeuleSchaden;
     if (run.hp <= 0) {
@@ -569,14 +596,18 @@ export function fuehreGegnerzugAus(run, kampf, rng) {
   }
 
   // Selbst-Buffs (z. B. Kraft-Eskalation, 05 §5): jede Runde, unabhängig von der Aktion.
+  // Boss-Phasen (D2) können den Auflagen-Satz austauschen.
   const mods = reifegradMods(run.reifegrad ?? 0);
-  for (const auflage of kampf.gegner.statusAuflagen ?? []) {
+  const auflagen = aktivePhase(kampf.gegner)?.statusAuflagen ?? kampf.gegner.statusAuflagen ?? [];
+  for (const auflage of auflagen) {
     if (auflage.mit === 'selbst') legeStatusAuf(status, auflage.typ, auflage.stapel);
   }
   // Status auf den Hüter legen (D1): Reifegrad 8 gibt Normalgegnern +1 Stapel/Anwendung.
+  // eskaliert (Modermutter-Brut Phase 2, 05 §6): Auflage wächst +1 je Boss-Zyklus.
   const legeAufHueter = (auflage) => {
     const zuschlag = kampf.gegner.rolle === 'normal' ? mods.gegnerStatusZuschlag : 0;
-    legeStatusAuf(kampf.spielerStatus, auflage.typ, auflage.stapel + zuschlag);
+    const eskalation = auflage.eskaliert ? (kampf.gegner.eskalation ?? 0) : 0;
+    legeStatusAuf(kampf.spielerStatus, auflage.typ, auflage.stapel + zuschlag + eskalation);
   };
 
   // Gegner handelt: Kraft-Buff hebt, Welk-Debuff senkt den Angriffswert (02 §8).
@@ -586,7 +617,7 @@ export function fuehreGegnerzugAus(run, kampf, rng) {
   const aufgelegt = [];
   if (absicht.typ === 'sieche') {
     // Sieche-Zyklus: kein Schaden, dafür Status auf den Hüter (05 §5).
-    for (const auflage of kampf.gegner.statusAuflagen ?? []) {
+    for (const auflage of auflagen) {
       if ((auflage.mit ?? 'sieche') === 'sieche') {
         legeAufHueter(auflage);
         aufgelegt.push(auflage.typ);
@@ -612,7 +643,7 @@ export function fuehreGegnerzugAus(run, kampf, rng) {
     blockRest = block;
     run.hp -= erlitten;
     // "Angriff + Status" (05 §5): Auflagen, die mit dem Treffer kommen.
-    for (const auflage of kampf.gegner.statusAuflagen ?? []) {
+    for (const auflage of auflagen) {
       if (auflage.mit === 'angriff') {
         legeAufHueter(auflage);
         aufgelegt.push(auflage.typ);
@@ -624,8 +655,10 @@ export function fuehreGegnerzugAus(run, kampf, rng) {
   const hamster = segenEffekt(run, 'rinde_uebertrag');
   kampf.block = hamster ? Math.min(hamster.cap, blockRest) : 0;
 
-  // Gegnerzug-Ende: Brand tickt (kann ihn töten).
-  const brand = tickeBrand(status);
+  // Gegnerzug-Ende: Brand tickt (kann ihn töten). Auflodern-Gegengewicht
+  // (Schwelbrand, 05 §6): Brand auf DIESEM Boss zündet doppelt.
+  let brand = tickeBrand(status);
+  if (kampf.gegner.mechanikIds?.includes('auflodern')) brand *= 2;
   if (brand > 0) {
     kampf.gegner.hp = Math.max(0, kampf.gegner.hp - brand);
     if (kampf.gegner.hp <= 0) {
@@ -637,6 +670,18 @@ export function fuehreGegnerzugAus(run, kampf, rng) {
   // Rundenende-Decay beider Seiten (02 §2.4).
   decayRundenende(status);
   decayRundenende(kampf.spielerStatus);
+
+  // Boss-Twists am Rundenende (05 §6, D2):
+  // Auflodern: Grundschaden +1 kumulativ — der Kampf MUSS vorankommen.
+  if (kampf.gegner.mechanikIds?.includes('auflodern')) kampf.gegner.schaden += 1;
+  // Enge Pforte: Übermut > 0 ins Rundenende → +1 Schreck auf einen zufälligen
+  // Würfel (angekündigte Gier-Strafe; rein spieler-erzeugt, Anti-Brick).
+  if (kampf.gegner.mechanikIds?.includes('enge_pforte') && kampf.uebermut > 0) {
+    const ziel = run.arsenal[Math.floor(rng.naechsteZahl() * run.arsenal.length)];
+    ziel.gemuet -= 1;
+    kampf.engePforteZuletzt = ziel.id; // Anzeige
+  }
+  kampf.gegner.eskalation = (kampf.gegner.eskalation ?? 0) + 1; // speist eskalierte Auflagen
 
   kampf.gegner.zyklus += 1;
   kampf.gegner.absicht = naechsteAbsicht(kampf.gegner);
