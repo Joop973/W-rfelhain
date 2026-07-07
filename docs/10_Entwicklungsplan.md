@@ -86,7 +86,7 @@ Ziel: alle Systeme voll aktiv, mehrere Build-Pfade. Endet mit **Balance-Tor 2**.
 Endet mit **Balance-Tor 3** (voller Run balanciert).
 
 - [x] **D1 [C] Regionen 2–6**: Roster als `data.js`-Zeilen (05 §5 liegt komplett vor), Status-Themen je Region, HP-/Schaden-Kurven *(26 Gegner + Bosse 2–6 als Grundmuster; Sieche/Rasende/Angriff+Status/Selbst-Buff; Gegner-Status aktiviert eingehendMult + Reifegrad 8; Region-Progression mit Tau/Welk-Grad; Sims auf maxRegion 1 gepinnt. Voll-Run un-kalibriert ~0 % — Eichung = D8)* — 2026-07-06
-- [ ] **D2 [C] Bosse 2–5** mit Phasen + Twists (Ausbreitung, Auflodern, Auszehrung, Enge Pforte)
+- [x] **D2 [C] Bosse 2–5** mit Phasen + Twists (Ausbreitung, Auflodern, Auszehrung, Enge Pforte) *(Phasen-System wechselt Muster/Auflagen/Treffer; alle 4 Twists + eskalierende Fäule + Saumhüter-Doppelschlag; 7 Tests)* — 2026-07-06
 - [ ] **D3 [C] Endboss**: 3 Phasen, Twist „Hohles Echo", personalisierte Phase aus dem ängstlichsten Arsenal, Trösten-Auflösung via `bossSchreck` *(05 §7/§8)*
 - [ ] **D4 [C+D] 3 Enden + Narrativ**: Mentor-Stimme über den Run (Text-Keys!), Zweifel-Events R4/R5, Wendungs-Szene, Enden-Inszenierung — **du redigierst alle Texte** (Ton 01 §6 ist Chefsache)
 - [ ] **D5 [C+D] Welk-Grad/Entsättigung**: Filter-MVP ist vorbereitet → Rollen-Swap (08 §3.4 A/B) sobald echte Sprites da sind; Audio-Stems mit diegetischem Ausdünnen (08 §2.2). Claude Technik, **du/Aaron Assets**
