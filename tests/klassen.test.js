@@ -72,15 +72,15 @@ test('Dorfschamane: erste Ermutigungs-Seite je Kampf kostet 0 Atem (inkl. Zurüc
   assert.equal(kampf.gratisErmutigungRest, 0);
 });
 
-test('Glöckner "Widerhall": +3 auf den Pool, wenn Gleichklang zündet — sonst nicht', () => {
+test('Glöckner "Widerhall": Flachbonus auf den Pool, wenn Gleichklang zündet — sonst nicht', () => {
   const { rng, run, kampf } = bereiteKampf('gloeckner', 1004);
   const [a, b] = handWuerfelVomTyp(run, kampf, 'schaden');
   platziereFest(run, kampf, a, 2); // Klangwürfel Wert 4
   platziereFest(run, kampf, b, 2); // Wert 4 → Gleichklang 2
   const pools = loeseZugAuf(run, kampf, rng);
-  // (4+4) × 1,25 = 10, +3 Widerhall = 13.
-  assert.equal(pools.combos.widerhallBonus, 3);
-  assert.equal(pools.schaden, Math.floor(8 * 1.25) + 3);
+  // (4+4) × 1,25 = 10, +5 Widerhall (nachgeschärft, C7) = 15.
+  assert.equal(pools.combos.widerhallBonus, KLASSEN.gloeckner.passiv.schadenFlach);
+  assert.equal(pools.schaden, Math.floor(8 * 1.25) + KLASSEN.gloeckner.passiv.schadenFlach);
 
   // Ohne Match: kein Widerhall.
   const zweiter = bereiteKampf('gloeckner', 1005);

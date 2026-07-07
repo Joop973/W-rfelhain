@@ -46,3 +46,17 @@ Korridor stimmt im Mittel (16,5), aber die **Varianz** kostet: Züge ohne Match 
 3. **Frühling-Schwelle:** bleibt ≥ 8 (voller Run eicht) — Empfehlung: nicht am Slice kalibrieren.
 
 **Empfehlung Claude:** Rodbauer beobachten (1a), Glöckner/Dorfschamane minimal nachschärfen (2a — beide fühlen sich sonst JETZT schlecht an, und die Maßnahmen sind klein und rückbaubar), Frühling unangetastet (3).
+
+---
+
+## 5. Nachschärfung (Entscheid [D], 2026-07-06)
+
+**Entschieden:** Rodbauer beobachten bis Balance-Tor 3 (1a) · Glöckner/Dorfschamane minimal buffen (2a) · Frühling-Schwelle unangetastet (3).
+
+| Eingriff | Vorher → Nachher | Wirkung (nachgemessen) |
+|---|---|---|
+| **Widerhall +3 → +5** | Glöckner Standard 32,3 % / Pflege 57,1 % | **53,7 % / 75,9 %** — sitzt zwischen Schleiferin und Eichwart ✓ |
+| ~~Dorfschamane 7/2/3 → 6/3/3~~ | Pflege 62,6 % → 33,9 % | **RÜCKGEBAUT** — der Output-Verlust (Korridor 16,7 → 14,6) wog weit schwerer als der Block-Gewinn |
+| **Dorfschamane hpMod 0 → +5** (= 80) | Pflege 62,6 % | **76,3 %** — schließt die Lücke zum Anker, ohne ihn einzuholen („Mittel" ✓); Korridor zurück auf 16,7 |
+
+Dorfschamane-Standard bleibt bei ~5 % — bewusst akzeptiert: das ist die designte Doppelstrafe (06 §3) gegen gieriges Spiel mit der Pflege-Klasse, kein Balance-Fehler. Basis-Sim unverändert (Eichwart-Standard 68,3 % im Band).

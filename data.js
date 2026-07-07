@@ -93,12 +93,12 @@ export const KLASSEN = {
   dorfschamane: {
     id: 'dorfschamane',
     nameKey: 'klasse.dorfschamane.name',
-    hpMod: 0,
+    hpMod: 5, // 0→+5 nachgeschärft (C7-Befund: Floor-Dip kostet real mehr als 06 §3 erwartete)
     startArsenal: [
       { vorlage: 'astschneide', anzahl: 7 },
       { vorlage: 'borkenschild', anzahl: 2 },
       { vorlage: 'sanftholz', anzahl: 3 },
-    ],
+    ], // 6/3/3-Versuch rückgebaut (C7: Output-Verlust wog schwerer als Block-Gewinn)
     passiv: { typ: 'zuversicht', schadenFlach: 2, nurGemuetAb: 0, sauberSiegBonus: 2, gratisErmutigungProKampf: 1 },
     freischaltung: { jahresringe: 3 },
   },
@@ -110,7 +110,7 @@ export const KLASSEN = {
       { vorlage: 'klangwuerfel', anzahl: 8 },
       { vorlage: 'borkenschild', anzahl: 4 },
     ],
-    passiv: { typ: 'widerhall', schadenFlach: 3, bedingung: 'gleichklang_aktiv' },
+    passiv: { typ: 'widerhall', schadenFlach: 5, bedingung: 'gleichklang_aktiv' }, // +3→+5 nachgeschärft (C7-Befund: 32 % Standard-Siegrate)
     freischaltung: { jahresringe: 5 },
   },
   schleiferin: {
