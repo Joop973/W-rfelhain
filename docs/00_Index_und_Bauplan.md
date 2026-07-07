@@ -139,25 +139,19 @@
 
 ---
 
-## 4. Build-Stand
+## 4. Build-Stand *(Sync 2026-07-07 — Etappen A–D abgeschlossen bis auf D6)*
 
-**Claude-Code-Repo (echter Spielcode, Smartphone-Workflow):**
-- `rng.js` — gesäter, deterministischer Zufall (mulberry32). `[GESPERRT]`
-- `engine.js` — reine Kampf-Auflösung (drei Pools, L→R, Mult typgebunden, Kraft, Morsch/Welk final, floor). `[GESPERRT]`
-- `push.js` — Übermut, Reroll, Tischsturz, Schreck, stimmungsabhängiges Würfeln. `[GESPERRT]`
-- `tests/engine.test.js` — 11 Tests grün.
-- **Kristallisations-Mechanik (Übermut→Schreck bei Kampfende) noch NICHT im Repo-Code** — nächster Code-Schritt.
-- `data.js`, `save.js`, `ui/`, `sim/` — noch nicht angelegt.
+**Claude-Code-Repo (echter Spielcode):**
+- **Kern (DOM-frei, Node+Browser):** `rng.js` · `engine.js` · `push.js` · `ziehstapel.js` · `status.js` · `kampf.js` (Run/Karte/Kampf-Loop, Regionen 1–6, Bosse mit Phasen/Twists, Endboss mit Spiegel-Modulen + Befriedung) · `karte.js` · `knoten.js` (Schmiede/Markt/Event/Lagerfeuer, 6 Slice-Events regions-gegated) · `belohnung.js` · `segen.js` (16 Hain-Segen) · `data.js` (16 Blaupausen, 12 Gravuren, 31 Gegner/Bosse, REGION_TUNING) · `meta.js` (Jahresringe/Stammbaum/Samen/Setzlinge) · `reifegrad.js` (Stufen 1–10) · `enden.js` (3 Enden, Frühling-Gate scharf) · `narrativ.js` (Mentor/Zweifel/Wendung/Welk-Stufe) · `save.js` (SAVE_VERSION 6, lückenlose Migrationskette).
+- **Präsentation:** `ui/main.js` (alle Screens inkl. Wendung/Enden-Inszenierung, Welk-Filter-Swap) · `ui/audio.js` (Stem-Ausdünnen 08 §2.2, No-Op bis Assets da) · `i18n/de.js` + `i18n/en.js` + `i18n/sprache.js` (D7, 209 Keys, DE/EN-Toggle) · `index.html` (Rollen-Slots, welk-0…5).
+- **Sims:** `sim/vollrun.js` (Tor 3) · region1_run · build_pfade · reifegrade · klassen · morsch_gegner_ab (R1-gepinnt, Relativ-Diagnose).
+- **Tests:** 177 grün (`npm test`), je Mechanik; Chromium-Smokes je UI-Schritt.
 
-**Sandbox-Referenzimplementierung (Design-Chat, nicht Teil des Repos):**
-- Eigenständiger Node-Prototyp (`rng.js`/`engine.js`/`push.js`/`data.js`/`sim/gier_vs_pflege.js`) zur Verifikation gebaut, da kein Zugriff auf den echten Repo-Code bestand. Dient als Beleg-Werkzeug, nicht 1:1-Übernahmevorlage — Mechanik-Logik (`kristallisiereUebermut`) ist die zu portierende Referenz.
-- **Welle-1-Tor strukturell ERFÜLLT:** Pflege-Politik schlägt blinde wie kluge Gier-Politik konsistent über mehrere Schwierigkeitsstufen. Exakte Zielband-Kalibrierung (65–70 % Siegrate, 03 §13) offen, reine Eichungsarbeit.
-- **Achtung — Kalibrierungs-Basis veraltet:** die gesamte Sandbox-Verifikation lief auf dem alten **6er-Arsenal**. Das strukturelle Ergebnis (Pflege > Gier) hält erwartbar auch bei 12 Würfeln (Atem-Deckel + Kristallisation sind arsenal-größen-unabhängig), aber absolute Siegraten und Schreck-Akkumulation verschieben sich → **Re-Run auf 12er-Arsenal nötig** (03 §12.1/§13).
-- Befund-Dokument: `Wuerfelhain_Welle1_Tor_Befund.md`.
+**Balance-Tore:** Tor 1 (Gier<Pflege, 12er-Re-Run) ✓ · Tor 2 (Build-Pfade/Lawine, `docs/BalanceTor2_Befund.md`) ✓ · **Tor 3 (Voll-Run: RG 0 = 67,6 %, RG 10 = 25,2 %, Gier nie dominant — abgenommen 2026-07-07, `docs/BalanceTor3_Befund.md`)** ✓.
 
-**Design-Stand:** Artefakte 01–04, 06, 07, 09 erstellt und auf Stand 2026-07-02 (Batch-Nachzug). Offen: 05, 08.
+**Design-Stand:** Artefakte 00–10 liegen im Repo (`docs/`); 11 (Bild-Prompts für Aaron) ergänzt 2026-07-07. Offen nur die Asset-Produktion (D6, Aaron) und Text-Redaktionen (D4/D7-Entwürfe).
 
-**Gesamtstatus:** Welle-0-Tor erfüllt. **Welle-1-Tor strukturell erfüllt** (Sandbox-verifiziert auf 6er-Arsenal) — Portierung ins Claude-Code-Repo + 12er-Re-Run sind die nächsten konkreten Schritte, bevor Schema-Erweiterung für Welle 2 beginnt.
+**Gesamtstatus:** Etappen A–C komplett; Etappe D bis auf **D6 (Kunst/Audio — eure Seite)** komplett. Nächster Claude-Schritt: **Etappe E (Release)** — E1 Deployment-Vorbereitung.
 
 ---
 

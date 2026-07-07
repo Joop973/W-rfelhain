@@ -98,7 +98,7 @@ Endet mit **Balance-Tor 3** (voller Run balanciert).
 
 ## Etappe E — Release
 
-- [ ] **E1 [C+D] Deployment**: GitHub Pages (statisch, kein Build — passt exakt zur Architektur). Claude bereitet vor, **du aktivierst Pages in den Repo-Settings** und entscheidest den Merge
+- [x] **E1 [C+D] Deployment**: GitHub Pages (statisch, kein Build — passt exakt zur Architektur). Claude bereitet vor, **du aktivierst Pages in den Repo-Settings** und entscheidest den Merge *(vorbereitet: `.github/workflows/pages.yml` (Test-Job → Deploy der Repo-Wurzel bei Push auf main), `.nojekyll`, README mit Anleitung, Titel entstaubt; Subpfad-Smoke unter `/W-rfelhain/` grün — alle Pfade relativ. **Deine Seite: Settings → Pages → Source „GitHub Actions" + Merge-Entscheid des Feature-Branches**)* — 2026-07-07
 - [ ] **E2 [C+D] Geräte-Matrix-Test**: iOS Safari + Android Chrome (Audio-Fallback `.m4a`, LocalStorage, Performance Integer-Scaling). Claude automatisiert was geht, **du testest real**
 - [ ] **E3 [D→C] Beta mit echten Spielern**, Feedback-Runde, letzte Eichung. **Du organisierst**, Claude fixt
 - [ ] **E4 [C+D] Doku-Endstand**: alle verbleibenden `[PROVISORISCH]` → `[GESPERRT]` oder gestrichen; Index 00 final

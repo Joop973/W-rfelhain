@@ -349,8 +349,7 @@ s. §3.
 - `push.js` — Übermut, Reroll-Ökonomie (inkl. Freilauf/Klemme-Verrechnung), Tischsturz, Schreck-Sperrung, Push/Beruhigung/Ermutigung, **Kristallisation (`kristallisiereUebermut()`, `verarbeiteKampfende()`) portiert**. ✓
 - `ziehstapel.js` — **Ziehmodell (§2.11) portiert**: `kampfbeginn()`/`zieheHand()`/`zugende()`/`pruefeInvariante()`, Fisher-Yates-Mischen über `rng.js`. ✓
 - `tests/engine.test.js`, `tests/push.test.js`, `tests/ziehstapel.test.js` — 16 Tests grün. ✓
-- `data.js`, `save.js`, `ui/`, `sim/` — **noch nicht angelegt.**
-- **Beide Bausteine für den 12er-Re-Run (Kristallisation + Ziehmodell) sind jetzt im Repo-Code vorhanden** — der Re-Run selbst (via `sim/`) steht noch aus, da `sim/` und `data.js` fehlen.
+- **Sync 2026-07-07:** inzwischen vollständig angelegt und grün getestet (177 Tests): `status.js`, `kampf.js`, `karte.js`, `knoten.js`, `belohnung.js`, `segen.js`, `data.js`, `meta.js`, `reifegrad.js`, `enden.js`, `narrativ.js`, `save.js` (SAVE_VERSION 6, Kettenpflicht-Test aktiv), `ui/main.js`, `ui/audio.js`, `i18n/de|en|sprache.js`, `sim/*` (6 Monte-Carlo-Sims). Der 12er-Re-Run ist gelaufen (A8), alle drei Balance-Tore sind geschlossen (Tor 3 abgenommen 2026-07-07, `docs/BalanceTor3_Befund.md`). Maßgeblicher Fortschrittsstand: `docs/10_Entwicklungsplan.md`.
 
 **Sandbox-Referenzimplementierung (Design-Chat, nicht Teil des Repos):**
 - Eigenständiger, lauffähiger Node-Prototyp (`rng.js`/`engine.js`/`push.js`/`data.js`/`sim/gier_vs_pflege.js`, ES-Module) zur Verifikation des Welle-1-Tors gebaut, da kein Zugriff auf den echten Repo-Code bestand.
@@ -366,9 +365,9 @@ s. §3.
 
 - ~~Kristallisations-Mechanik ins Claude-Code-Repo portieren~~ — **erledigt** (`push.js: kristallisiereUebermut()`).
 - ~~Ziehmodell implementieren~~ — **erledigt** (`ziehstapel.js`).
-- **12er-Re-Run durchführen** (`sim/` + `data.js` als Voraussetzung) — höchste Priorität, damit das Welle-1-Tor real (nicht nur strukturell/Sandbox) auf 12er-Arsenal-Basis geschlossen ist.
-- Feinkalibrierung Schwierigkeit/Heilung ins Zielband 65–70 % (03 §13) — auf 12er-Basis.
+- ~~12er-Re-Run durchführen~~ — **erledigt** (A8, `docs/Welle1_Tor_ReRun_12er_Befund.md`).
+- ~~Feinkalibrierung ins Zielband 65–70 %~~ — **erledigt** (Tor 3, Voll-Run 67,6 %, abgenommen 2026-07-07).
 - ~~RNG-State-Persistenz bei Mid-Run-Save~~ — **entschieden** (§3.1/§4): kein Mid-Kampf-Save, kein RNG-State im Save. `[PROVISORISCH: Default, Fallback dokumentiert]`
-- LocalStorage-Key-Strategie (§3.3) final festlegen.
-- Migrationsketten-Testpflicht (§3.2) in `tests/` verankern, sobald `saveVersion` 2 existiert.
-- `ui/`-Modulgrenzen (Komponenten vs. einzelne Render-Funktionen) — Welle 2.
+- ~~LocalStorage-Key-Strategie~~ — **erledigt** (fester Key `wuerfelhain_save`, Migration statt Save-Verlust).
+- ~~Migrationsketten-Testpflicht~~ — **erledigt** (`tests/save.test.js`, seit v2 aktiv; Stand v6).
+- ~~`ui/`-Modulgrenzen~~ — **entschieden**: eine Render-Datei `ui/main.js` + `ui/audio.js`; Komponenten-Split erst, falls echte Sprites die Datei sprengen.
