@@ -106,7 +106,7 @@ function simuliereRun(reifegrad, rng) {
     } else if (knoten.typ === 'markt') {
       erstelleMarktAngebot(rng, run);
     } else if (knoten.typ === 'event') {
-      const event = zieheEvent(rng);
+      const event = zieheEvent(rng, run.region);
       const index = event.optionen.findIndex((o) => o.effekt.muenzen);
       waehleEventOption(run, event, Math.max(0, index), rng);
     } else if (knoten.typ === 'lagerfeuer') {

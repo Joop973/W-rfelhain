@@ -180,7 +180,7 @@ function simuliereRun(klasseId, policy, rng) {
         }
       }
     } else if (knoten.typ === 'event') {
-      const event = zieheEvent(rng);
+      const event = zieheEvent(rng, run.region);
       const index = policy === 'pflege'
         ? event.optionen.findIndex((o) => o.effekt.troesten || o.effekt.tau)
         : event.optionen.findIndex((o) => o.effekt.muenzen);

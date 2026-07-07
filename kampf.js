@@ -63,6 +63,8 @@ export function starteRun(klasseId = 'eichwart', rng, { reifegrad = 0, setzlinge
     pflegeZahl: 0, // alle Gemüt-Pflege-Ereignisse (inkl. Ermutigung) — speist Labung (04 §4.1)
     hainSegen: [], // besessene Segen-IDs, einmalig je Run (07 §4)
     welkGrad: 0, // globaler Welk-Grad (09 §2.10, rein visuell — Dürre-Same treibt ihn)
+    hinweise: [], // Zweifel-Hinweise aus R4/R5-Events (07 §5.3) — färben die Wendung (D4)
+    wendungGesehen: false, // Wendungs-Szene an der Schwelle zu Region 6 (01 §4.3), einmalig
     verloren: false,
     abgeschlossen: false, // Boss besiegt
   };

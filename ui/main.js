@@ -49,8 +49,16 @@ import {
   TROESTEN_DIENST_TAU,
   zieheEvent,
   waehleEventOption,
+  eventOptionMoeglich,
   rasteLagerfeuer,
 } from '../knoten.js';
+import {
+  mentorBeiRegionEintritt,
+  mentorBeiTischsturz,
+  wendungSzene,
+  wendungSteht,
+  endeSzenen,
+} from '../narrativ.js';
 
 const rng = new RNG((Date.now() >>> 0) || 1);
 const KNOTEN_LABEL = {
@@ -61,8 +69,9 @@ const KNOTEN_LABEL = {
 let run = null;
 let kampf = null;
 let meta = normalisiereMeta(null); // Meta-Progression, überlebt Run-Enden (C1)
-let modus = 'karte'; // karte | kampf | schmiede | markt | event | lagerfeuer
+let modus = 'karte'; // karte | kampf | schmiede | markt | event | lagerfeuer | wendung
 let letztesEreignis = '';
+let mentorZeile = null; // aktiver Mentor-Text-Key (D4) — bis zum nächsten Knoten sichtbar
 // UI-Auswahlzustände
 let belohnungsWahl = null; // { option, wuerfelId? }
 let schmiedeWahl = null; // { gravurId, wuerfelId? }
@@ -95,6 +104,9 @@ function speichereZwischenKnoten() {
       setzlinge: run.setzlinge ?? [],
       knospeGenutzt: run.knospeGenutzt ?? false,
       region: run.region ?? 1,
+      hpMax: run.hpMax,
+      hinweise: run.hinweise ?? [],
+      wendungGesehen: run.wendungGesehen ?? false,
     });
     save.metaState = meta; // Meta überlebt Run-Wechsel (C1)
     speichere(save);
@@ -121,7 +133,8 @@ function ladeGespeichertenRun() {
     if (save?.metaState) meta = normalisiereMeta(save.metaState);
     if (!save?.runState?.karte) return false;
     const rs = save.runState;
-    const hpMax = HUETER_BASIS_HP + KLASSEN[rs.klasse].hpMod;
+    // hpMax steht seit Save v6 im Save (D8: +8 je Regionstor); Fallback = Basis.
+    const hpMax = rs.hpMax ?? HUETER_BASIS_HP + KLASSEN[rs.klasse].hpMod;
     run = {
       klasse: rs.klasse,
       arsenal: rs.arsenal,
@@ -142,6 +155,8 @@ function ladeGespeichertenRun() {
       knospeGenutzt: rs.knospeGenutzt ?? false,
       region: rs.region ?? 1,
       maxRegion: 6,
+      hinweise: rs.hinweise ?? [],
+      wendungGesehen: rs.wendungGesehen ?? false,
       verloren: false,
       abgeschlossen: findeKnotenTyp(rs) === 'boss',
     };
@@ -167,14 +182,18 @@ function neuerRun(klasseId = 'eichwart', reifegrad = 0) {
   modus = 'karte';
   belohnungsWahl = schmiedeWahl = marktWahl = lagerfeuerWahl = knotenKontext = null;
   letztesEreignis = 'Ein neuer Hüter betritt den Saumhain. Wähle deinen Weg.';
+  mentorZeile = mentorBeiRegionEintritt(1); // die Eiche spricht zum ersten Mal (01 §7)
   render();
 }
 
 function zurKarte() {
   if (kampf?.regionGeschafft) {
     letztesEreignis = `Der Wächter fällt — du ziehst weiter. Region ${kampf.regionGeschafft} liegt vor dir.`;
+    // Regions-Eintritt: Mentor-Zeile der neuen Region — bzw. an der Schwelle
+    // zu Region 6 die Wendung (01 §4.3), dort schweigt der Mentor für immer.
+    mentorZeile = mentorBeiRegionEintritt(run.region);
   }
-  modus = 'karte';
+  modus = wendungSteht(run) ? 'wendung' : 'karte';
   kampf = null;
   belohnungsWahl = schmiedeWahl = marktWahl = lagerfeuerWahl = knotenKontext = null;
   speichereZwischenKnoten();
@@ -184,6 +203,7 @@ function zurKarte() {
 function klickKnoten(knotenId) {
   const knoten = betreteKnoten(run, knotenId);
   if (!knoten) return;
+  mentorZeile = null; // die Stimme verstummt, sobald der Weg gewählt ist
   if (['kampf', 'elite', 'boss'].includes(knoten.typ)) {
     modus = 'kampf';
     kampf = starteKampf(run, rng, knoten.typ);
@@ -199,7 +219,7 @@ function klickKnoten(knotenId) {
     letztesEreignis = 'Ein Markt am Wegesrand.';
   } else if (knoten.typ === 'event') {
     modus = 'event';
-    knotenKontext = { event: zieheEvent(rng), ergebnis: null };
+    knotenKontext = { event: zieheEvent(rng, run.region), ergebnis: null, hinweisKey: null };
     letztesEreignis = '';
   } else if (knoten.typ === 'lagerfeuer') {
     modus = 'lagerfeuer';
@@ -222,6 +242,7 @@ function klickReroll() {
   letztesEreignis = tischsturz
     ? 'TISCHSTURZ! Die Würfel stürzen vom Tisch — die ganze Hand erschrickt.'
     : 'Die Hand wird neu geworfen.';
+  if (tischsturz) mentorZeile = mentorBeiTischsturz(); // die Stimme wiegelt ab (D4)
   render();
 }
 
@@ -374,8 +395,11 @@ function marktZiel(wuerfelId) {
 
 // Event
 function eventOption(index) {
+  const option = knotenKontext.event.optionen[index];
   const wirkungen = waehleEventOption(run, knotenKontext.event, index, rng);
   knotenKontext.ergebnis = wirkungen.length ? wirkungen.join(' · ') : 'Du gehst weiter.';
+  // Zweifel-Hinweis (07 §5.3): der stille Text, der Unbehagen sät, als eigener Absatz.
+  knotenKontext.hinweisKey = option.effekt.hinweis ? `hinweis.${option.effekt.hinweis}` : null;
   render();
 }
 
@@ -590,16 +614,28 @@ function renderMarkt() {
 }
 
 function renderEvent() {
-  const { event, ergebnis } = knotenKontext;
+  const { event, ergebnis, hinweisKey } = knotenKontext;
   return `
     <section class="ph ph--belohnung">
       <strong>${uebersetze(event.titelKey)}</strong>
       <p>${uebersetze(event.textKey)}</p>
       ${ergebnis
-        ? `<p><em>${ergebnis}</em></p>`
+        ? `<p><em>${ergebnis}</em></p>${hinweisKey ? `<p class="ph ph--hinweis">${uebersetze(hinweisKey)}</p>` : ''}`
         : `<div class="picker">
-            ${event.optionen.map((o, i) => `<button data-event-opt="${i}">${uebersetze(o.textKey)}</button>`).join('')}
+            ${event.optionen
+              .map((o, i) => `<button data-event-opt="${i}" ${eventOptionMoeglich(run, o) ? '' : 'disabled'}>${uebersetze(o.textKey)}</button>`)
+              .join('')}
           </div>`}
+    </section>`;
+}
+
+// Die Wendung (01 §4.3, D4): einmalige Szene an der Schwelle zu Region 6.
+function renderWendung() {
+  return `
+    <section class="ph ph--wendung">
+      <strong>Das Hohle Herz</strong>
+      ${wendungSzene(run).map((key) => `<p>${uebersetze(key)}</p>`).join('')}
+      <button data-aktion="wendung-weiter">Weitergehen</button>
     </section>`;
 }
 
@@ -693,7 +729,7 @@ function render() {
     wurzel.innerHTML = `
       <div class="ph ph--ende">
         <h2>${titel}</h2>
-        ${ende ? `<p class="ph ph--ende-text">${uebersetze(ende.textKey)}</p>` : ''}
+        ${ende ? endeSzenen(ende.id).map((key) => `<p class="ph ph--ende-text">${uebersetze(key)}</p>`).join('') : ''}
         <p>End-Schreck: ${endSchreck(run)} · Trösten: ${run.troestenZahl} · 🪙 ${run.waehrungen.muenzen}</p>
         <p>🪵 +${run.jahresringeVergeben || 0} Jahresringe (gesamt ${meta.jahresringe})${run.samenVergeben ? ` · 🌱 +${run.samenVergeben} Samen (gesamt ${meta.samen})` : ''}</p>
         ${renderStammbaum()}
@@ -710,12 +746,14 @@ function render() {
   else if (modus === 'markt') inhalt = statuszeile() + renderMarkt();
   else if (modus === 'event') inhalt = statuszeile() + renderEvent();
   else if (modus === 'lagerfeuer') inhalt = statuszeile() + renderLagerfeuer();
+  else if (modus === 'wendung') inhalt = statuszeile() + renderWendung();
   else inhalt = statuszeile() + renderKarte();
 
   const verlassenSichtbar = ['schmiede', 'markt', 'lagerfeuer'].includes(modus) || (modus === 'event' && knotenKontext?.ergebnis);
   wurzel.innerHTML = `
     ${inhalt}
     ${verlassenSichtbar ? '<section class="aktionen"><button data-aktion="verlassen">Weiterziehen</button></section>' : ''}
+    ${mentorZeile && modus !== 'wendung' ? `<section class="ph ph--mentor"><em>${uebersetze(mentorZeile)}</em></section>` : ''}
     <section class="ph ph--log">${letztesEreignis}</section>
   `;
   verdrahte();
@@ -764,6 +802,12 @@ function verdrahte() {
     weiter: klickWeiter,
     ueberspringen: ueberspringeBelohnung,
     verlassen: zurKarte,
+    'wendung-weiter': () => {
+      run.wendungGesehen = true; // einmalig (01 §4.3) — ab hier schweigt die Stimme
+      modus = 'karte';
+      speichereZwischenKnoten();
+      render();
+    },
     neu: () => {
       if ((meta.freigeschalteteKlassen.length > 1 || (meta.maxReifegrad ?? 0) > 0) && !klassenWahl) {
         klassenWahl = true;
@@ -779,8 +823,10 @@ function verdrahte() {
 // --- Start: gespeicherten Run fortsetzen oder neu beginnen ---------------------------
 
 if (ladeGespeichertenRun()) {
-  modus = 'karte';
-  letztesEreignis = 'Willkommen zurück im Saumhain.';
+  // Falls der Save an der Schwelle zu Region 6 liegt: die Wendung zuerst (D4).
+  modus = wendungSteht(run) ? 'wendung' : 'karte';
+  letztesEreignis = 'Willkommen zurück im Hain.';
+  mentorZeile = mentorBeiRegionEintritt(run.region);
   render();
 } else {
   neuerRun();

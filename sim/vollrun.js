@@ -158,7 +158,7 @@ function simuliereVollRun(rng) {
     } else if (knoten.typ === 'markt') {
       besucheMarkt(run, rng);
     } else if (knoten.typ === 'event') {
-      const event = zieheEvent(rng);
+      const event = zieheEvent(rng, run.region);
       const index =
         POLITIK === 'gier'
           ? event.optionen.findIndex((o) => o.effekt.muenzen)

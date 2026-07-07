@@ -15,6 +15,7 @@ import { graviereSeite, wendeBlaupauseAn } from './belohnung.js';
 import { troeste, schreck } from './push.js';
 import { gibSegen, segenEffekt, troestenBonus, zieheSegenOption } from './segen.js';
 import { reifegradMods } from './reifegrad.js';
+import { merkeHinweis } from './narrativ.js';
 
 export const TAU_PRO_REGION = 6; // 03 §8 [GESPERRT]
 export const LAGERFEUER_HEILUNG_ANTEIL = 0.3; // +30 % hpMax [PROVISORISCH]
@@ -23,8 +24,17 @@ export const ENTFERNEN_STARTPREIS = 25; // +15 je Anwendung (07 §3.3) [PROVISOR
 export const ENTFERNEN_AUFSCHLAG = 15;
 
 // Slice-Events: nur Vignetten, deren Effekte der aktuelle Code ausführen kann
-// (Münzen/Tau/Trösten/Gemüt/Würfel-ins-Arsenal). Rest folgt mit den Systemen.
-export const SLICE_EVENTS = ['ueberwucherter_brunnen', 'veraengstigtes_kaetzchen'];
+// (Münzen/Eicheln/Tau/Trösten/Gemüt/Würfel/Segen/Gravur/Selbstschaden/Hinweis).
+// Die Fluch-Events (Moderpfütze, Schrein, Trockene Quelle) folgen mit dem
+// Fluch-System (07 §5.4). Zweifel-Events R4/R5 seit D4 (07 §5.3).
+export const SLICE_EVENTS = [
+  'ueberwucherter_brunnen',
+  'veraengstigtes_kaetzchen',
+  'schwelende_wurzel',
+  'wetzstein_am_wegrand',
+  'stumme_lichtung',
+  'hohler_stumpf',
+];
 
 const BLAUPAUSEN_PREIS = { haeufig: 60, selten: 80, episch: 100 }; // Eicheln (07 §2.3) [PROVISORISCH]
 
@@ -144,14 +154,31 @@ export function troesteDienst(run, wuerfelId) {
 
 // --- Event (07 §5, Slice-Teilmenge) -----------------------------------------------
 
-export function zieheEvent(rng) {
-  const id = SLICE_EVENTS[Math.floor(rng.naechsteZahl() * SLICE_EVENTS.length)];
+// Regions-Gating (07 §5.2): Zweifel-Events erscheinen NUR in R4/R5 (01 §9 —
+// die Wendung darf nicht früher angedeutet werden). Ohne Regions-Treffer
+// (z. B. Region 6) fällt die Ziehung auf den vollen Slice-Pool zurück.
+export function zieheEvent(rng, region = null) {
+  const pool = region == null
+    ? SLICE_EVENTS
+    : SLICE_EVENTS.filter((id) => EVENTS[id].regionen.includes(region));
+  const auswahl = pool.length > 0 ? pool : SLICE_EVENTS;
+  const id = auswahl[Math.floor(rng.naechsteZahl() * auswahl.length)];
   return EVENTS[id];
+}
+
+// Prüft, ob eine Option bezahlbar ist (negative Währungs-Effekte sind Preise).
+export function eventOptionMoeglich(run, option) {
+  const effekt = option.effekt;
+  if ((effekt.muenzen ?? 0) < 0 && run.waehrungen.muenzen + effekt.muenzen < 0) return false;
+  if ((effekt.eicheln ?? 0) < 0 && run.waehrungen.eicheln + effekt.eicheln < 0) return false;
+  return true;
 }
 
 // Wendet die deklarativen Options-Effekte an, soweit der Slice sie kennt.
 export function waehleEventOption(run, event, optionIndex, rng) {
-  const effekt = event.optionen[optionIndex].effekt;
+  const option = event.optionen[optionIndex];
+  if (!eventOptionMoeglich(run, option)) return []; // Preis nicht bezahlbar — nichts passiert
+  const effekt = option.effekt;
   const ergebnis = [];
 
   if (effekt.muenzen) {
@@ -186,6 +213,43 @@ export function waehleEventOption(run, event, optionIndex, rng) {
     neu.gemuet = effekt.wuerfelInsArsenal.gemuet ?? 0;
     run.arsenal.push(neu);
     ergebnis.push('ein Würfel schließt sich an');
+  }
+  if (effekt.segen) {
+    gibSegen(run, effekt.segen);
+    ergebnis.push('ein Hain-Segen begleitet dich');
+  }
+  if (effekt.selbstschaden) {
+    // Events töten nicht — Untergrenze 1 HP [PROVISORISCH].
+    run.hp = Math.max(1, run.hp - effekt.selbstschaden);
+    ergebnis.push(`−${effekt.selbstschaden} HP`);
+  }
+  if (effekt.seitenAufwertung) {
+    // "Würfel schärfen" (07 §5.2): dauerhaft +wert auf die schwächste
+    // ungravierte Seite der ersten N Schaden-Würfel.
+    const ziele = run.arsenal.filter((w) => w.typ === 'schaden').slice(0, effekt.seitenAufwertung.wuerfel);
+    for (const w of ziele) {
+      const kandidaten = w.seiten
+        .map((s, i) => ({ s, i }))
+        .filter(({ i }) => w.stufen[i] === 0)
+        .sort((a, b) => a.s.wert - b.s.wert);
+      if (kandidaten.length === 0) continue;
+      const { s } = kandidaten[0];
+      s.wert += effekt.seitenAufwertung.wert;
+      for (const e of s.effekt) if (e.typ === 'schaden' || e.typ === 'rinde') e.wert = s.wert;
+    }
+    ergebnis.push(`${ziele.length} Würfel geschärft`);
+  }
+  if (effekt.gravurGratis) {
+    const ziel = run.arsenal.find((w) => w.typ === 'schaden' && w.stufen.some((st) => st === 0));
+    if (ziel) {
+      const seitenIndex = ziel.stufen.findIndex((st) => st === 0);
+      graviereSeite(ziel, effekt.gravurGratis, seitenIndex);
+      ergebnis.push('eine Gravur, ohne Preis');
+    }
+  }
+  if (effekt.hinweis) {
+    // Zweifel-Hinweis (07 §5.3): run-weit merken — die Wendung färbt sich (D4).
+    merkeHinweis(run, effekt.hinweis);
   }
   return ergebnis;
 }

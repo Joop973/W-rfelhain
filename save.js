@@ -4,9 +4,9 @@
 // kein RNG-State im Save). Storage ist injizierbar, damit Node-Tests ohne
 // Browser laufen (Default: globalThis.localStorage).
 
-import { erstelleStartArsenal, HUETER_BASIS_HP, KLASSEN } from './data.js';
+import { erstelleStartArsenal, HUETER_BASIS_HP, KLASSEN, REGION_HPMAX_BONUS } from './data.js';
 
-export const SAVE_VERSION = 5; // [GESPERRT] Pflichtfeld, monoton steigend
+export const SAVE_VERSION = 6; // [GESPERRT] Pflichtfeld, monoton steigend
 // v2 (2026-07-04): + karte, positionKnotenId, hp, belohnungenOhneBlaupause,
 // entfernteWuerfel, troestenZahl (Etappe A3–A6, Karten-Run).
 // v3 (2026-07-06): + pflegeZahl — Gemüt-Pflege-Zähler inkl. Ermutigung,
@@ -14,6 +14,8 @@ export const SAVE_VERSION = 5; // [GESPERRT] Pflichtfeld, monoton steigend
 // v4 (2026-07-06): + welkGrad — globaler Welk-Grad (09 §2.10, Dürre-Same-Haken;
 // hainSegen existiert seit v1 und trägt ab jetzt die aktiven Segen, Etappe B6).
 // v5 (2026-07-06): + setzlinge/knospeGenutzt — Heimat-Hain-Boni im Run (C5).
+// v6 (2026-07-07): + hinweise/wendungGesehen (Narrativ D4) und hpMax — seit D8
+// wächst hpMax je Regionstor (+8) und muss mitgespeichert werden.
 export const SAVE_KEY = 'wuerfelhain_save'; // fester Key, Migration statt Save-Verlust (09 §3.3)
 
 // --- Neuen Run anlegen (Struktur 09 §3.1) -----------------------------------
@@ -32,6 +34,7 @@ export function erstelleNeuenSave(klasseId = 'eichwart', jetzt = () => new Date(
       karte: null, // null = kein laufender Karten-Run (v2)
       positionKnotenId: null,
       hp: HUETER_BASIS_HP + KLASSEN[klasseId].hpMod,
+      hpMax: HUETER_BASIS_HP + KLASSEN[klasseId].hpMod,
       waehrungen: { muenzen: 0, eicheln: 0, tau: 0 },
       hainSegen: [],
       welkGrad: 0,
@@ -43,6 +46,8 @@ export function erstelleNeuenSave(klasseId = 'eichwart', jetzt = () => new Date(
       entfernteWuerfel: 0,
       troestenZahl: 0,
       pflegeZahl: 0,
+      hinweise: [],
+      wendungGesehen: false,
       aktiveFluechte: [],
       sauberSiegStreak: 0,
     },
@@ -138,6 +143,24 @@ export const MIGRATIONEN = {
       ...save.runState,
       setzlinge: save.runState.setzlinge ?? [],
       knospeGenutzt: save.runState.knospeGenutzt ?? false,
+    },
+  }),
+  // v5 → v6: Narrativ-Felder (D4) + hpMax. Bestands-Saves in Region ≥ 6 haben
+  // die Wendung logisch schon passiert; hpMax rekonstruiert den D8-Bonus
+  // (+8 je durchschrittenem Regionstor).
+  5: (save) => ({
+    ...save,
+    saveVersion: 6,
+    runState: {
+      ...save.runState,
+      hinweise: save.runState.hinweise ?? [],
+      wendungGesehen: save.runState.wendungGesehen ?? (save.runState.region ?? 1) >= 6,
+      hpMax:
+        save.runState.hpMax ??
+        HUETER_BASIS_HP +
+          (KLASSEN[save.runState.klasse]?.hpMod ?? 0) +
+          ((save.runState.setzlinge ?? []).includes('tiefwurzel') ? 5 : 0) +
+          REGION_HPMAX_BONUS * ((save.runState.region ?? 1) - 1),
     },
   }),
 };

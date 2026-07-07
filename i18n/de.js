@@ -132,13 +132,41 @@ export const DE = {
   'stammbaum.klasse_rodbauer.text': 'Rodbauer freischalten — der Experten-Griff (Brandrodung, kein Block)',
   'stammbaum.klasse_rodbauer.bedingung': 'Erst nach einem Frühling-Ende oder mit Reifegrad 3',
 
-  // Enden (01 §5) — Texte [PROVISORISCH], Redaktion in D4 (Ton ist Chefsache)
+  // Enden (01 §5) — Texte [ENTWURF D4 — du redigierst, Ton 01 §6 ist Chefsache]
   'ende.fruehling.titel': 'Der neue Frühling',
   'ende.fruehling.text': 'Du hast nicht erschlagen, du hast getröstet. Die Gier löst sich, die alte Eiche darf endlich sterben — und ein neuer Trieb bricht durch die Rinde.',
+  'ende.fruehling.szene1': 'Du hebst keine Klinge. Du kniest dich hin, wie du dich zu jedem verängstigten Würfel gekniet hast, und sprichst leise gegen die Furcht an. Der frühere Hüter zittert — nicht vor Zorn. Er hat so lange niemanden mehr so sprechen hören.',
+  'ende.fruehling.szene2': 'Die Gier löst sich von ihm wie trockene Rinde. Darunter ist nur ein müder, alter Mann, der einmal denselben Auftrag hatte wie du. Er legt sich in die Wurzeln der Eiche, und die Eiche — die echte, stille — darf endlich sterben.',
+  'ende.fruehling.szene3': 'Aus dem hohlen Stamm bricht ein Trieb, dünn und unverschämt grün. Kein Chor, kein Wunder. Nur Wasser, das wieder weiß, wohin es fließen will. Deine Würfel drängen sich an deine Hände. Keiner von ihnen zittert mehr.',
   'ende.stiller_hain.titel': 'Der stille Hain',
   'ende.stiller_hain.text': 'Der Kreislauf ist gebrochen, aber der Hain trägt Narben. Die tote Eiche wird zur Ruhe gebettet, ein Samen gepflanzt. Kein Frühling — aber ein Ende der Dürre.',
+  'ende.stiller_hain.szene1': 'Es ist vorbei, und es ist still. Der frühere Hüter liegt zwischen den Wurzeln, und was von seiner Stimme übrig ist, verweht wie Staub aus einem hohlen Stamm.',
+  'ende.stiller_hain.szene2': 'Du bettest die tote Eiche zur Ruhe, so gut ein einzelner Hüter das kann. Der Hain trägt Narben — Stellen, an denen du gedrängt hast, werden lange grau bleiben. Aber es breitet sich nichts mehr aus. Der Kreislauf ist gebrochen.',
+  'ende.stiller_hain.szene3': 'Bevor du gehst, drückst du einen Samen in die Erde am Fuß des Stamms. Vielleicht für den nächsten Hüter. Vielleicht für niemanden. Der Wind geht durch den Hain, und zum ersten Mal seit Jahren klingt er nicht durstig.',
   'ende.hohles_erbe.titel': 'Das hohle Erbe',
   'ende.hohles_erbe.text': 'Du hast gewonnen — und nimmst seinen Platz. Die Rinde schließt sich um dich, deine Stimme wird die neue Großmutter-Eiche. Die Dürre pausiert. Sie kehrt wieder.',
+  'ende.hohles_erbe.szene1': 'Du hast gewonnen. Deine Würfel stehen hinter dir, aber sie stehen nicht nah. Sie halten den Abstand, den man vor etwas hält, das man kennt und fürchtet.',
+  'ende.hohles_erbe.szene2': 'Der hohle Stamm ist warm und geräumig, und du bist so müde. Es ist vernünftig, sich hineinzusetzen. Es ist nur für einen Moment. Die Rinde schließt sich ohne Eile, wie sich eine Hand um etwas schließt, das ihr gehört.',
+  'ende.hohles_erbe.szene3': 'Jahre später wird ein junger Hüter den Saumhain betreten, und eine warme, vernünftige Stimme wird ihn begrüßen und ihm raten, sich zu beeilen. Die Stimme wird deine sein. Du wirst es gut meinen. Das haben alle davor auch.',
+
+  // Mentor-Stimme (01 §4.2) — [ENTWURF D4 — du redigierst]. Die Stimme klingt
+  // gütig und vernünftig und rät beständig zur Gier; kein Text belehrt (01 §6).
+  'mentor.region.1': '„Da bist du ja, Kind. Der Saum ist noch grün — sieh ihn dir gut an, so sah einmal alles aus. Komm zu mir, ins Herz. Und trödle nicht: der Hain kann warten, die Dürre kann es nicht."',
+  'mentor.region.2': '„Der Moder riecht schlimmer, als er ist. Zieh durch, pflege später — jeder Tag, den du an einem kranken Würfel verweilst, frisst die Dürre zwei Schritte weiter."',
+  'mentor.region.3': '„Gut. Hart. So gewinnt man. Der Hain braucht keinen sanften Hüter, er braucht einen schnellen. Ein Wurf mehr, wenn es knapp wird — sie halten das aus, glaub mir. Ich kenne sie länger als du."',
+  'mentor.region.4': '„Sieh dich nicht so viel um. Ja, es ist trocken. Umso wichtiger, dass du nimmst, was am Weg liegt — wer hamstert, überlebt. Die Zweifel, die hier wachsen, sind auch nur Unkraut."',
+  'mentor.region.5': '„Still hier, nicht wahr? Hör nicht auf die Stille. Hör auf mich. Wir sind fast da, Kind — noch ein Tor, dann zeige ich dir die Quelle von allem. Treib sie. Ein letztes Mal. Für den Hain."',
+  'mentor.tischsturz': '„Schsch. Nicht schlimm. Sie erschrecken schnell, das liegt in ihrer Natur — nicht in deiner Hand. Wirf noch einmal. Wer zögert, hat schon verloren."',
+
+  // Zweifel-Hinweise (07 §5.3) — [ENTWURF D4 — du redigierst]. Andeuten, nie aussprechen.
+  'hinweis.zweifel_1': 'Einen Atemzug lang, während die Stimme schwieg, hat der Hain geklungen wie ein Ort, der sich vor etwas duckt. Nicht vor der Dürre. Vor etwas, das spricht.',
+  'hinweis.zweifel_2': 'Du bettest die Reste zur Ruhe. Werkzeug eines Hüters, Gaben eines Hüters — gehortet, bis zuletzt. Die Stimme sagt dazu nichts. Es ist das erste Mal, dass sie nichts sagt.',
+
+  // Die Wendung (01 §4.3) — an der Schwelle zu Region 6. [ENTWURF D4 — du redigierst]
+  'wendung.szene1': 'Vor dir steht die Großmutter-Eiche, größer als jeder Baum ein Recht hat zu sein — und hohl. Nicht krank, nicht sterbend: seit Langem tot. Der Wind geht durch sie hindurch wie durch ein leeres Haus.',
+  'wendung.szene2': 'Die warme, vernünftige Stimme setzt an, dir zur Eile zu raten — und fällt in sich zusammen wie trockene Rinde. Aus dem hohlen Stamm tritt ein Hüter. Sein Mantel ist wie deiner. Seine Würfel hängen stumm an seinem Gürtel, die Augen abgewandt.',
+  'wendung.szene3': '„Ich habe den Hain geliebt", sagt er, und es klingt nicht wie eine Lüge. „Ich wollte ihn nur schneller retten, als er sich retten ließ." Er sieht dich an, und du erkennst den Blick. Du hast ihn heute schon getragen. Die Dürre hat eine Stimme, und sie hat dich den ganzen Weg geführt.',
+  'wendung.geahnt': 'Du bist nicht überrascht — nur traurig. Die stummen Stellen im Hain, der geplünderte Stumpf ohne Körper: du hast es geahnt, seit die Stimme zum ersten Mal schwieg.',
 
   // Heimat-Hain / Setzlinge (C5) [PROVISORISCH]
   'setzling.tau_wurzel.text': 'Tau-Wurzel — +2 Tau bei jedem Region-Eintritt',
