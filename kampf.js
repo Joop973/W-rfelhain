@@ -15,7 +15,7 @@ import {
 } from './push.js';
 import { leererStatus, tickeFaeule, tickeBrand, decayRundenende, legeStatusAuf } from './status.js';
 import { kampfbeginn, zieheHand, zugende } from './ziehstapel.js';
-import { GEGNER_VORLAGEN, KLASSEN, HUETER_BASIS_HP, ATEM_PRO_ZUG, REGION_GEGNER, REGION_MAX, erstelleStartArsenal } from './data.js';
+import { GEGNER_VORLAGEN, KLASSEN, HUETER_BASIS_HP, ATEM_PRO_ZUG, REGION_GEGNER, REGION_MAX, REGION_TUNING, REGION_HEILUNG_ANTEIL, REGION_HPMAX_BONUS, erstelleStartArsenal } from './data.js';
 import { verdieneKampfBelohnung, zieheBelohnungsoptionen, zieheBossBelohnung } from './belohnung.js';
 import { generiereKarte } from './karte.js';
 import { TAU_PRO_REGION } from './knoten.js';
@@ -184,10 +184,13 @@ export function naechsteAbsicht(gegner) {
 function baueGegner(vorlageId, rng, { schadenZuschlag = 0, reifegrad = 0 } = {}) {
   const vorlage = GEGNER_VORLAGEN[vorlageId];
   const mods = reifegradMods(reifegrad);
+  // Voll-Run-Eichung (D8): zentrale Region-Mults über den Doc-Rohwerten.
+  const tuning = REGION_TUNING[vorlage.region] ?? { hp: 1, schaden: 1 };
   // Reifegrad-Kurve (03 §9): HP-Mults je Rolle kumulativ mit dem globalen Mult.
   const rollenHpMult =
     vorlage.rolle === 'elite' ? mods.eliteHpMult : vorlage.rolle === 'boss' ? mods.bossHpMult : 1;
-  const hp = Math.round(zufallZwischen(rng, vorlage.hpBereich) * rollenHpMult * mods.gegnerHpMult);
+  const bossTuning = vorlage.rolle === 'boss' ? tuning.bossHp ?? 1 : 1;
+  const hp = Math.round(zufallZwischen(rng, vorlage.hpBereich) * tuning.hp * bossTuning * rollenHpMult * mods.gegnerHpMult);
   const gegner = {
     vorlageId,
     nameKey: vorlage.nameKey,
@@ -196,7 +199,7 @@ function baueGegner(vorlageId, rng, { schadenZuschlag = 0, reifegrad = 0 } = {})
     hpMax: hp,
     schaden:
       Math.round(
-        zufallZwischen(rng, vorlage.schadenBereich) * (vorlage.rolle !== 'normal' ? mods.eliteBossSchadenMult : 1)
+        zufallZwischen(rng, vorlage.schadenBereich) * tuning.schaden * (vorlage.rolle !== 'normal' ? mods.eliteBossSchadenMult : 1)
       ) + schadenZuschlag,
     absichtsMuster: vorlage.absichtsMuster,
     statusAuflagen: vorlage.statusAuflagen ?? [],
@@ -661,10 +664,14 @@ export function fuehreGegnerzugAus(run, kampf, rng) {
   }
   // Status auf den Hüter legen (D1): Reifegrad 8 gibt Normalgegnern +1 Stapel/Anwendung.
   // eskaliert (Modermutter-Brut Phase 2, 05 §6): Auflage wächst +1 je Boss-Zyklus.
+  const statusTuning = REGION_TUNING[run.region ?? 1]?.status ?? 1;
   const legeAufHueter = (auflage) => {
     const zuschlag = kampf.gegner.rolle === 'normal' ? mods.gegnerStatusZuschlag : 0;
     const eskalation = auflage.eskaliert ? (kampf.gegner.eskalation ?? 0) : 0;
-    legeStatusAuf(kampf.spielerStatus, auflage.typ, auflage.stapel + zuschlag + eskalation);
+    // D8-Dämpfer: spätere Regionen bündeln Debuffs — der Tuning-Knopf hält die
+    // Dichte spielbar (mindestens 1 Stapel bleibt immer).
+    const stapel = Math.max(1, Math.round(auflage.stapel * statusTuning));
+    legeStatusAuf(kampf.spielerStatus, auflage.typ, stapel + zuschlag + eskalation);
   };
 
   // Gegner handelt: Kraft-Buff hebt, Welk-Debuff senkt den Angriffswert (02 §8).
@@ -735,7 +742,11 @@ export function fuehreGegnerzugAus(run, kampf, rng) {
 
   // Boss-Twists am Rundenende (05 §6, D2):
   // Auflodern: Grundschaden +1 kumulativ — der Kampf MUSS vorankommen.
-  if (kampf.gegner.mechanikIds?.includes('auflodern')) kampf.gegner.schaden += 1;
+  // D8-Eichung: +1 je ZWEI Runden (volle Rate war gegen die reale Spieler-
+  // Skalierung eine unschaffbare Uhr) [PROVISORISCH].
+  if (kampf.gegner.mechanikIds?.includes('auflodern') && kampf.gegner.zyklus % 2 === 1) {
+    kampf.gegner.schaden += 1;
+  }
   // "Das hohle Echo" (Endboss, 05 §6): heilt um das Rest-Übermut des Hüters —
   // Gier füttert ihn wörtlich; boss-lokal, rührt die Kristallisation nicht an.
   if (kampf.gegner.mechanikIds?.includes('hohles_echo') && kampf.uebermut > 0) {
@@ -759,7 +770,11 @@ export function fuehreGegnerzugAus(run, kampf, rng) {
     ziel.gemuet -= 1;
     kampf.engePforteZuletzt = ziel.id; // Anzeige
   }
-  kampf.gegner.eskalation = (kampf.gegner.eskalation ?? 0) + 1; // speist eskalierte Auflagen
+  // Eskalations-Zähler läuft nur, während eine eskalierte Auflage AKTIV ist
+  // (05 §6: "Auflege +1/Zyklus" gilt ab Phase-2-Eintritt, nicht ab Kampfbeginn).
+  if (auflagen.some((a) => a.eskaliert)) {
+    kampf.gegner.eskalation = (kampf.gegner.eskalation ?? 0) + 1;
+  }
 
   kampf.gegner.zyklus += 1;
   kampf.gegner.absicht = naechsteAbsicht(kampf.gegner);
@@ -780,6 +795,11 @@ export function betreteNaechsteRegion(run, rng) {
   run.region = (run.region ?? 1) + 1;
   run.karte = generiereKarte(rng);
   run.positionKnotenId = null;
+  // Rast am Regionstor (D8) [PROVISORISCH]: der Hüter wächst mit dem Weg
+  // (+Max-HP), dann Heilung x Reifegrad-6-Malus.
+  run.hpMax += REGION_HPMAX_BONUS;
+  const heilung = Math.round(run.hpMax * REGION_HEILUNG_ANTEIL * reifegradMods(run.reifegrad ?? 0).heilungMult);
+  run.hp = Math.min(run.hpMax, run.hp + heilung);
   let tau = TAU_PRO_REGION + (run.setzlinge?.includes('tau_wurzel') ? 2 : 0);
   const segenBonus = segenEffekt(run, 'tau_einkommen');
   if (segenBonus?.je === 'region') tau += segenBonus.wert;

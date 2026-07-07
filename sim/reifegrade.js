@@ -129,3 +129,4 @@ for (let stufe = 0; stufe <= 10; stufe += 1) {
   console.log(`${String(stufe).padStart(5)} | ${rate.toFixed(1).padStart(7)}% | ${ZIEL[stufe] ?? ''}`);
 }
 console.log('\nHinweis: Stufe 8 (Gegner-Status-Zuschlag) ist in Region 1 wirkungslos (Gegner legen noch keinen Status) — Kurve dort flacher als final.');
+console.log('Seit Tor 3 (D8) ist die maßgebliche Kurve der VOLL-Run (SIM_REIFEGRAD in sim/vollrun.js); diese R1-Messung dient nur noch der Relativ-Diagnose.');

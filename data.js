@@ -723,11 +723,11 @@ export const GEGNER_VORLAGEN = {
   modermutter_brut: {
     id: 'modermutter_brut', nameKey: 'boss.modermutter_brut.name', region: 2, rolle: 'boss',
     hpBereich: [180, 210], schadenBereich: [10, 12],
-    statusAuflagen: [{ typ: 'faeule', stapel: 3, mit: 'sieche' }],
+    statusAuflagen: [{ typ: 'faeule', stapel: 2, mit: 'sieche' }], // 3→2: Ausbreitung-Freeze macht die Auflage zur Uhr (D8)
     absichtsMuster: 'sieche', mechanikIds: ['ausbreitung'],
     phasen: [
       { abHpAnteil: 1.0, absichtsMuster: 'sieche' },
-      { abHpAnteil: 0.6, absichtsMuster: 'sieche', statusAuflagen: [{ typ: 'faeule', stapel: 3, mit: 'sieche', eskaliert: true }] },
+      { abHpAnteil: 0.6, absichtsMuster: 'sieche', statusAuflagen: [{ typ: 'faeule', stapel: 2, mit: 'sieche', eskaliert: true }] },
     ],
   },
   // Boss 3 (05 §6): Rasende 3× + Brand; Phase 2 (<66 %) Kraft-Eskalation,
@@ -740,8 +740,8 @@ export const GEGNER_VORLAGEN = {
     absichtsMuster: 'rasende', treffer: 3, mechanikIds: ['auflodern'],
     phasen: [
       { abHpAnteil: 1.0, absichtsMuster: 'rasende', treffer: 3 },
-      { abHpAnteil: 0.66, absichtsMuster: 'rasende', treffer: 3, statusAuflagen: [{ typ: 'kraft', stapel: 2, mit: 'selbst' }] },
-      { abHpAnteil: 0.33, absichtsMuster: 'rasende', treffer: 3, statusAuflagen: [{ typ: 'brand', stapel: 4, mit: 'angriff' }, { typ: 'kraft', stapel: 2, mit: 'selbst' }] },
+      { abHpAnteil: 0.66, absichtsMuster: 'rasende', treffer: 3, statusAuflagen: [{ typ: 'kraft', stapel: 1, mit: 'selbst' }] }, // Kraft 2→1 (D8)
+      { abHpAnteil: 0.33, absichtsMuster: 'rasende', treffer: 3, statusAuflagen: [{ typ: 'brand', stapel: 3, mit: 'angriff' }, { typ: 'kraft', stapel: 1, mit: 'selbst' }] },
     ],
   },
   // Boss 4 (05 §6): Sieche mit Welk+Scharte; Phase 2 (<50 %) plus Morsch-Spitze;
@@ -791,6 +791,32 @@ export const GEGNER_VORLAGEN = {
     ],
   },
 };
+
+// Voll-Run-Kalibrierung (D8, Balance-Tor 3) [PROVISORISCH — Sim eicht]:
+// globale Mults auf die 05-§5-Rohwerte je Region. Die Roster-Zeilen bleiben
+// unangetastet; hier dreht die Eichung. Start: 1.0 = Doc-Werte.
+export const REGION_TUNING = {
+  // R1: die A8-Härtung (+32 %) war das SLICE-Band (Region 1 = ganzer Run);
+  // im vollen Run ist R1 der Lernboden → zurück Richtung 05-Originalwerte.
+  // bossHp: zusätzlicher Boss-Faktor — das Kampffenster muss ~5–6 Züge bleiben,
+  // sonst werden die Boss-Uhren (Twists/Eskalationen) unschaffbar.
+  // status: Dämpfer auf Gegner-Status-Stapel (Debuff-Dichte spät erdrückend).
+  1: { hp: 1.0, schaden: 0.75, bossHp: 1.0, status: 1.0 },
+  2: { hp: 0.6, schaden: 0.65, bossHp: 0.85, status: 1.0 },
+  3: { hp: 0.4, schaden: 0.4, bossHp: 0.85, status: 0.8 },
+  4: { hp: 0.4, schaden: 0.38, bossHp: 0.7, status: 0.7 },
+  5: { hp: 0.3, schaden: 0.28, bossHp: 0.55, status: 0.6 },
+  6: { hp: 0.2, schaden: 0.19, bossHp: 0.5, status: 0.4 },
+};
+
+// Rast am Regionstor (D8) [PROVISORISCH]: Heilung beim Region-Übergang als
+// Anteil von hpMax — ohne strukturelle Erholung ist der 6-Regionen-Run
+// rechnerisch unschaffbar (Befund docs/BalanceTor3_Befund.md).
+export const REGION_HEILUNG_ANTEIL = 1.0; // Vollheilung am Tor — macht die Regions-Eichung entkoppelt (D8-Iteration 3)
+// Der Hüter wächst mit dem Weg (D8) [PROVISORISCH — D-Entscheid]: +Max-HP je
+// Regionstor. Ohne strukturelles Spieler-Wachstum konvergiert die 6-Regionen-
+// Kurve nicht (Output wächst ~+40 %, Gegner-Rohkurve ×4-8).
+export const REGION_HPMAX_BONUS = 8;
 
 // Region-Zuordnung für die Kampf-Auswahl (D1). REGION_MAX = voller Run (00 §2).
 export const REGION_MAX = 6;

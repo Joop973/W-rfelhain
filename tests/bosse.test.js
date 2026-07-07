@@ -61,18 +61,19 @@ test('Eskalation (Boss 2 Phase 2): Fäule-Auflage wächst mit den Boss-Zyklen', 
   loeseZugAuf(run, kampf, rng);
   kampf.gegner.absicht = { typ: 'sieche', wert: 0, angekuendigt: true };
   fuehreGegnerzugAus(run, kampf, rng);
-  // Basis 3 + Eskalation 2 = 5 (kein Cap auf Fäule).
-  assert.equal(kampf.spielerStatus.faeule, 5);
+  // Basis 2 (D8-Nachschärfung) + Eskalation 2 = 4 (kein Cap auf Fäule).
+  assert.equal(kampf.spielerStatus.faeule, 4);
 });
 
-test('Auflodern (Boss 3): +1 Grundschaden je Rundenende, Brand auf ihm zündet doppelt', () => {
+test('Auflodern (Boss 3): +1 Grundschaden je zwei Runden (D8), Brand auf ihm zündet doppelt', () => {
   const { rng, run, kampf } = bossKampf(3, 1503);
   const schadenVorher = kampf.gegner.schaden;
   legeStatusAuf(kampf.gegner.status, 'brand', 4);
   const bossHpVorher = kampf.gegner.hp;
+  kampf.gegner.zyklus = 1; // ungerader Zyklus → Auflodern tickt diese Runde (halbe Rate, D8)
   leererZug(run, kampf, rng);
   fuehreGegnerzugAus(run, kampf, rng);
-  assert.equal(kampf.gegner.schaden, schadenVorher + 1); // Auflodern
+  assert.equal(kampf.gegner.schaden, schadenVorher + 1); // Auflodern (je 2 Runden)
   // Brand 4 × 2 = 8 Schaden am Boss (Gegengewicht).
   assert.equal(kampf.gegner.hp, bossHpVorher - 8);
 });

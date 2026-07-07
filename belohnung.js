@@ -21,7 +21,10 @@ const OPTIONS_MIX = [
 // --- Einkommen (03 §8 gesperrt: Münzen ~14–16/Kampf, Eicheln ~8/Kampf) --------
 
 export function verdieneKampfBelohnung(run, rng, { elite = false, hpVerlust = false } = {}) {
-  const faktor = elite ? ELITE_FAKTOR : 1;
+  // Regions-Skalierung (D8) [PROVISORISCH]: spätere Regionen zahlen mehr, damit
+  // die Gravur-Ökonomie mit den Gegner-Kurven mitwächst (03 §8 sperrt nur R1).
+  const regionsFaktor = 1 + 0.2 * ((run.region ?? 1) - 1);
+  const faktor = (elite ? ELITE_FAKTOR : 1) * regionsFaktor;
   let eicheln = Math.round(8 * faktor);
   // Fleißiges Eichhorn: +3 Eicheln je Kampf (07 §4.2 #3).
   eicheln += segenEffekt(run, 'eicheln_einkommen')?.wert ?? 0;

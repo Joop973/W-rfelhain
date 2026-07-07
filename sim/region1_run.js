@@ -208,7 +208,11 @@ function main() {
       `${LABEL[policy].padEnd(12)} | ${e.siegrate.toFixed(1).padStart(7)}% | ${e.schreck.toFixed(1).padStart(12)} | ${e.troesten.toFixed(1).padStart(9)} | ${e.kaempfe.toFixed(1).padStart(6)}`
     );
   }
-  console.log('\nZielband Reifegrad 0: Standard ~65–70 % (03 §13); Pflege ≥ Gier (Welle-1-Kriterium).');
+  console.log(
+    '\nHinweis: Seit Tor 3 (D8) gilt 65–70 % für den VOLL-Run (sim/vollrun.js), nicht mehr' +
+      '\nfür Region 1 allein — R1 ist bewusst weich (Standard ~99 %). Hier zählt nur noch' +
+      '\ndas Struktur-Kriterium Pflege ≥ Standard ≥ Gier (Welle 1).'
+  );
 }
 
 main();

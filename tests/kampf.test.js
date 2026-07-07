@@ -178,8 +178,10 @@ test('kompletter Run über die Karte terminiert (Boss beendet die Region)', () =
     if (['kampf', 'elite', 'boss'].includes(knoten.typ)) {
       const kampf = starteKampf(run, rng, knoten.typ);
       kaempfeDurch(run, kampf, rng);
-      if (kampf.phase === 'sieg' && knoten.typ === 'boss') {
-        assert.ok(kampf.belohnung.optionen.every((o) => o.typ === 'blaupause')); // Boss-Sonder-Belohnung
+      if (kampf.phase === 'sieg' && knoten.typ === 'boss' && kampf.belohnung) {
+        // Boss-Sonder-Belohnung seit B6: 2 Blaupausen + 1 Boss-Segen (Endboss: null).
+        assert.ok(kampf.belohnung.optionen.every((o) => o.typ === 'blaupause' || o.typ === 'segen'));
+        assert.ok(kampf.belohnung.optionen.filter((o) => o.typ === 'blaupause').length >= 2);
       }
     } else if (knoten.typ === 'lagerfeuer') {
       rasteLagerfeuer(run, 'heilen');
