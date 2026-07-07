@@ -1,0 +1,221 @@
+// i18n/en.js — English localization (D7, 09 §5). Key parity with de.js is
+// enforced by tests/i18n.test.js. Translation drafts by Claude — review
+// pending (plan 10: "Claude übersetzt, du prüfst").
+//
+// Terminology ledger (keep consistent across future keys):
+// Hüter=Keeper · Hain=Grove · Gemüt=Mood · Schreck=Fright · Trösten=Comfort ·
+// Übermut=Recklessness · Tischsturz=Table Crash · Atem=Breath · Tau=Dew ·
+// Eicheln=Acorns · Münzen=Coins · Jahresringe=Growth Rings · Samen=Seeds ·
+// Reifegrad=Maturity · Fäule=Rot · Brand=Burn · Morsch=Brittle · Welk=Wilt ·
+// Kraft=Vigor · Riss=Crack · Glanz=Gleam · Wetzung=Hone · Scharte=Notch ·
+// Freilauf=Free Rein · Klemme=Clamp · Gleichklang=Unison · Vollmond=Full Moon ·
+// Labung=Balm · Beruhigung=Soothing · Ermutigung=Encouragement · Prägung=Imprint ·
+// Blaupause=Blueprint · Gravur=Engraving · Hain-Segen=Grove Blessing ·
+// Setzling=Sapling · Heimat-Hain=Home Grove · Sauberer Sieg=Clean Victory.
+
+export const EN = {
+  // Classes
+  'klasse.eichwart.name': 'Oakwarden',
+  'klasse.dorfschamane.name': 'Village Shaman',
+  'klasse.gloeckner.name': 'Bellringer',
+  'klasse.schleiferin.name': 'Whetter',
+  'klasse.rodbauer.name': 'Woodclearer',
+
+  // Dice
+  'wuerfel.astschneide.name': 'Branchblade',
+  'wuerfel.borkenschild.name': 'Barkshield',
+  'wuerfel.klangwuerfel.name': 'Chime Die',
+  'wuerfel.wetzklinge.name': 'Whetblade',
+  'wuerfel.wildzahn.name': 'Wildfang',
+  'wuerfel.sanftholz.name': 'Softwood',
+
+  // Engravings
+  'gravur.wucht.name': 'Heft',
+  'gravur.schaerfe.name': 'Edge',
+  'gravur.borke.name': 'Bark',
+  'gravur.gift.name': 'Venom',
+  'gravur.zunder.name': 'Tinder',
+  'gravur.faeulnis_hauch.name': 'Rot Breath',
+  'gravur.duerre_hauch.name': 'Drought Breath',
+  'gravur.markhaertung.name': 'Marrow Hardening',
+  'gravur.echo_gravur.name': 'Echo Engraving',
+  'gravur.glanz_gravur.name': 'Gleam Engraving',
+  'gravur.beruhigungs_gravur.name': 'Soothing Engraving',
+  'gravur.ermutigungs_gravur.name': 'Encouraging Engraving',
+  'gravur.doppelschlag.name': 'Double Strike',
+  'gravur.bruchstelle.name': 'Breaking Point',
+
+  // Blueprints
+  'blaupause.quell.name': 'Spring',
+  'blaupause.hort.name': 'Hoard',
+  'blaupause.hartholz.name': 'Hardwood',
+  'blaupause.splitterklinge.name': 'Splinterblade',
+  'blaupause.eichenwall.name': 'Oakwall',
+  'blaupause.giftranke.name': 'Venomvine',
+  'blaupause.schwelbrand.name': 'Smolder',
+  'blaupause.morschmacher.name': 'Brittlemaker',
+  'blaupause.duerrhauch.name': 'Droughtbreath',
+  'blaupause.markstein.name': 'Marrowstone',
+  'blaupause.hallklinge.name': 'Echoblade',
+  'blaupause.glanzkorn.name': 'Gleamseed',
+  'blaupause.weitwurf.name': 'Longthrow',
+  'blaupause.gleichmass.name': 'Equipoise',
+  'blaupause.sanftholz.name': 'Softwood',
+  'blaupause.wildwuchs.name': 'Wildgrowth',
+
+  // Enemies, Region 1
+  'gegner.astbeisser.name': 'Branchbiter',
+  'gegner.borkenkriecher.name': 'Barkcrawler',
+  'gegner.moosgnom.name': 'Moss Gnome',
+  'gegner.dornalter.name': 'Thorn Elder',
+  'boss.saumhueter.name': 'The Hem Warden',
+
+  // Grove Blessings
+  'segen.morgentau_krug.text': 'Morning Dew Jug: +2 Dew per region.',
+  'segen.rindenring.text': 'Bark Ring: The first Bark die played each turn grants +2 Block.',
+  'segen.fleissiges_eichhorn.text': 'Busy Squirrel: +3 Acorns per fight.',
+  'segen.warmes_moos.text': 'Warm Moss: Campfire healing +25%.',
+  'segen.wetzstein.text': 'Whetstone: At the start of each fight, a random die in hand gains Hone 1.',
+  'segen.loser_ast.text': 'Loose Branch: +1 recklessness-free reroll per fight.',
+  'segen.geduldiger_waechter.text': 'Patient Warden: A Clean Victory grants +2 Mood instead of +1.',
+  'segen.geduldiger_waechter.haken': 'Fights where you lose HP grant no Acorn bonus.',
+  'segen.gieriger_griff.text': 'Greedy Grasp: The first paid reroll each turn costs 0 Recklessness.',
+  'segen.gieriger_griff.haken': 'Crystallization at fight end: +1 leftover Fright.',
+  'segen.splitternde_borke.text': 'Splintering Bark: Full Moon burst +50%.',
+  'segen.splitternde_borke.haken': 'Every turn without a Full Moon puts Notch 1 on one die.',
+  'segen.klarer_quell.text': 'Clear Spring: Comforting grants +3 Mood instead of +2.',
+  'segen.klarer_quell.haken': 'Dew income −2 per region.',
+  'segen.doppelter_morgen.text': 'Double Morning: At the start of each fight, two dice in hand gain Hone 1.',
+  'segen.doppelter_morgen.haken': 'Enemies start with +1 on their intent value.',
+  'segen.hamsterherz.text': 'Hoarder Heart: Keep up to 5 Bark block beyond the turn.',
+  'segen.hamsterherz.haken': '−5 max HP.',
+  'segen.ungeduld.text': 'Impatience: +1 Breath per turn.',
+  'segen.ungeduld.haken': 'Crystallization converts leftover Recklessness 2:1 instead of 1:1.',
+  'segen.stiller_hain.text': 'Still Grove: While your arsenal carries no Fright, +15% damage.',
+  'segen.stiller_hain.haken': 'Switches off as soon as Fright appears — until it is back to 0.',
+  'segen.krone_des_alten_hueters.text': "Old Keeper's Crown: Forge tier-1 prices −50%.",
+  'segen.krone_des_alten_hueters.haken': 'Every fight starts with Clamp 1 on a random die.',
+  'segen.duerre_same.text': 'Drought Seed: Every kill grants +2 Coins.',
+  'segen.duerre_same.haken': '+1 Wilt Stage per region — the drought accelerates.',
+
+  // Events
+  'event.ueberwucherter_brunnen.titel': 'The Overgrown Well',
+  'event.ueberwucherter_brunnen.text': 'An old well lies between roots, half swallowed. Metal glints at the bottom.',
+  'event.ueberwucherter_brunnen.opt1': 'Scoop out coins (+20 Coins, one die −1 Mood)',
+  'event.ueberwucherter_brunnen.opt2': 'Tend the well (+4 Dew, 1 Comfort)',
+  'event.ueberwucherter_brunnen.opt3': 'Walk on',
+  'event.veraengstigtes_kaetzchen.titel': 'The Frightened Kitten',
+  'event.veraengstigtes_kaetzchen.text': 'A small die cowers under a fern leaf, trembling.',
+  'event.veraengstigtes_kaetzchen.opt1': 'Take it in (a frightened die joins your arsenal)',
+  'event.veraengstigtes_kaetzchen.opt2': 'Comfort it and let it go (1 Comfort)',
+  'event.moderpfuetze.titel': 'Mold Puddle',
+  'event.moderpfuetze.text': 'Brackish water; an overgrown blueprint drifts in it.',
+  'event.moderpfuetze.opt1': 'Wade through (chance at Venomvine, but a Rot curse on one die)',
+  'event.moderpfuetze.opt2': 'Go around',
+  'event.schwelende_wurzel.titel': 'The Smoldering Root',
+  'event.schwelende_wurzel.text': 'A root glows from within. The heat could be harvested.',
+  'event.schwelende_wurzel.opt1': 'Harvest the embers (free Tinder engraving, 3 self-damage)',
+  'event.schwelende_wurzel.opt2': 'Put it out (+3 Dew)',
+  'event.schrein_der_raschen_gaben.titel': 'Shrine of Swift Gifts',
+  'event.schrein_der_raschen_gaben.text': 'A crooked shrine promises much — for a price.',
+  'event.schrein_der_raschen_gaben.opt1': 'Sacrifice calm (a curse side for an epic reward)',
+  'event.schrein_der_raschen_gaben.opt2': 'Pray quietly (1 Comfort)',
+  'event.schrein_der_raschen_gaben.opt3': 'Leave',
+  'event.wetzstein_am_wegrand.titel': 'Whetstone by the Wayside',
+  'event.wetzstein_am_wegrand.text': 'A smooth stone, as if made for sharpening.',
+  'event.wetzstein_am_wegrand.opt1': 'Sharpen dice (−20 Acorns, two dice permanently improved)',
+  'event.wetzstein_am_wegrand.opt2': 'Take the stone along (Whetstone blessing)',
+  'event.stumme_lichtung.titel': 'The Silent Clearing',
+  'event.stumme_lichtung.text': "The oak's voice falls silent. For one breath there is only the wind — then it presses on.",
+  'event.stumme_lichtung.opt1': 'Follow the advice (+10 Coins, one die −1 Mood)',
+  'event.stumme_lichtung.opt2': 'Linger and listen to the grove (1 Comfort)',
+  'event.hohler_stumpf.titel': 'The Hollow Stump',
+  'event.hohler_stumpf.text': 'A hollowed-out stump bearing the traces of an earlier warden — tools, withered gifts, no body.',
+  'event.hohler_stumpf.opt1': 'Plunder it (+25 Coins, +8 Acorns, +2 Fright on one die)',
+  'event.hohler_stumpf.opt2': 'Lay the remains to rest (2 Comfort, +3 Dew)',
+  'event.trockene_quelle.titel': 'The Dry Spring',
+  'event.trockene_quelle.text': 'A spring basin, cracked and empty. Something gleams at the very bottom.',
+  'event.trockene_quelle.opt1': 'Dig to the bottom (+30 Coins, a Notch curse on one die)',
+  'event.trockene_quelle.opt2': 'Gather what dew remains (+3 Dew)',
+
+  // Family Tree (Meta, 09 §2.9)
+  'stammbaum.klasse_dorfschamane.text': 'Unlock Village Shaman — the caretaking teacher (Confidence, free Encouragement)',
+  'stammbaum.klasse_gloeckner.text': 'Unlock Bellringer — the unison chimer (Reverberation)',
+  'stammbaum.klasse_schleiferin.text': 'Unlock Whetter — the dice master (Hone pedestal, extra reroll)',
+  'stammbaum.klasse_rodbauer.text': 'Unlock Woodclearer — the expert grip (slash-and-burn, no block)',
+  'stammbaum.klasse_rodbauer.bedingung': 'Only after a New Spring ending, or at Maturity 3',
+
+  // Endings (01 §5) — drafts pending review (D4/D7)
+  'ende.fruehling.titel': 'The New Spring',
+  'ende.fruehling.text': 'You did not strike him down — you comforted him. The greed lets go, the old oak is finally allowed to die, and a new shoot breaks through the bark.',
+  'ende.fruehling.szene1': 'You raise no blade. You kneel down, the way you knelt beside every frightened die, and speak softly against the fear. The former keeper trembles — not with rage. It has been so long since anyone spoke to him like this.',
+  'ende.fruehling.szene2': 'The greed peels off him like dry bark. Beneath it is only a tired old man who once carried the same charge you do. He lies down among the roots of the oak, and the oak — the real, quiet one — is finally allowed to die.',
+  'ende.fruehling.szene3': 'From the hollow trunk breaks a shoot, thin and impudently green. No choir, no miracle. Just water that knows where it wants to flow again. Your dice press close against your hands. Not one of them is trembling anymore.',
+  'ende.stiller_hain.titel': 'The Still Grove',
+  'ende.stiller_hain.text': 'The cycle is broken, but the grove bears scars. The dead oak is laid to rest, a seed is planted. No spring — but an end to the drought.',
+  'ende.stiller_hain.szene1': 'It is over, and it is quiet. The former keeper lies among the roots, and what remains of his voice drifts away like dust from a hollow trunk.',
+  'ende.stiller_hain.szene2': 'You lay the dead oak to rest, as well as a single keeper can. The grove bears scars — the places where you pushed too hard will stay grey for a long time. But nothing is spreading anymore. The cycle is broken.',
+  'ende.stiller_hain.szene3': 'Before you go, you press a seed into the earth at the foot of the trunk. Perhaps for the next keeper. Perhaps for no one. The wind moves through the grove, and for the first time in years it does not sound thirsty.',
+  'ende.hohles_erbe.titel': 'The Hollow Legacy',
+  'ende.hohles_erbe.text': 'You have won — and you take his place. The bark closes around you; your voice becomes the new Grandmother Oak. The drought pauses. It will return.',
+  'ende.hohles_erbe.szene1': 'You have won. Your dice stand behind you, but they do not stand close. They keep the distance one keeps from something one knows and fears.',
+  'ende.hohles_erbe.szene2': 'The hollow trunk is warm and roomy, and you are so tired. It is reasonable to sit inside. It is only for a moment. The bark closes without haste, the way a hand closes around something that belongs to it.',
+  'ende.hohles_erbe.szene3': 'Years later, a young keeper will enter the Hem Grove, and a warm, reasonable voice will greet them and advise them to hurry. The voice will be yours. You will mean well. So did everyone before you.',
+
+  // Mentor voice (01 §4.2) — kind, reasonable, always counselling greed
+  'mentor.region.1': '"There you are, child. The hem is still green — look at it well, this is how everything once looked. Come to me, into the heart. And do not dawdle: the grove can wait, the drought cannot."',
+  'mentor.region.2': '"The mold smells worse than it is. Push through, tend later — every day you linger over a sick die, the drought eats two steps further."',
+  'mentor.region.3': '"Good. Hard. That is how one wins. The grove does not need a gentle keeper, it needs a fast one. One more throw when it gets close — they can take it, believe me. I have known them longer than you have."',
+  'mentor.region.4': '"Do not look around so much. Yes, it is dry. All the more reason to take what lies along the way — the one who hoards, survives. The doubts that grow here are only weeds."',
+  'mentor.region.5': '"Quiet here, is it not? Do not listen to the silence. Listen to me. We are almost there, child — one more gate, and I will show you the source of it all. Push them. One last time. For the grove."',
+  'mentor.tischsturz': '"Shhh. No harm done. They startle easily, it is in their nature — not in your hand. Throw again. Those who hesitate have already lost."',
+
+  // Doubt hints (07 §5.3) — imply, never state
+  'hinweis.zweifel_1': 'For one breath, while the voice was silent, the grove sounded like a place ducking away from something. Not from the drought. From something that speaks.',
+  'hinweis.zweifel_2': "You lay the remains to rest. A keeper's tools, a keeper's gifts — hoarded to the very last. The voice says nothing about it. It is the first time it says nothing.",
+
+  // The Turn (01 §4.3) — at the threshold of Region 6
+  'wendung.szene1': 'Before you stands the Grandmother Oak, larger than any tree has a right to be — and hollow. Not sick, not dying: long dead. The wind passes through her like through an empty house.',
+  'wendung.szene2': 'The warm, reasonable voice begins to urge you to hurry — and collapses into itself like dry bark. Out of the hollow trunk steps a keeper. His cloak is like yours. His dice hang silent at his belt, their eyes turned away.',
+  'wendung.szene3': '"I loved the grove," he says, and it does not sound like a lie. "I only wanted to save it faster than it would let itself be saved." He looks at you, and you recognize the look. You have worn it yourself today. The drought has a voice, and it has led you the whole way.',
+  'wendung.geahnt': 'You are not surprised — only sad. The silent places in the grove, the plundered stump with no body: you have suspected it ever since the voice first fell silent.',
+
+  // Home Grove / Saplings (C5)
+  'setzling.tau_wurzel.text': 'Dew Root — +2 Dew at every region entry',
+  'setzling.mut_trieb.text': 'Courage Sprout — one die starts every run cheerful (+2 Mood)',
+  'setzling.tiefwurzel.text': 'Deeproot — +5 max HP in every run',
+  'setzling.fruehjahrs_knospe.text': 'Spring Bud — the first campfire comfort each run does not use up the rest',
+
+  // Enemies, Regions 2–6 (05 §5) + Bosses 2–6 (05 §6)
+  'gegner.faeulnisqualle.name': 'Rotjelly',
+  'gegner.sporenbalg.name': 'Sporesack',
+  'gegner.schimmelwicht.name': 'Mold Wight',
+  'gegner.modermutter.name': 'Mold Mother',
+  'gegner.pilzhort.name': 'Fungus Hoard',
+  'gegner.glutkorn.name': 'Emberseed',
+  'gegner.aschekriecher.name': 'Ashcrawler',
+  'gegner.funkenschwarm.name': 'Sparkswarm',
+  'gegner.schwelbrand_ur.name': 'Elder Smolder',
+  'gegner.glutwaechter.name': 'Ember Warden',
+  'gegner.duerrgeist.name': 'Drought Wraith',
+  'gegner.zehrranke.name': 'Leechvine',
+  'gegner.aschgabler.name': 'Ash Forker',
+  'gegner.auszehrer.name': 'Witherer',
+  'gegner.rissmark_alter.name': 'Crackmarrow Elder',
+  'gegner.furchtwisp.name': 'Fearwisp',
+  'gegner.klemmzange.name': 'Clampjaw',
+  'gegner.scharkant.name': 'Notchedge',
+  'gegner.stillewicht.name': 'Hushwight',
+  'gegner.graupfoertnerin.name': 'Grey Gatekeeper',
+  'gegner.rissfuerst.name': 'Crack Prince',
+  'gegner.hohlenwaechter.name': 'Hollow Warden',
+  'gegner.duerre_echo.name': 'Drought Echo',
+  'gegner.schreckborke.name': 'Frightbark',
+  'gegner.rindenhohl.name': 'Barkhollow',
+  'gegner.letzter_schatten.name': 'Last Shadow',
+  'boss.modermutter_brut.name': "The Mold Mother's Brood",
+  'boss.schwelbrand.name': 'The Smolder',
+  'boss.auszehrer_fuerst.name': 'The Wither Prince',
+  'boss.graupfoertnerin.name': 'The Grey Gatekeeper',
+  'boss.frueherer_hueter.name': 'The Former Keeper',
+};

@@ -4,7 +4,7 @@
 
 import { RNG } from '../rng.js';
 import { schreck, gesperrteSeitenAnzahl, KIPP_PUNKT } from '../push.js';
-import { uebersetze } from '../i18n/de.js';
+import { uebersetze, setzeSprache, aktiveSprache } from '../i18n/sprache.js';
 import { KLASSEN, HUETER_BASIS_HP } from '../data.js';
 import { erstelleNeuenSave, speichere, lade, loesche } from '../save.js';
 import {
@@ -129,6 +129,7 @@ function speichereZwischenKnoten() {
       wendungGesehen: run.wendungGesehen ?? false,
     });
     save.metaState = meta; // Meta überlebt Run-Wechsel (C1)
+    save.einstellungen.sprache = aktiveSprache(); // D7
     speichere(save);
   } catch {
     /* kein localStorage (z. B. file://) — ignorieren */
@@ -141,6 +142,7 @@ function speichereNurMeta() {
   try {
     const save = erstelleNeuenSave(run?.klasse ?? 'eichwart');
     save.metaState = meta;
+    save.einstellungen.sprache = aktiveSprache(); // D7
     speichere(save);
   } catch {
     /* kein localStorage — ignorieren */
@@ -150,6 +152,7 @@ function speichereNurMeta() {
 function ladeGespeichertenRun() {
   try {
     const save = lade();
+    if (save?.einstellungen?.sprache) setzeSprache(save.einstellungen.sprache); // D7
     if (save?.metaState) meta = normalisiereMeta(save.metaState);
     if (!save?.runState?.karte) return false;
     const rs = save.runState;
@@ -462,6 +465,7 @@ function statuszeile() {
       <span>🪙 ${run.waehrungen.muenzen} · 🌰 ${run.waehrungen.eicheln} · 💧 ${run.waehrungen.tau}</span>
       <span>Schreck Σ ${arsenalSchreckSumme(run)}</span>
       ${segen ? `<span class="segen-leiste">${segen}</span>` : ''}
+      <button class="sprache" data-aktion="sprache" title="Sprache wechseln / switch language">${aktiveSprache().toUpperCase()}</button>
     </section>`;
 }
 
@@ -833,6 +837,11 @@ function verdrahte() {
       run.wendungGesehen = true; // einmalig (01 §4.3) — ab hier schweigt die Stimme
       modus = 'karte';
       speichereZwischenKnoten();
+      render();
+    },
+    sprache: () => {
+      setzeSprache(aktiveSprache() === 'de' ? 'en' : 'de'); // D7-Toggle
+      if (modus !== 'kampf') speichereZwischenKnoten(); // Save nur zwischen Knoten (09 §3.1)
       render();
     },
     neu: () => {
