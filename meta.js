@@ -12,6 +12,8 @@ export function leeresMeta() {
     runsGespielt: 0,
     runsGewonnen: 0,
     maxReifegrad: 0, // höchste freigeschaltete Ascension-Stufe (03 §9, C4)
+    samen: 0, // Enden-Währung des Heimat-Hains (01 §5, C5)
+    heimatHain: [], // gepflanzte Setzling-IDs
   };
 }
 
@@ -95,6 +97,74 @@ export function kaufeStammbaumKnoten(meta, knotenId, kontext = {}) {
     meta.freigeschalteteKlassen = [...(meta.freigeschalteteKlassen ?? []), knoten.effekt.klasseId];
   }
   return { ok: true, knoten };
+}
+
+// --- Heimat-Hain: Samen + Setzlinge (01 §2.7/§5, C5) --------------------------------
+// Samen sind die NARRATIV verdiente Meta-Währung: nur Enden geben welche —
+// der Stille Hain pflanzt kanonisch einen Samen (+1), der Frühling restauriert
+// voll (+2), das Hohle Erbe lässt nichts wachsen (0). [PROVISORISCH]
+
+const SAMEN_JE_ENDE = { fruehling: 2, stiller_hain: 1, hohles_erbe: 0 };
+
+export function verdieneSamen(meta, endeId) {
+  const samen = SAMEN_JE_ENDE[endeId] ?? 0;
+  meta.samen = (meta.samen ?? 0) + samen;
+  return samen;
+}
+
+// Setzlinge: permanente, FLACHE Start-Boni im Pflege-Thema — nichts
+// multipliziert, alles einmalig je Run (Anti-Lawine 03 §14). [PROVISORISCH]
+export const SETZLINGE = {
+  tau_wurzel: {
+    id: 'tau_wurzel',
+    textKey: 'setzling.tau_wurzel.text',
+    kosten: { samen: 1 },
+    effekt: { typ: 'tau_bonus', wert: 2 }, // +2 Tau je Region-Eintritt
+  },
+  mut_trieb: {
+    id: 'mut_trieb',
+    textKey: 'setzling.mut_trieb.text',
+    kosten: { samen: 1 },
+    effekt: { typ: 'start_gemuet', wert: 2 }, // 1 zufälliger Würfel startet fröhlich
+  },
+  tiefwurzel: {
+    id: 'tiefwurzel',
+    textKey: 'setzling.tiefwurzel.text',
+    kosten: { samen: 2 },
+    effekt: { typ: 'max_hp', wert: 5 },
+  },
+  fruehjahrs_knospe: {
+    id: 'fruehjahrs_knospe',
+    textKey: 'setzling.fruehjahrs_knospe.text',
+    kosten: { samen: 3 },
+    effekt: { typ: 'gratis_lagerfeuer_troesten', wert: 1 }, // 1×/Run: Trösten verbraucht die Rast nicht
+  },
+};
+
+export function hatSetzling(meta, setzlingId) {
+  return (meta.heimatHain ?? []).includes(setzlingId);
+}
+
+export function pruefeSetzlingKauf(meta, setzlingId) {
+  const setzling = SETZLINGE[setzlingId];
+  if (!setzling) return { ok: false, grund: 'unbekannt' };
+  if (hatSetzling(meta, setzlingId)) return { ok: false, grund: 'gepflanzt' };
+  if ((meta.samen ?? 0) < setzling.kosten.samen) return { ok: false, grund: 'samen' };
+  return { ok: true, setzling };
+}
+
+export function pflanzeSetzling(meta, setzlingId) {
+  const pruefung = pruefeSetzlingKauf(meta, setzlingId);
+  if (!pruefung.ok) return pruefung;
+  meta.samen -= pruefung.setzling.kosten.samen;
+  meta.heimatHain = [...(meta.heimatHain ?? []), setzlingId];
+  return { ok: true, setzling: pruefung.setzling };
+}
+
+// Aktive Setzling-Effekte für den Run-Start — kampf.js/knoten.js lesen die
+// Liste über run.setzlinge (IDs), damit Sims ohne Meta-Objekt testen können.
+export function aktiveSetzlinge(meta) {
+  return meta?.heimatHain ?? [];
 }
 
 // Altbestand-Saves (metaState seit v1, aber ohne die C1-Felder) auffüllen.

@@ -6,13 +6,14 @@
 
 import { erstelleStartArsenal, HUETER_BASIS_HP, KLASSEN } from './data.js';
 
-export const SAVE_VERSION = 4; // [GESPERRT] Pflichtfeld, monoton steigend
+export const SAVE_VERSION = 5; // [GESPERRT] Pflichtfeld, monoton steigend
 // v2 (2026-07-04): + karte, positionKnotenId, hp, belohnungenOhneBlaupause,
 // entfernteWuerfel, troestenZahl (Etappe A3–A6, Karten-Run).
 // v3 (2026-07-06): + pflegeZahl — Gemüt-Pflege-Zähler inkl. Ermutigung,
 // speist Labung (Etappe B5; troestenZahl bleibt der Frühling-Zähler ohne Ermutigung).
 // v4 (2026-07-06): + welkGrad — globaler Welk-Grad (09 §2.10, Dürre-Same-Haken;
 // hainSegen existiert seit v1 und trägt ab jetzt die aktiven Segen, Etappe B6).
+// v5 (2026-07-06): + setzlinge/knospeGenutzt — Heimat-Hain-Boni im Run (C5).
 export const SAVE_KEY = 'wuerfelhain_save'; // fester Key, Migration statt Save-Verlust (09 §3.3)
 
 // --- Neuen Run anlegen (Struktur 09 §3.1) -----------------------------------
@@ -34,6 +35,8 @@ export function erstelleNeuenSave(klasseId = 'eichwart', jetzt = () => new Date(
       waehrungen: { muenzen: 0, eicheln: 0, tau: 0 },
       hainSegen: [],
       welkGrad: 0,
+      setzlinge: [],
+      knospeGenutzt: false,
       reifegrad: 0,
       uebermut: 0, // zwischen Knoten effektiv immer 0 (Rest kristallisiert in arsenal[].gemuet)
       belohnungenOhneBlaupause: 0,
@@ -125,6 +128,16 @@ export const MIGRATIONEN = {
       ...save.runState,
       welkGrad: save.runState.welkGrad ?? 0,
       hainSegen: save.runState.hainSegen ?? [],
+    },
+  }),
+  // v4 → v5: Heimat-Hain-Felder (C5) — Bestands-Runs haben keine Setzlinge.
+  4: (save) => ({
+    ...save,
+    saveVersion: 5,
+    runState: {
+      ...save.runState,
+      setzlinge: save.runState.setzlinge ?? [],
+      knospeGenutzt: save.runState.knospeGenutzt ?? false,
     },
   }),
 };

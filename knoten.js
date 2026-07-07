@@ -206,6 +206,12 @@ export function rasteLagerfeuer(run, wahl, wuerfelId = null) {
     wuerfel.gemuet = troeste(wuerfel, troestenBonus(run)).gemuet;
     run.troestenZahl = (run.troestenZahl ?? 0) + 1;
     run.pflegeZahl = (run.pflegeZahl ?? 0) + 1;
+    // Frühjahrs-Knospe (Setzling, C5): das erste Lagerfeuer-Trösten je Run
+    // verbraucht die Rast nicht (rastFrei — der Aufrufer lässt die Aktion offen).
+    if ((run.setzlinge ?? []).includes('fruehjahrs_knospe') && !run.knospeGenutzt) {
+      run.knospeGenutzt = true;
+      return { ok: true, text: '+2 Gemüt — die Knospe schenkt die Rast', rastFrei: true };
+    }
     return { ok: true, text: '+2 Gemüt' };
   }
   if (wahl === 'vollenden') {

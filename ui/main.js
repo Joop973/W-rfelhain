@@ -9,10 +9,15 @@ import { KLASSEN, HUETER_BASIS_HP } from '../data.js';
 import { erstelleNeuenSave, speichere, lade, loesche } from '../save.js';
 import {
   STAMMBAUM_KNOTEN,
+  SETZLINGE,
   normalisiereMeta,
   verdieneJahresringe,
+  verdieneSamen,
   pruefeStammbaumKauf,
   kaufeStammbaumKnoten,
+  pruefeSetzlingKauf,
+  pflanzeSetzling,
+  aktiveSetzlinge,
 } from '../meta.js';
 import { bestimmeEnde, endSchreck, merkeEnde } from '../enden.js';
 import {
@@ -87,6 +92,8 @@ function speichereZwischenKnoten() {
       hainSegen: run.hainSegen,
       welkGrad: run.welkGrad,
       reifegrad: run.reifegrad ?? 0,
+      setzlinge: run.setzlinge ?? [],
+      knospeGenutzt: run.knospeGenutzt ?? false,
     });
     save.metaState = meta; // Meta überlebt Run-Wechsel (C1)
     speichere(save);
@@ -130,6 +137,8 @@ function ladeGespeichertenRun() {
       hainSegen: rs.hainSegen ?? [],
       welkGrad: rs.welkGrad ?? 0,
       reifegrad: rs.reifegrad ?? 0,
+      setzlinge: rs.setzlinge ?? [],
+      knospeGenutzt: rs.knospeGenutzt ?? false,
       verloren: false,
       abgeschlossen: findeKnotenTyp(rs) === 'boss',
     };
@@ -150,7 +159,7 @@ function neuerRun(klasseId = 'eichwart', reifegrad = 0) {
   // Nur den Run löschen — der Stammbaum (meta) überlebt (C1). Der nächste
   // speichereZwischenKnoten schreibt meta wieder in den frischen Save.
   try { loesche(); } catch { /* ignorieren */ }
-  run = starteRun(klasseId, rng, { reifegrad });
+  run = starteRun(klasseId, rng, { reifegrad, setzlinge: aktiveSetzlinge(meta) });
   kampf = null;
   modus = 'karte';
   belohnungsWahl = schmiedeWahl = marktWahl = lagerfeuerWahl = knotenKontext = null;
@@ -361,7 +370,7 @@ function lagerfeuerAktion(wahl, wuerfelId = null) {
     return;
   }
   const ergebnis = rasteLagerfeuer(run, wahl, wuerfelId);
-  knotenKontext.genutzt = true;
+  knotenKontext.genutzt = !ergebnis.rastFrei; // Frühjahrs-Knospe schenkt die Rast (C5)
   lagerfeuerWahl = null;
   letztesEreignis = `Rast: ${ergebnis.text}.`;
   render();
@@ -606,6 +615,24 @@ function renderKlassenWahl() {
   return `<section class="ph ph--klassenwahl"><strong>Hüter wählen</strong>${stufen}<p>${knoepfe}</p></section>`;
 }
 
+// Heimat-Hain-Panel (C5): Setzlinge pflanzen mit Samen (Enden-Währung).
+function renderHeimatHain() {
+  const zeilen = Object.values(SETZLINGE).map((k) => {
+    if (meta.heimatHain.includes(k.id)) return `<p>🌳 ${uebersetze(k.textKey)}</p>`;
+    const pruefung = pruefeSetzlingKauf(meta, k.id);
+    return `<p><button data-setzling="${k.id}" ${pruefung.ok ? '' : 'disabled'}>
+      ${uebersetze(k.textKey)} (${k.kosten.samen} 🌱)</button></p>`;
+  });
+  return `<section class="ph ph--heimathain"><strong>Heimat-Hain (🌱 ${meta.samen})</strong>${zeilen.join('')}</section>`;
+}
+
+function klickSetzling(setzlingId) {
+  const ergebnis = pflanzeSetzling(meta, setzlingId);
+  letztesEreignis = ergebnis.ok ? `${uebersetze(ergebnis.setzling.textKey)} — gepflanzt.` : 'Noch nicht pflanzbar.';
+  speichereNurMeta();
+  render();
+}
+
 // Stammbaum-Panel (C1): kaufbare Meta-Knoten am Run-Ende (09 §2.9).
 function renderStammbaum() {
   const zeilen = Object.values(STAMMBAUM_KNOTEN).map((k) => {
@@ -639,7 +666,10 @@ function render() {
     if (!run.jahresringeVergebenFertig) {
       run.jahresringeVergeben = verdieneJahresringe(meta, { sieg: run.abgeschlossen, kaempfe: run.kampfNummer, reifegrad: run.reifegrad ?? 0 });
       run.jahresringeVergebenFertig = true;
-      if (ende) merkeEnde(meta, ende.id); // speist u. a. die Rodbauer-Bedingung
+      if (ende) {
+        merkeEnde(meta, ende.id); // speist u. a. die Rodbauer-Bedingung
+        run.samenVergeben = verdieneSamen(meta, ende.id); // Heimat-Hain (C5)
+      }
       speichereNurMeta(); // Meta sofort sichern; toter Run wandert NICHT in den Save
     }
     wurzel.innerHTML = `
@@ -647,8 +677,9 @@ function render() {
         <h2>${titel}</h2>
         ${ende ? `<p class="ph ph--ende-text">${uebersetze(ende.textKey)}</p>` : ''}
         <p>End-Schreck: ${endSchreck(run)} · Trösten: ${run.troestenZahl} · 🪙 ${run.waehrungen.muenzen}</p>
-        <p>🪵 +${run.jahresringeVergeben || 0} Jahresringe (gesamt ${meta.jahresringe})</p>
+        <p>🪵 +${run.jahresringeVergeben || 0} Jahresringe (gesamt ${meta.jahresringe})${run.samenVergeben ? ` · 🌱 +${run.samenVergeben} Samen (gesamt ${meta.samen})` : ''}</p>
         ${renderStammbaum()}
+        ${renderHeimatHain()}
         ${klassenWahl ? renderKlassenWahl() : '<button data-aktion="neu">Neuer Run</button>'}
       </div>`;
     verdrahte();
@@ -705,6 +736,7 @@ function verdrahte() {
   binde('[data-lagerfeuer]', (el) => lagerfeuerAktion(el.dataset.lagerfeuer));
   binde('[data-lagerfeuer-ziel]', (el) => lagerfeuerAktion(lagerfeuerWahl, el.dataset.lagerfeuerZiel));
   binde('[data-stammbaum]', (el) => klickStammbaum(el.dataset.stammbaum));
+  binde('[data-setzling]', (el) => klickSetzling(el.dataset.setzling));
   binde('[data-klasse]', (el) => { klassenWahl = false; neuerRun(el.dataset.klasse, reifegradWahl); });
   binde('[data-reifegrad]', (el) => { reifegradWahl = Number(el.dataset.reifegrad); render(); });
   const aktionen = {

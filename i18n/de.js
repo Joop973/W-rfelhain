@@ -139,6 +139,12 @@ export const DE = {
   'ende.stiller_hain.text': 'Der Kreislauf ist gebrochen, aber der Hain trägt Narben. Die tote Eiche wird zur Ruhe gebettet, ein Samen gepflanzt. Kein Frühling — aber ein Ende der Dürre.',
   'ende.hohles_erbe.titel': 'Das hohle Erbe',
   'ende.hohles_erbe.text': 'Du hast gewonnen — und nimmst seinen Platz. Die Rinde schließt sich um dich, deine Stimme wird die neue Großmutter-Eiche. Die Dürre pausiert. Sie kehrt wieder.',
+
+  // Heimat-Hain / Setzlinge (C5) [PROVISORISCH]
+  'setzling.tau_wurzel.text': 'Tau-Wurzel — +2 Tau bei jedem Region-Eintritt',
+  'setzling.mut_trieb.text': 'Mut-Trieb — ein Würfel beginnt jeden Run fröhlich (+2 Gemüt)',
+  'setzling.tiefwurzel.text': 'Tiefwurzel — +5 Max-HP in jedem Run',
+  'setzling.fruehjahrs_knospe.text': 'Frühjahrs-Knospe — das erste Lagerfeuer-Trösten je Run verbraucht die Rast nicht',
 };
 
 // Fallback-Auflösung (09 §5): fehlender Key → de, sonst Key selbst.

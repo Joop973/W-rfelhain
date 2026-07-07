@@ -28,8 +28,11 @@ const BOSS_GEGNER = 'saumhueter';
 
 // --- Run --------------------------------------------------------------------
 
-export function starteRun(klasseId = 'eichwart', rng, { reifegrad = 0 } = {}) {
-  const hpMax = HUETER_BASIS_HP + KLASSEN[klasseId].hpMod;
+// setzlinge: gepflanzte Heimat-Hain-Boni (C5, meta.aktiveSetzlinge) — flache
+// Start-Effekte; die Liste wandert als run.setzlinge mit (knoten.js liest sie).
+export function starteRun(klasseId = 'eichwart', rng, { reifegrad = 0, setzlinge = [] } = {}) {
+  let hpMax = HUETER_BASIS_HP + KLASSEN[klasseId].hpMod;
+  if (setzlinge.includes('tiefwurzel')) hpMax += 5;
   const arsenal = erstelleStartArsenal(klasseId);
   // Reifegrad-Start-Malus (03 §9 Stufe 2/9): Schreck auf einen zufälligen Würfel.
   const { startSchreck } = reifegradMods(reifegrad);
@@ -37,16 +40,23 @@ export function starteRun(klasseId = 'eichwart', rng, { reifegrad = 0 } = {}) {
     const ziel = arsenal[Math.floor(rng.naechsteZahl() * arsenal.length)];
     ziel.gemuet -= startSchreck;
   }
+  // Mut-Trieb: ein zufälliger Würfel startet fröhlich (+2 Gemüt).
+  if (setzlinge.includes('mut_trieb')) {
+    const ziel = arsenal[Math.floor(rng.naechsteZahl() * arsenal.length)];
+    ziel.gemuet += 2;
+  }
   return {
     klasse: klasseId,
     reifegrad,
+    setzlinge: [...setzlinge],
     arsenal,
     hp: hpMax,
     hpMax,
     karte: generiereKarte(rng),
     positionKnotenId: null, // vor Reihe 1
     kampfNummer: 0, // abgeschlossene Kämpfe (Statistik)
-    waehrungen: { muenzen: 0, eicheln: 0, tau: TAU_PRO_REGION }, // Tau je Region (03 §8)
+    // Tau je Region (03 §8) + Tau-Wurzel-Setzling (+2 je Region-Eintritt, C5)
+    waehrungen: { muenzen: 0, eicheln: 0, tau: TAU_PRO_REGION + (setzlinge.includes('tau_wurzel') ? 2 : 0) },
     belohnungenOhneBlaupause: 0, // Blaupause-Pity-Zähler (03 §10)
     entfernteWuerfel: 0, // treibt die Entfernen-Preiseskalation (07 §3.3)
     troestenZahl: 0, // run-weite Trösten-Ereignisse für Frühling — OHNE Ermutigung (01 §5)
