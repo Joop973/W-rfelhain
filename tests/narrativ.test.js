@@ -13,7 +13,16 @@ import {
   wendungSzene,
   wendungSteht,
   endeSzenen,
+  welkStufe,
 } from '../narrativ.js';
+
+test('Welk-Stufe (D5): clamp(welkGrad, 0, 5) — Dürre-Same darf nicht über 5 treiben', () => {
+  assert.equal(welkStufe({ welkGrad: 0 }), 0);
+  assert.equal(welkStufe({ welkGrad: 3 }), 3);
+  assert.equal(welkStufe({ welkGrad: 9 }), 5); // Dürre-Same-Haken treibt schneller
+  assert.equal(welkStufe({}), 0);
+  assert.equal(welkStufe(null), 0);
+});
 
 test('Mentor-Zeilen: eine je Region 1–5, keine in Region 6 (die Wendung übernimmt)', () => {
   for (let r = 1; r <= 5; r += 1) {

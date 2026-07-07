@@ -47,6 +47,16 @@ export function wendungSteht(run) {
   return (run.region ?? 1) >= 6 && !run.wendungGesehen && !run.abgeschlossen && !run.verloren;
 }
 
+// --- Welk-Stufe (08 §3.1/§3.2, D5) --------------------------------------------------
+
+// Visuelle Entsättigungs-Achse: 6 diskrete Stufen 0–5 aus run.welkGrad
+// (normal = region − 1; der Dürre-Same-Haken treibt ihn schneller). Rein
+// präsentationsseitig — ui/ liest den Wert und setzt die Klasse `welk-N`
+// bzw. das Audio-Ausdünnen; keine Rückkopplung in die Spiellogik (08 §3.5).
+export function welkStufe(run) {
+  return Math.max(0, Math.min(5, run?.welkGrad ?? 0));
+}
+
 // --- Enden-Inszenierung (01 §5) -----------------------------------------------------
 
 // Drei Absätze je Ende, ruhig erzählt — kein Ende ist ein Fail-Screen

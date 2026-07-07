@@ -11,6 +11,10 @@
       --holz: #8a5a3b; --rinde: #3d2a1e; --laub: #6a8f3c; --tau: #7fb7c4;
       --glut: #c8552e; --pergament: #e8dcc0; --tinte: #2a2018;
     }
+    /* Weicher Swap an Region-Grenzen, ~600 ms (08 §3.4); welk-0 explizit
+       saturate(1), damit der filter-Übergang interpoliert (none animiert nicht). */
+    #hain { transition: filter 600ms ease; }
+    #hain.welk-0 { filter: saturate(1); }
     #hain.welk-1 { filter: saturate(0.85); }
     #hain.welk-2 { filter: saturate(0.7) sepia(0.15); }
     #hain.welk-3 { filter: saturate(0.5) sepia(0.25); }

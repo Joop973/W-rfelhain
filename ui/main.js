@@ -58,7 +58,9 @@ import {
   wendungSzene,
   wendungSteht,
   endeSzenen,
+  welkStufe,
 } from '../narrativ.js';
+import * as audio from './audio.js';
 
 const rng = new RNG((Date.now() >>> 0) || 1);
 const KNOTEN_LABEL = {
@@ -82,6 +84,24 @@ let klassenWahl = false; // Klassen-Auswahl vor neuem Run (C2/C3)
 let reifegradWahl = 0; // gewählte Ascension-Stufe für den nächsten Run (C4)
 
 const wurzel = document.getElementById('spiel');
+const hain = document.getElementById('hain');
+
+// Welk-Entsättigung (D5, 08 §3.4 Variante C): Klasse welk-0…5 am Wurzel-
+// Container treibt den CSS-Filter; Audio dünnt deckungsgleich aus (08 §2.2).
+function wendeWelkStufeAn() {
+  const stufe = run ? welkStufe(run) : 0;
+  if (hain && !hain.classList.contains(`welk-${stufe}`)) {
+    hain.className = `welk-${stufe}`;
+    audio.setzeWelkStufe(stufe);
+  }
+}
+
+// Autoplay-Policy: die erste Geste entsperrt den AudioContext und startet
+// die Region-Stems (No-Op, solange keine Audio-Dateien liegen — D6).
+document.addEventListener('pointerdown', () => {
+  audio.entsperreAudio();
+  if (run) audio.spieleRegion(run.region ?? 1, welkStufe(run));
+}, { once: true });
 
 // --- Persistenz (nur zwischen Knoten, 09 §3.1/§3.3) ------------------------------
 
@@ -192,6 +212,8 @@ function zurKarte() {
     // Regions-Eintritt: Mentor-Zeile der neuen Region — bzw. an der Schwelle
     // zu Region 6 die Wendung (01 §4.3), dort schweigt der Mentor für immer.
     mentorZeile = mentorBeiRegionEintritt(run.region);
+    // Stem-Wechsel deckungsgleich mit dem Palette-Swap (08 §2.2/§3.4).
+    audio.spieleRegion(run.region, welkStufe(run));
   }
   modus = wendungSteht(run) ? 'wendung' : 'karte';
   kampf = null;
@@ -243,6 +265,7 @@ function klickReroll() {
     ? 'TISCHSTURZ! Die Würfel stürzen vom Tisch — die ganze Hand erschrickt.'
     : 'Die Hand wird neu geworfen.';
   if (tischsturz) mentorZeile = mentorBeiTischsturz(); // die Stimme wiegelt ab (D4)
+  audio.sfx(tischsturz ? 'tischsturz' : 'reroll');
   render();
 }
 
@@ -388,6 +411,7 @@ function marktZiel(wuerfelId) {
   } else if (marktWahl.aktion === 'troesten') {
     const ergebnis = troesteDienst(run, wuerfelId);
     letztesEreignis = ergebnis.ok ? '+2 Gemüt.' : 'Zu wenig Tau.';
+    if (ergebnis.ok) audio.troestenRueckkehr(); // Zier-Stem kehrt kurz zurück (08 §2.2)
   }
   marktWahl = null;
   render();
@@ -400,6 +424,7 @@ function eventOption(index) {
   knotenKontext.ergebnis = wirkungen.length ? wirkungen.join(' · ') : 'Du gehst weiter.';
   // Zweifel-Hinweis (07 §5.3): der stille Text, der Unbehagen sät, als eigener Absatz.
   knotenKontext.hinweisKey = option.effekt.hinweis ? `hinweis.${option.effekt.hinweis}` : null;
+  if (option.effekt.troesten) audio.troestenRueckkehr();
   render();
 }
 
@@ -414,6 +439,7 @@ function lagerfeuerAktion(wahl, wuerfelId = null) {
   knotenKontext.genutzt = !ergebnis.rastFrei; // Frühjahrs-Knospe schenkt die Rast (C5)
   lagerfeuerWahl = null;
   letztesEreignis = `Rast: ${ergebnis.text}.`;
+  if (wahl === 'troesten' && ergebnis.ok) audio.troestenRueckkehr();
   render();
 }
 
@@ -711,6 +737,7 @@ function klickStammbaum(knotenId) {
 }
 
 function render() {
+  wendeWelkStufeAn(); // Entsättigung folgt run.welkGrad (D5)
   const belohnungOffen = kampf?.phase === 'sieg' && kampf.belohnung && !kampf.belohnung.erledigt;
   if ((run.verloren || run.abgeschlossen) && !belohnungOffen && modus !== 'kampf') {
     // Enden-Klassifikation (01 §5, C6): nur bei Sieg — Niederlage hat kein Ende.
