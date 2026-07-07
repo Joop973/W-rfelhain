@@ -795,8 +795,8 @@ export function betreteNaechsteRegion(run, rng) {
   run.region = (run.region ?? 1) + 1;
   run.karte = generiereKarte(rng);
   run.positionKnotenId = null;
-  // Rast am Regionstor (D8) [PROVISORISCH]: der Hüter wächst mit dem Weg
-  // (+Max-HP), dann Heilung x Reifegrad-6-Malus.
+  // Rast am Regionstor (D8) [GESPERRT — Tor-3-Abnahme 2026-07-07]: der Hüter
+  // wächst mit dem Weg (+Max-HP), dann Heilung x Reifegrad-6-Malus.
   run.hpMax += REGION_HPMAX_BONUS;
   const heilung = Math.round(run.hpMax * REGION_HEILUNG_ANTEIL * reifegradMods(run.reifegrad ?? 0).heilungMult);
   run.hp = Math.min(run.hpMax, run.hp + heilung);

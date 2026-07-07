@@ -792,9 +792,9 @@ export const GEGNER_VORLAGEN = {
   },
 };
 
-// Voll-Run-Kalibrierung (D8, Balance-Tor 3) [PROVISORISCH — Sim eicht]:
+// Voll-Run-Kalibrierung (D8, Balance-Tor 3) [GESPERRT — Tor-3-Abnahme 2026-07-07]:
 // globale Mults auf die 05-§5-Rohwerte je Region. Die Roster-Zeilen bleiben
-// unangetastet; hier dreht die Eichung. Start: 1.0 = Doc-Werte.
+// unangetastet; hier dreht die Eichung. Befund: docs/BalanceTor3_Befund.md.
 export const REGION_TUNING = {
   // R1: die A8-Härtung (+32 %) war das SLICE-Band (Region 1 = ganzer Run);
   // im vollen Run ist R1 der Lernboden → zurück Richtung 05-Originalwerte.
@@ -809,13 +809,13 @@ export const REGION_TUNING = {
   6: { hp: 0.2, schaden: 0.19, bossHp: 0.5, status: 0.4 },
 };
 
-// Rast am Regionstor (D8) [PROVISORISCH]: Heilung beim Region-Übergang als
-// Anteil von hpMax — ohne strukturelle Erholung ist der 6-Regionen-Run
-// rechnerisch unschaffbar (Befund docs/BalanceTor3_Befund.md).
-export const REGION_HEILUNG_ANTEIL = 1.0; // Vollheilung am Tor — macht die Regions-Eichung entkoppelt (D8-Iteration 3)
-// Der Hüter wächst mit dem Weg (D8) [PROVISORISCH — D-Entscheid]: +Max-HP je
-// Regionstor. Ohne strukturelles Spieler-Wachstum konvergiert die 6-Regionen-
-// Kurve nicht (Output wächst ~+40 %, Gegner-Rohkurve ×4-8).
+// Rast am Regionstor (D8) [GESPERRT — Tor-3-Abnahme 2026-07-07]: Heilung beim
+// Region-Übergang als Anteil von hpMax — ohne strukturelle Erholung ist der
+// 6-Regionen-Run rechnerisch unschaffbar (Befund docs/BalanceTor3_Befund.md).
+export const REGION_HEILUNG_ANTEIL = 1.0; // Vollheilung am Tor — macht die Regions-Eichung entkoppelt
+// Der Hüter wächst mit dem Weg (D8) [GESPERRT — Tor-3-Abnahme 2026-07-07]:
+// +Max-HP je Regionstor. Ohne strukturelles Spieler-Wachstum konvergiert die
+// 6-Regionen-Kurve nicht (Output wächst ~+40 %, Gegner-Rohkurve ×4-8).
 export const REGION_HPMAX_BONUS = 8;
 
 // Region-Zuordnung für die Kampf-Auswahl (D1). REGION_MAX = voller Run (00 §2).

@@ -80,3 +80,7 @@ Die erste Voll-Run-Messung nach D3 lag bei **0 %** — die Gegner-Nominale aus 0
 - Sperr-Kandidaten nach Abnahme: `REGION_TUNING`, `REGION_HEILUNG_ANTEIL`, `REGION_HPMAX_BONUS`, Einkommens-Skalierung, Twist-Raten.
 
 **Empfehlung:** Tor 3 passieren. Nächste Balance-Arbeit erst wieder nach Handy-Playtests (A7) bzw. an D4/D5-Inhalten.
+
+---
+
+**Abnahme: erteilt am 2026-07-07** (Entscheid D). Die Hebel aus §5 (`REGION_TUNING`, `REGION_HEILUNG_ANTEIL`, `REGION_HPMAX_BONUS`, Einkommens-Skalierung, Twist-Raten) sind damit gesperrt — Änderungen nur noch über einen neuen Tor-Beschluss.
