@@ -32,7 +32,7 @@ function spieleZug(run, kampf, rng) {
 
 function simuliereEliteKampf(variante, seed) {
   const rng = new RNG(seed);
-  const run = starteRun('eichwart', rng);
+  const run = starteRun('eichwart', rng, { maxRegion: 1 });
   const kampf = starteKampf(run, rng, 'elite'); // Dornalter, Region-1-Elite
   const hpStart = run.hp;
   let zuege = 0;

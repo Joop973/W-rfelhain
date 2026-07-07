@@ -123,7 +123,7 @@ function kaempfe(run, policy, knotenTyp, rng) {
 }
 
 function simuliereRun(policy, rng) {
-  const run = starteRun('eichwart', rng);
+  const run = starteRun('eichwart', rng, { maxRegion: 1 });
   let kaempfeGesamt = 0;
   let schutz = 0;
 

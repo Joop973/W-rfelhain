@@ -59,7 +59,7 @@ function messeKorridor(klasseId, zuege = 4000) {
   let summe = 0;
   let gemessen = 0;
   while (gemessen < zuege) {
-    const run = starteRun(klasseId, rng);
+    const run = starteRun(klasseId, rng, { maxRegion: 1 });
     const kampf = starteKampf(run, rng);
     kampf.gegner.hp = kampf.gegner.hpMax = 100000; // Dummy
     kampf.gegner.absicht = { typ: 'block', wert: 0, angekuendigt: true }; // greift nie an
@@ -147,7 +147,7 @@ const PRAEFERENZ = {
 };
 
 function simuliereRun(klasseId, policy, rng) {
-  const run = starteRun(klasseId, rng);
+  const run = starteRun(klasseId, rng, { maxRegion: 1 });
   let schutz = 0;
   while (!run.abgeschlossen && !run.verloren && schutz < 30) {
     schutz += 1;

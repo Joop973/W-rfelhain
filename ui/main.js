@@ -94,6 +94,7 @@ function speichereZwischenKnoten() {
       reifegrad: run.reifegrad ?? 0,
       setzlinge: run.setzlinge ?? [],
       knospeGenutzt: run.knospeGenutzt ?? false,
+      region: run.region ?? 1,
     });
     save.metaState = meta; // Meta überlebt Run-Wechsel (C1)
     speichere(save);
@@ -139,6 +140,8 @@ function ladeGespeichertenRun() {
       reifegrad: rs.reifegrad ?? 0,
       setzlinge: rs.setzlinge ?? [],
       knospeGenutzt: rs.knospeGenutzt ?? false,
+      region: rs.region ?? 1,
+      maxRegion: 6,
       verloren: false,
       abgeschlossen: findeKnotenTyp(rs) === 'boss',
     };
@@ -168,6 +171,9 @@ function neuerRun(klasseId = 'eichwart', reifegrad = 0) {
 }
 
 function zurKarte() {
+  if (kampf?.regionGeschafft) {
+    letztesEreignis = `Der Wächter fällt — du ziehst weiter. Region ${kampf.regionGeschafft} liegt vor dir.`;
+  }
   modus = 'karte';
   kampf = null;
   belohnungsWahl = schmiedeWahl = marktWahl = lagerfeuerWahl = knotenKontext = null;
@@ -248,6 +254,7 @@ function klickGegnerzug() {
     letztesEreignis = ergebnis.erlitten > 0
       ? `Der Gegner trifft für ${ergebnis.erlitten}.`
       : 'Der Gegner holt aus — kein Schaden durchgedrungen.';
+    if (ergebnis.aufgelegt?.length) letztesEreignis += ` Er legt ${ergebnis.aufgelegt.join(' + ')} auf dich!`;
     if (dot > 0) letztesEreignis += ` (Status: ${dot} an den Gegner.)`;
   }
   if (kampf.phase === 'zug') beginneZug(run, kampf, rng);
@@ -390,6 +397,7 @@ function statuszeile() {
     .join(' ');
   return `
     <section class="status">
+      <span>Region ${run.region ?? 1}/${run.maxRegion ?? 6}</span>
       <span>❤ ${run.hp}/${run.hpMax}</span>
       <span>🪙 ${run.waehrungen.muenzen} · 🌰 ${run.waehrungen.eicheln} · 💧 ${run.waehrungen.tau}</span>
       <span>Schreck Σ ${arsenalSchreckSumme(run)}</span>

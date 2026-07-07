@@ -549,6 +549,215 @@ export const GEGNER_VORLAGEN = {
     ],
     sonderBelohnung: { wahl: ['blaupause_haeufig', 'segen_gravur_rabatt'] },
   },
+
+  // --- Region 2 — Moderbruch (Fäule/Morsch) [SIM, un-kalibriert — 05 §5] ---------
+  // statusAuflagen: { typ, stapel, mit } — mit: 'sieche' (eigener Status-Zug),
+  // 'angriff' (zusammen mit dem Treffer), 'selbst' (Self-Buff je Zyklus).
+  faeulnisqualle: {
+    id: 'faeulnisqualle', nameKey: 'gegner.faeulnisqualle.name', region: 2, rolle: 'normal',
+    hpBereich: [45, 55], schadenBereich: [9, 11],
+    statusAuflagen: [{ typ: 'faeule', stapel: 2, mit: 'sieche' }],
+    absichtsMuster: 'sieche', mechanikIds: [],
+  },
+  sporenbalg: {
+    id: 'sporenbalg', nameKey: 'gegner.sporenbalg.name', region: 2, rolle: 'normal',
+    hpBereich: [50, 65], schadenBereich: [10, 12],
+    statusAuflagen: [{ typ: 'faeule', stapel: 2, mit: 'sieche' }],
+    absichtsMuster: 'schlaeger_sieche', mechanikIds: [],
+  },
+  schimmelwicht: {
+    id: 'schimmelwicht', nameKey: 'gegner.schimmelwicht.name', region: 2, rolle: 'normal',
+    hpBereich: [40, 50], schadenBereich: [9, 10],
+    statusAuflagen: [], absichtsMuster: 'rasende', treffer: 2, mechanikIds: [],
+  },
+  modermutter: {
+    id: 'modermutter', nameKey: 'gegner.modermutter.name', region: 2, rolle: 'elite',
+    hpBereich: [100, 115], schadenBereich: [12, 14],
+    statusAuflagen: [{ typ: 'faeule', stapel: 3, mit: 'angriff' }],
+    absichtsMuster: 'wetterwechsler', mechanikIds: [],
+  },
+  pilzhort: {
+    id: 'pilzhort', nameKey: 'gegner.pilzhort.name', region: 2, rolle: 'elite',
+    hpBereich: [115, 130], schadenBereich: [11, 13],
+    statusAuflagen: [{ typ: 'faeule', stapel: 2, mit: 'angriff' }],
+    absichtsMuster: 'waechter', mechanikIds: [],
+  },
+
+  // --- Region 3 — Schwelgrund (Brand) [SIM, un-kalibriert] -----------------------
+  glutkorn: {
+    id: 'glutkorn', nameKey: 'gegner.glutkorn.name', region: 3, rolle: 'normal',
+    hpBereich: [70, 80], schadenBereich: [14, 16],
+    statusAuflagen: [{ typ: 'brand', stapel: 3, mit: 'sieche' }],
+    absichtsMuster: 'sieche', mechanikIds: [],
+  },
+  aschekriecher: {
+    id: 'aschekriecher', nameKey: 'gegner.aschekriecher.name', region: 3, rolle: 'normal',
+    hpBereich: [85, 100], schadenBereich: [15, 18],
+    statusAuflagen: [{ typ: 'brand', stapel: 3, mit: 'angriff' }],
+    absichtsMuster: 'schlaeger', mechanikIds: [],
+  },
+  funkenschwarm: {
+    id: 'funkenschwarm', nameKey: 'gegner.funkenschwarm.name', region: 3, rolle: 'normal',
+    hpBereich: [70, 85], schadenBereich: [13, 15],
+    statusAuflagen: [{ typ: 'kraft', stapel: 1, mit: 'selbst' }],
+    absichtsMuster: 'rasende', treffer: 3, mechanikIds: [],
+  },
+  schwelbrand_ur: {
+    id: 'schwelbrand_ur', nameKey: 'gegner.schwelbrand_ur.name', region: 3, rolle: 'elite',
+    hpBereich: [150, 170], schadenBereich: [18, 20],
+    statusAuflagen: [{ typ: 'brand', stapel: 4, mit: 'angriff' }, { typ: 'kraft', stapel: 1, mit: 'selbst' }],
+    absichtsMuster: 'rasende', treffer: 2, mechanikIds: [],
+  },
+  glutwaechter: {
+    id: 'glutwaechter', nameKey: 'gegner.glutwaechter.name', region: 3, rolle: 'elite',
+    hpBereich: [170, 190], schadenBereich: [16, 19],
+    statusAuflagen: [{ typ: 'brand', stapel: 4, mit: 'angriff' }],
+    absichtsMuster: 'waechter', mechanikIds: [],
+  },
+
+  // --- Region 4 — Dürrmark (Welk; Scharte-Einstieg) [SIM, un-kalibriert] ---------
+  duerrgeist: {
+    id: 'duerrgeist', nameKey: 'gegner.duerrgeist.name', region: 4, rolle: 'normal',
+    hpBereich: [110, 130], schadenBereich: [20, 23],
+    statusAuflagen: [{ typ: 'welk', stapel: 2, mit: 'sieche' }],
+    absichtsMuster: 'sieche', mechanikIds: [],
+  },
+  zehrranke: {
+    id: 'zehrranke', nameKey: 'gegner.zehrranke.name', region: 4, rolle: 'normal',
+    hpBereich: [130, 150], schadenBereich: [21, 24],
+    statusAuflagen: [{ typ: 'welk', stapel: 1, mit: 'sieche' }, { typ: 'scharte', stapel: 1, mit: 'sieche' }],
+    absichtsMuster: 'schlaeger_sieche', mechanikIds: [],
+  },
+  aschgabler: {
+    id: 'aschgabler', nameKey: 'gegner.aschgabler.name', region: 4, rolle: 'normal',
+    hpBereich: [115, 135], schadenBereich: [22, 25],
+    statusAuflagen: [], absichtsMuster: 'rasende', treffer: 2, mechanikIds: [],
+  },
+  auszehrer: {
+    id: 'auszehrer', nameKey: 'gegner.auszehrer.name', region: 4, rolle: 'elite',
+    hpBereich: [220, 245], schadenBereich: [26, 29],
+    statusAuflagen: [{ typ: 'welk', stapel: 3, mit: 'angriff' }, { typ: 'morsch', stapel: 1, mit: 'angriff' }],
+    absichtsMuster: 'wetterwechsler', mechanikIds: [],
+  },
+  rissmark_alter: {
+    id: 'rissmark_alter', nameKey: 'gegner.rissmark_alter.name', region: 4, rolle: 'elite',
+    hpBereich: [245, 270], schadenBereich: [24, 27],
+    statusAuflagen: [{ typ: 'scharte', stapel: 2, mit: 'angriff' }],
+    absichtsMuster: 'waechter', mechanikIds: [],
+  },
+
+  // --- Region 5 — Graupforte (Riss/Scharte/Klemme) [SIM, un-kalibriert] ----------
+  furchtwisp: {
+    id: 'furchtwisp', nameKey: 'gegner.furchtwisp.name', region: 5, rolle: 'normal',
+    hpBereich: [160, 185], schadenBereich: [28, 31],
+    statusAuflagen: [{ typ: 'riss', stapel: 1, mit: 'sieche' }],
+    absichtsMuster: 'sieche', mechanikIds: [],
+  },
+  klemmzange: {
+    id: 'klemmzange', nameKey: 'gegner.klemmzange.name', region: 5, rolle: 'normal',
+    hpBereich: [185, 210], schadenBereich: [30, 33],
+    statusAuflagen: [{ typ: 'klemme', stapel: 1, mit: 'sieche' }],
+    absichtsMuster: 'schlaeger_sieche', mechanikIds: [],
+  },
+  scharkant: {
+    id: 'scharkant', nameKey: 'gegner.scharkant.name', region: 5, rolle: 'normal',
+    hpBereich: [170, 195], schadenBereich: [29, 32],
+    statusAuflagen: [{ typ: 'scharte', stapel: 1, mit: 'angriff' }],
+    absichtsMuster: 'schlaeger', mechanikIds: [],
+  },
+  stillewicht: {
+    id: 'stillewicht', nameKey: 'gegner.stillewicht.name', region: 5, rolle: 'normal',
+    hpBereich: [160, 180], schadenBereich: [28, 30],
+    statusAuflagen: [{ typ: 'welk', stapel: 2, mit: 'angriff' }, { typ: 'riss', stapel: 1, mit: 'angriff' }],
+    absichtsMuster: 'rasende', treffer: 2, mechanikIds: [],
+  },
+  graupfoertnerin: {
+    id: 'graupfoertnerin', nameKey: 'gegner.graupfoertnerin.name', region: 5, rolle: 'elite',
+    hpBereich: [320, 350], schadenBereich: [34, 37],
+    statusAuflagen: [{ typ: 'klemme', stapel: 2, mit: 'angriff' }, { typ: 'scharte', stapel: 1, mit: 'angriff' }],
+    absichtsMuster: 'wetterwechsler', mechanikIds: [],
+  },
+  rissfuerst: {
+    id: 'rissfuerst', nameKey: 'gegner.rissfuerst.name', region: 5, rolle: 'elite',
+    hpBereich: [350, 380], schadenBereich: [32, 36],
+    statusAuflagen: [{ typ: 'riss', stapel: 1, mit: 'angriff' }, { typ: 'welk', stapel: 3, mit: 'angriff' }],
+    absichtsMuster: 'rasende', treffer: 2, mechanikIds: [],
+  },
+
+  // --- Region 6 — Hohles Herz (alles gebündelt) [SIM, un-kalibriert] -------------
+  hohlenwaechter: {
+    id: 'hohlenwaechter', nameKey: 'gegner.hohlenwaechter.name', region: 6, rolle: 'normal',
+    hpBereich: [230, 260], schadenBereich: [38, 42],
+    statusAuflagen: [{ typ: 'scharte', stapel: 2, mit: 'angriff' }, { typ: 'brand', stapel: 4, mit: 'angriff' }],
+    absichtsMuster: 'wetterwechsler', mechanikIds: [],
+  },
+  duerre_echo: {
+    id: 'duerre_echo', nameKey: 'gegner.duerre_echo.name', region: 6, rolle: 'normal',
+    hpBereich: [260, 290], schadenBereich: [40, 44],
+    statusAuflagen: [{ typ: 'welk', stapel: 3, mit: 'sieche' }, { typ: 'klemme', stapel: 2, mit: 'sieche' }],
+    absichtsMuster: 'sieche', mechanikIds: [],
+  },
+  schreckborke: {
+    id: 'schreckborke', nameKey: 'gegner.schreckborke.name', region: 6, rolle: 'normal',
+    hpBereich: [240, 270], schadenBereich: [39, 43],
+    statusAuflagen: [{ typ: 'riss', stapel: 1, mit: 'angriff' }, { typ: 'faeule', stapel: 4, mit: 'angriff' }],
+    absichtsMuster: 'rasende', treffer: 2, mechanikIds: [],
+  },
+  rindenhohl: {
+    id: 'rindenhohl', nameKey: 'gegner.rindenhohl.name', region: 6, rolle: 'elite',
+    hpBereich: [450, 485], schadenBereich: [46, 50],
+    statusAuflagen: [{ typ: 'morsch', stapel: 2, mit: 'angriff' }, { typ: 'scharte', stapel: 2, mit: 'angriff' }],
+    absichtsMuster: 'waechter', mechanikIds: [],
+  },
+  letzter_schatten: {
+    id: 'letzter_schatten', nameKey: 'gegner.letzter_schatten.name', region: 6, rolle: 'elite',
+    hpBereich: [485, 520], schadenBereich: [44, 48],
+    statusAuflagen: [{ typ: 'klemme', stapel: 2, mit: 'angriff' }, { typ: 'scharte', stapel: 2, mit: 'angriff' }, { typ: 'welk', stapel: 4, mit: 'angriff' }],
+    absichtsMuster: 'wetterwechsler', mechanikIds: [],
+  },
+
+  // --- Bosse 2–6 (05 §6) — D1: Grundmuster; Phasen/Twists folgen mit D2/D3 -------
+  modermutter_brut: {
+    id: 'modermutter_brut', nameKey: 'boss.modermutter_brut.name', region: 2, rolle: 'boss',
+    hpBereich: [180, 210], schadenBereich: [10, 12],
+    statusAuflagen: [{ typ: 'faeule', stapel: 3, mit: 'sieche' }],
+    absichtsMuster: 'sieche', mechanikIds: [], // Twist "Ausbreitung" folgt mit D2
+  },
+  schwelbrand: {
+    id: 'schwelbrand', nameKey: 'boss.schwelbrand.name', region: 3, rolle: 'boss',
+    hpBereich: [280, 320], schadenBereich: [16, 19],
+    statusAuflagen: [{ typ: 'brand', stapel: 4, mit: 'angriff' }, { typ: 'kraft', stapel: 1, mit: 'selbst' }],
+    absichtsMuster: 'rasende', treffer: 3, mechanikIds: [], // Twist "Auflodern" folgt mit D2
+  },
+  auszehrer_fuerst: {
+    id: 'auszehrer_fuerst', nameKey: 'boss.auszehrer_fuerst.name', region: 4, rolle: 'boss',
+    hpBereich: [400, 450], schadenBereich: [22, 25],
+    statusAuflagen: [{ typ: 'welk', stapel: 3, mit: 'sieche' }, { typ: 'scharte', stapel: 1, mit: 'sieche' }],
+    absichtsMuster: 'schlaeger_sieche', mechanikIds: [], // Twist "Auszehrung" folgt mit D2
+  },
+  graupfoertnerin_boss: {
+    id: 'graupfoertnerin_boss', nameKey: 'boss.graupfoertnerin.name', region: 5, rolle: 'boss',
+    hpBereich: [550, 620], schadenBereich: [30, 34],
+    statusAuflagen: [{ typ: 'scharte', stapel: 2, mit: 'angriff' }, { typ: 'klemme', stapel: 2, mit: 'angriff' }],
+    absichtsMuster: 'wetterwechsler', mechanikIds: [], // Twist "Enge Pforte" folgt mit D2
+  },
+  frueherer_hueter: {
+    id: 'frueherer_hueter', nameKey: 'boss.frueherer_hueter.name', region: 6, rolle: 'boss',
+    hpBereich: [750, 850], schadenBereich: [38, 44],
+    statusAuflagen: [], // Phase 1 "Die Stimme": kaum Status — Phasen 2/3 + Twist folgen mit D3
+    absichtsMuster: 'wetterwechsler', mechanikIds: [],
+  },
+};
+
+// Region-Zuordnung für die Kampf-Auswahl (D1). REGION_MAX = voller Run (00 §2).
+export const REGION_MAX = 6;
+export const REGION_GEGNER = {
+  1: { normal: ['astbeisser', 'borkenkriecher', 'moosgnom'], elite: ['dornalter'], boss: 'saumhueter' },
+  2: { normal: ['faeulnisqualle', 'sporenbalg', 'schimmelwicht'], elite: ['modermutter', 'pilzhort'], boss: 'modermutter_brut' },
+  3: { normal: ['glutkorn', 'aschekriecher', 'funkenschwarm'], elite: ['schwelbrand_ur', 'glutwaechter'], boss: 'schwelbrand' },
+  4: { normal: ['duerrgeist', 'zehrranke', 'aschgabler'], elite: ['auszehrer', 'rissmark_alter'], boss: 'auszehrer_fuerst' },
+  5: { normal: ['furchtwisp', 'klemmzange', 'scharkant', 'stillewicht'], elite: ['graupfoertnerin', 'rissfuerst'], boss: 'graupfoertnerin_boss' },
+  6: { normal: ['hohlenwaechter', 'duerre_echo', 'schreckborke'], elite: ['rindenhohl', 'letzter_schatten'], boss: 'frueherer_hueter' },
 };
 
 // --- Hain-Segen (07 §4.2, Schema 09 §2.8) --------------------------------------

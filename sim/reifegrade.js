@@ -79,7 +79,7 @@ function wendeSiegBelohnungAn(run, kampf) {
 }
 
 function simuliereRun(reifegrad, rng) {
-  const run = starteRun('eichwart', rng, { reifegrad });
+  const run = starteRun('eichwart', rng, { reifegrad, maxRegion: 1 });
   let schutz = 0;
   while (!run.abgeschlossen && !run.verloren && schutz < 30) {
     schutz += 1;

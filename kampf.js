@@ -15,22 +15,20 @@ import {
 } from './push.js';
 import { leererStatus, tickeFaeule, tickeBrand, decayRundenende, legeStatusAuf } from './status.js';
 import { kampfbeginn, zieheHand, zugende } from './ziehstapel.js';
-import { GEGNER_VORLAGEN, KLASSEN, HUETER_BASIS_HP, ATEM_PRO_ZUG, erstelleStartArsenal } from './data.js';
+import { GEGNER_VORLAGEN, KLASSEN, HUETER_BASIS_HP, ATEM_PRO_ZUG, REGION_GEGNER, REGION_MAX, erstelleStartArsenal } from './data.js';
 import { verdieneKampfBelohnung, zieheBelohnungsoptionen, zieheBossBelohnung } from './belohnung.js';
 import { generiereKarte } from './karte.js';
 import { TAU_PRO_REGION } from './knoten.js';
 import { segenEffekt, segenEffekte, segenHaken, troestenBonus } from './segen.js';
 import { reifegradMods } from './reifegrad.js';
 
-const NORMALE_GEGNER = ['astbeisser', 'borkenkriecher', 'moosgnom'];
-const ELITE_GEGNER = 'dornalter';
-const BOSS_GEGNER = 'saumhueter';
+// Gegner-Auswahl je Region: REGION_GEGNER (data.js, D1).
 
 // --- Run --------------------------------------------------------------------
 
 // setzlinge: gepflanzte Heimat-Hain-Boni (C5, meta.aktiveSetzlinge) — flache
 // Start-Effekte; die Liste wandert als run.setzlinge mit (knoten.js liest sie).
-export function starteRun(klasseId = 'eichwart', rng, { reifegrad = 0, setzlinge = [] } = {}) {
+export function starteRun(klasseId = 'eichwart', rng, { reifegrad = 0, setzlinge = [], maxRegion = REGION_MAX } = {}) {
   let hpMax = HUETER_BASIS_HP + KLASSEN[klasseId].hpMod;
   if (setzlinge.includes('tiefwurzel')) hpMax += 5;
   const arsenal = erstelleStartArsenal(klasseId);
@@ -49,6 +47,8 @@ export function starteRun(klasseId = 'eichwart', rng, { reifegrad = 0, setzlinge
     klasse: klasseId,
     reifegrad,
     setzlinge: [...setzlinge],
+    region: 1,
+    maxRegion, // Sims messen einzelne Regionen mit maxRegion: 1
     arsenal,
     hp: hpMax,
     hpMax,
@@ -123,6 +123,22 @@ export function naechsteAbsicht(gegner) {
       ? { typ: 'block', wert: gegner.schaden, angekuendigt: true }
       : { typ: 'angriff', wert: gegner.schaden, angekuendigt: true };
   }
+  // Sieche (05 §4/§5): legt jeden zweiten Zyklus Status statt anzugreifen.
+  if (muster === 'sieche') {
+    return zyklus % 2 === 0
+      ? { typ: 'sieche', wert: 0, angekuendigt: true }
+      : { typ: 'angriff', wert: gegner.schaden, angekuendigt: true };
+  }
+  // Schläger→Sieche: zwei Angriffe, dann ein Status-Zyklus.
+  if (muster === 'schlaeger_sieche') {
+    return zyklus % 3 === 2
+      ? { typ: 'sieche', wert: 0, angekuendigt: true }
+      : { typ: 'angriff', wert: gegner.schaden, angekuendigt: true };
+  }
+  // Rasende: mehrere kleine Treffer (Summe = Schaden; Block wirkt je Treffer).
+  if (muster === 'rasende') {
+    return { typ: 'angriff', wert: gegner.schaden, treffer: gegner.treffer ?? 2, angekuendigt: true };
+  }
   return { typ: 'angriff', wert: gegner.schaden, angekuendigt: true }; // schlaeger
 }
 
@@ -144,6 +160,8 @@ function baueGegner(vorlageId, rng, { schadenZuschlag = 0, reifegrad = 0 } = {})
         zufallZwischen(rng, vorlage.schadenBereich) * (vorlage.rolle !== 'normal' ? mods.eliteBossSchadenMult : 1)
       ) + schadenZuschlag,
     absichtsMuster: vorlage.absichtsMuster,
+    statusAuflagen: vorlage.statusAuflagen ?? [],
+    treffer: vorlage.treffer ?? 1,
     mechanikIds: vorlage.mechanikIds ?? [],
     phasen: vorlage.phasen ?? null,
     status: leererStatus(), // vom Spieler auflegbare Status (Fäule/Brand/Morsch/Welk)
@@ -158,12 +176,13 @@ function baueGegner(vorlageId, rng, { schadenZuschlag = 0, reifegrad = 0 } = {})
 
 // knotenTyp: 'kampf' | 'elite' | 'boss' (aus dem betretenen Karten-Knoten).
 export function starteKampf(run, rng, knotenTyp = 'kampf') {
+  const pool = REGION_GEGNER[run.region ?? 1] ?? REGION_GEGNER[1];
   const vorlageId =
     knotenTyp === 'boss'
-      ? BOSS_GEGNER
+      ? pool.boss
       : knotenTyp === 'elite'
-        ? ELITE_GEGNER
-        : NORMALE_GEGNER[Math.floor(rng.naechsteZahl() * NORMALE_GEGNER.length)];
+        ? pool.elite[Math.floor(rng.naechsteZahl() * pool.elite.length)]
+        : pool.normal[Math.floor(rng.naechsteZahl() * pool.normal.length)];
   // Doppelter-Morgen-Haken (07 §4.2 #11): Gegner starten mit +1 Absichtswert.
   const gegnerHaken = segenHaken(run, 'gegner_absichtswert');
   const kampf = {
@@ -465,7 +484,7 @@ export function loeseZugAuf(run, kampf, rng) {
   const pools = resolveZug(gespielteSeiten, {
     morschStapel,
     welkStapel,
-    region: 1,
+    region: run.region ?? 1,
     vollmondBurstMult: borke ? 1 + borke.wert / 100 : 1,
     // Glöckner "Widerhall" (06 §4): +flach auf den Pool, wenn Gleichklang zündet.
     gleichklangFlachBonus: passiv.typ === 'widerhall' ? passiv.schadenFlach : 0,
@@ -549,19 +568,56 @@ export function fuehreGegnerzugAus(run, kampf, rng) {
     }
   }
 
+  // Selbst-Buffs (z. B. Kraft-Eskalation, 05 §5): jede Runde, unabhängig von der Aktion.
+  const mods = reifegradMods(run.reifegrad ?? 0);
+  for (const auflage of kampf.gegner.statusAuflagen ?? []) {
+    if (auflage.mit === 'selbst') legeStatusAuf(status, auflage.typ, auflage.stapel);
+  }
+  // Status auf den Hüter legen (D1): Reifegrad 8 gibt Normalgegnern +1 Stapel/Anwendung.
+  const legeAufHueter = (auflage) => {
+    const zuschlag = kampf.gegner.rolle === 'normal' ? mods.gegnerStatusZuschlag : 0;
+    legeStatusAuf(kampf.spielerStatus, auflage.typ, auflage.stapel + zuschlag);
+  };
+
   // Gegner handelt: Kraft-Buff hebt, Welk-Debuff senkt den Angriffswert (02 §8).
   const { absicht } = kampf.gegner;
   let erlitten = 0;
   let blockRest = kampf.block;
-  if (absicht.typ === 'angriff') {
+  const aufgelegt = [];
+  if (absicht.typ === 'sieche') {
+    // Sieche-Zyklus: kein Schaden, dafür Status auf den Hüter (05 §5).
+    for (const auflage of kampf.gegner.statusAuflagen ?? []) {
+      if ((auflage.mit ?? 'sieche') === 'sieche') {
+        legeAufHueter(auflage);
+        aufgelegt.push(auflage.typ);
+      }
+    }
+  } else if (absicht.typ === 'angriff') {
     // Gegner-Kraft hebt, Spieler-Welk auf dem Gegner senkt; Gegner-Morsch auf
     // dem HÜTER verstärkt den Einschlag (Option A, 05 §2.1) — alles vor Block.
     const roh = Math.floor(
       (absicht.wert + status.kraft) * welkMult(status.welk) * eingehendMult(kampf.spielerStatus.morsch)
     );
-    erlitten = Math.max(0, roh - kampf.block);
-    blockRest = Math.max(0, kampf.block - roh);
+    // Rasende: N kleine Treffer (Summe = roh), Block wirkt je Treffer fortlaufend —
+    // Block ist gegen viele kleine Treffer stärker als gegen einen großen.
+    const anzahl = absicht.treffer ?? 1;
+    const basis = Math.floor(roh / anzahl);
+    let block = kampf.block;
+    for (let t = 0; t < anzahl; t += 1) {
+      const hieb = basis + (t === 0 ? roh - basis * anzahl : 0); // Rest auf den ersten Treffer
+      const durch = Math.max(0, hieb - block);
+      block = Math.max(0, block - hieb);
+      erlitten += durch;
+    }
+    blockRest = block;
     run.hp -= erlitten;
+    // "Angriff + Status" (05 §5): Auflagen, die mit dem Treffer kommen.
+    for (const auflage of kampf.gegner.statusAuflagen ?? []) {
+      if (auflage.mit === 'angriff') {
+        legeAufHueter(auflage);
+        aufgelegt.push(auflage.typ);
+      }
+    }
   }
   // Rinde verfällt (02 §2.2 Schritt 9) — außer Hamsterherz (07 §4.2 #12):
   // bis zu `cap` Rest-Block überdauert den Zug (der Cap ist die Bremse).
@@ -591,7 +647,24 @@ export function fuehreGegnerzugAus(run, kampf, rng) {
   } else {
     kampf.phase = 'zug';
   }
-  return { erlitten, faeule, brand };
+  return { erlitten, faeule, brand, aufgelegt };
+}
+
+// Region-Übergang (D1, 07 §1.5): neue Karte, Tau-Zufluss (Basis + Segen +
+// Setzling), Welk-Grad steigt (visuell, 09 §2.10; Dürre-Same-Haken zusätzlich).
+// Kampf-Status/Block/Übermut sind kampf-lokal und tragen nie über (02 §2.5).
+export function betreteNaechsteRegion(run, rng) {
+  run.region = (run.region ?? 1) + 1;
+  run.karte = generiereKarte(rng);
+  run.positionKnotenId = null;
+  let tau = TAU_PRO_REGION + (run.setzlinge?.includes('tau_wurzel') ? 2 : 0);
+  const segenBonus = segenEffekt(run, 'tau_einkommen');
+  if (segenBonus?.je === 'region') tau += segenBonus.wert;
+  const segenMalus = segenHaken(run, 'tau_einkommen');
+  if (segenMalus?.je === 'region') tau += segenMalus.wert;
+  run.waehrungen.tau += Math.max(0, tau);
+  run.welkGrad = (run.welkGrad ?? 0) + 1 + (segenHaken(run, 'welk_grad_pro_region')?.wert ?? 0);
+  return run;
 }
 
 // Kampfende: erst Sauberer-Sieg-Bonus, dann Kristallisation (02 §2.5/§7.3),
@@ -647,7 +720,14 @@ function beendeKampf(run, kampf, sieg, rng) {
   };
 
   run.kampfNummer += 1;
-  if (rolle === 'boss') run.abgeschlossen = true; // Region 1 geschafft
+  if (rolle === 'boss') {
+    if ((run.region ?? 1) >= (run.maxRegion ?? REGION_MAX)) {
+      run.abgeschlossen = true; // letzter Boss — der Run ist durch
+    } else {
+      betreteNaechsteRegion(run, rng); // weiter in die nächste Region (D1)
+      kampf.regionGeschafft = run.region; // Anzeige: "Region N erreicht"
+    }
+  }
   // Keine Auto-Heilung mehr — Heilung ist strukturell (Lagerfeuer, 07 §1.3);
   // Nach-Eichung der Schwierigkeit gegen die neue Struktur ist Etappe A8.
 }

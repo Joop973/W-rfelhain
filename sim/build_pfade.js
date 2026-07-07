@@ -192,7 +192,7 @@ function kaempfe(run, buildId, knotenTyp, rng, statistik) {
 }
 
 function simuliereRun(buildId, rng, statistik) {
-  const run = starteRun('eichwart', rng);
+  const run = starteRun('eichwart', rng, { maxRegion: 1 });
   let schutz = 0;
   while (!run.abgeschlossen && !run.verloren && schutz < 30) {
     schutz += 1;
