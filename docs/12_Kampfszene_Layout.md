@@ -163,13 +163,14 @@ Der Umbau ist rein `ui/`-seitig (09 §1: Präsentation liest nur) — die Spiell
 
 ---
 
-## 7. Offene Entscheidungen (für dich)
+## 7. Entscheidungen (2026-07-09 mit dir geklärt)
 
-- **Ein Gegner oder mehrere?** Der Code kämpft aktuell 1-gegen-1 (`kampf.gegner`, ein Gegner). Das StS-artige Mehr-Gegner-Feld ist nicht angelegt. Empfehlung: bei 1-gegen-1 bleiben (klare Bühne, klare Absicht) — falls Gruppen gewünscht, ist das eine Mechanik-Erweiterung, nicht nur Layout.
-- **Würfel-Doppelrolle:** Wie stark tritt das Gemüt-Gesicht neben der Spiel-Seite auf? Vorschlag: Seite dominiert (Lesbarkeit), Gesicht als kleiner Dauer-Tell. Deine Ton-Entscheidung.
-- **Reihe-Darstellung:** Slots auf dem Tisch (konkret, diegetisch) vs. abstrakte Pool-Leiste. Vorschlag: geritzte Slots (bindet an den Tisch).
-- **Hoch- vs. Querformat:** Konzept ist Hochformat (08-Kanon). Falls du doch Querformat willst, kippt die Achse (Gegner links/rechts, Hand unten) — sag Bescheid, dann liefere ich die Querformat-Variante.
+- **Ein Gegner, mehrere Würfel — ENTSCHIEDEN.** 1-gegen-1 (`kampf.gegner`), klare Bühne, klare Absicht; die Vielfalt liegt in der Würfelhand, nicht im Gegnerfeld. Kein Mehr-Gegner-Feld.
+- **Würfel-Doppelrolle — ENTSCHIEDEN.** Die Spiel-Seite (Wert + Effekt) dominiert und ist zuerst lesbar; das Gemüt-Gesicht ist ein kleiner Dauer-Tell (Augen/Haltung), nie im Weg der Zahl.
+- **Reihe — ENTSCHIEDEN: geritzte Slots** auf der Tischplatte (diegetisch, bindet an den Tisch), keine abstrakte Pool-Leiste.
+- **Hoch- vs. Querformat — Empfehlung Querformat für die Sichtbarkeit `[D — deine finale Wahl]`.** Die Informationsdichte liegt in der Würfelhand (5 Würfel × Wert + Effekt + Gemüt + gesperrte Seiten + Slot-Reihe). Der Engpass ist die **Breite** — die gibt Querformat: die Würfel werden ~40 % größer und deutlich ablesbarer (Mockup belegt es direkt). **Preis:** zweihändige Haltung, weniger „Standard" für ein schnelles Handy-Roguelike, Gegner überragt den Tisch weniger. Wenn Ein-Hand-Bedienung höher wiegt als maximale Würfel-Lesbarkeit → Hochformat. Für das Kriterium „man muss alles sehen" gewinnt **Querformat**. Beide Layouts liegen im Mockup zum Vergleich vor.
+  - **Querformat-Zonen:** HUD-Streifen oben (volle Breite) · Gegner links (an der Tischkante, Absicht darüber, HP/Status darunter) · Reihe-Slots mittig-rechts auf dem Tisch (Auflösung fliegt nach *links* zum Gegner) · Hand als breites Band unten · Aktionen als Spalte rechts unten.
 
 ---
 
-*Begleitend: ein interaktives Mockup (Artifact) setzt die echten, freigestellten Sprites in genau dieses Layout — als Beleg, dass die Fragmente eine Bühne ergeben.*
+*Begleitend: `docs/12_Kampfszene_Mockup.html` (interaktives Mockup) setzt die echten, freigestellten Sprites in dieses Layout — Hoch- **und** Querformat zum direkten Vergleich, als Beleg, dass die Fragmente eine Bühne ergeben.*
