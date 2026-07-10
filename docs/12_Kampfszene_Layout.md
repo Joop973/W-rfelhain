@@ -176,6 +176,8 @@ Der Umbau ist rein `ui/`-seitig (09 §1: Präsentation liest nur) — die Spiell
   - **Unten links:** Atem-Orb (Energie-Analog, StS setzt Energie unten links) + Übermut-Leiste (Gier-Anzeige, Kipp-Punkt).
   - **Unten rechts:** Aktions-Tasten (Neu werfen / Auflösen / Trösten).
   - **Warum:** die Würfelhand ist das dichteste Element; Querformat gibt ihr die Breite (~40 % größere, ablesbarere Würfel). Der Preis (zweihändig, weniger „Standard") ist mit der bewussten StS-Ausrichtung akzeptiert. Hochformat bleibt als einhändige Alternative im Mockup, ist aber nicht mehr die Zielrichtung.
+  - **Zwei getrennte, austauschbare Ebenen `[ENTSCHIEDEN 2026-07-09]`:** eine **Hintergrund-Ebene** (Kulisse/Hain, `bg.kulisse.rN`) und eine **Boden-Ebene** (die Standfläche), beide volle Breite und **je Region austauschbar** (auch die Boden-Ebene wechselt die Stimmung, nicht nur der Hintergrund). Eine sichtbare Horizontkante trennt sie.
+  - **Alle Figuren stehen auf der Boden-Ebene `[ENTSCHIEDEN]`:** Gegner **und** alle fünf Würfel-Kreaturen (samt Hüter) haben die Füße auf der Standlinie, jeweils mit Kontaktschatten — nichts schwebt in der Hintergrund-Ebene. Tiefe entsteht über Größe + Position auf dem Boden (hintere Reihe kleiner/weiter hinten an der Horizontkante), nicht über Höhe in der Luft. Das gemeinsame Standlinie ist das zentrale Kohäsions-Mittel (§0).
   - **Neuer Asset-Bedarf:** ein **Hüter-Kampf-Sprite** (Charakter links). Steht so nicht in Artefakt 11 (dort erscheint der Hüter nur in Wendung/Enden-Szenen). Im Mockup als beschriftete Silhouette platziert. → in die nächste Asset-Charge aufnehmen (Ruhe-Idle + evtl. Treffer-Zucken), Größe ~ Elite-Klasse (~64–80 logisch), Licht oben links, PNG-32 mit Alpha.
 
 ---
