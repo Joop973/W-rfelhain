@@ -168,9 +168,35 @@ Der Umbau ist rein `ui/`-seitig (09 §1: Präsentation liest nur) — die Spiell
 - **Ein Gegner, mehrere Würfel — ENTSCHIEDEN.** 1-gegen-1 (`kampf.gegner`), klare Bühne, klare Absicht; die Vielfalt liegt in der Würfelhand, nicht im Gegnerfeld. Kein Mehr-Gegner-Feld.
 - **Würfel-Doppelrolle — ENTSCHIEDEN.** Die Spiel-Seite (Wert + Effekt) dominiert und ist zuerst lesbar; das Gemüt-Gesicht ist ein kleiner Dauer-Tell (Augen/Haltung), nie im Weg der Zahl.
 - **Reihe — ENTSCHIEDEN: geritzte Slots** auf der Tischplatte (diegetisch, bindet an den Tisch), keine abstrakte Pool-Leiste.
-- **Hoch- vs. Querformat — Empfehlung Querformat für die Sichtbarkeit `[D — deine finale Wahl]`.** Die Informationsdichte liegt in der Würfelhand (5 Würfel × Wert + Effekt + Gemüt + gesperrte Seiten + Slot-Reihe). Der Engpass ist die **Breite** — die gibt Querformat: die Würfel werden ~40 % größer und deutlich ablesbarer (Mockup belegt es direkt). **Preis:** zweihändige Haltung, weniger „Standard" für ein schnelles Handy-Roguelike, Gegner überragt den Tisch weniger. Wenn Ein-Hand-Bedienung höher wiegt als maximale Würfel-Lesbarkeit → Hochformat. Für das Kriterium „man muss alles sehen" gewinnt **Querformat**. Beide Layouts liegen im Mockup zum Vergleich vor.
-  - **Querformat-Zonen:** HUD-Streifen oben (volle Breite) · Gegner links (an der Tischkante, Absicht darüber, HP/Status darunter) · Reihe-Slots mittig-rechts auf dem Tisch (Auflösung fliegt nach *links* zum Gegner) · Hand als breites Band unten · Aktionen als Spalte rechts unten.
+- **Format — ENTSCHIEDEN: Querformat, Slay-the-Spire-Arena** (2026-07-09). Nicht die zuerst skizzierte „Tisch-von-vorn"-Bühne, sondern das klassische StS-Arena-Schema:
+  - **Oben:** volle Übersichts-Leiste (StS-Vorbild) — Hüter-Porträt + HP, Währungen 🪙🌰💧, Region/Akt mittig, Segen (Relikt-Analog) + Zieh/Ablage-Zähler + Menü rechts.
+  - **Links:** der **Hüter** (Charakter-Sprite — *fehlt noch, neuer Asset-Bedarf*, s. u.) mit seinen **fünf Würfel-Kreaturen davor, versetzt** (leichte Rotation + Höhen-Versatz = organisch, nicht in Reih und Glied), auf dem Boden vor der Hain-Kulisse.
+  - **Rechts:** das **Monster** (1 Gegner), groß, Absicht als Omen darüber, HP darunter, Status-Badges.
+  - **Mitte (Boden):** die **Reihe-Slots**; gelegte Würfel lösen auf, Wirkung fliegt nach **rechts** zum Monster (StS-Angriffsrichtung).
+  - **Unten links:** Atem-Orb (Energie-Analog, StS setzt Energie unten links) + Übermut-Leiste (Gier-Anzeige, Kipp-Punkt).
+  - **Unten rechts:** Aktions-Tasten (Neu werfen / Auflösen / Trösten).
+  - **Warum:** die Würfelhand ist das dichteste Element; Querformat gibt ihr die Breite (~40 % größere, ablesbarere Würfel). Der Preis (zweihändig, weniger „Standard") ist mit der bewussten StS-Ausrichtung akzeptiert. Hochformat bleibt als einhändige Alternative im Mockup, ist aber nicht mehr die Zielrichtung.
+  - **Neuer Asset-Bedarf:** ein **Hüter-Kampf-Sprite** (Charakter links). Steht so nicht in Artefakt 11 (dort erscheint der Hüter nur in Wendung/Enden-Szenen). Im Mockup als beschriftete Silhouette platziert. → in die nächste Asset-Charge aufnehmen (Ruhe-Idle + evtl. Treffer-Zucken), Größe ~ Elite-Klasse (~64–80 logisch), Licht oben links, PNG-32 mit Alpha.
 
 ---
 
-*Begleitend: `docs/12_Kampfszene_Mockup.html` (interaktives Mockup) setzt die echten, freigestellten Sprites in dieses Layout — Hoch- **und** Querformat zum direkten Vergleich, als Beleg, dass die Fragmente eine Bühne ergeben.*
+## 8. Würfel-Animation `[PROVISORISCH — Konzept]`
+
+Die Würfel sind **Kreaturen und Spielsteine zugleich** — die Animation muss beides bedienen: den physischen Wurf (Spielstein) und die Persönlichkeit (Kreatur). Leitidee: **der Wurf ist die Signatur-Bewegung.** Weil es Würfel sind, wird gerollt, nicht gewischt (kein StS-Karten-Gleiten).
+
+| Moment | Bewegung | Sprite-Bedarf |
+|---|---|---|
+| **Ziehen** (neue Hand) | die Würfel **purzeln/rollen** von links (vom Hüter her) an ihren Platz und kommen auf einer Seite zur Ruhe. | Roll-/Taumel-Sequenz (5–6 Frames), oder prozedural: Rotation + kleiner Sprung, Sprite bleibt statisch. |
+| **Idle** | ruhiges Atmen/Wippen, **je Gemüt verschieden und zeitversetzt** (nicht synchron = organisch): `ruhig` sanft, `froh` kleiner Hüpfer, `ängstlich` Zittern (entsättigt, eingezogen). | Idle-Frames je Gemüt (04 §4.1: 3 Ausdruck-Zustände) — oder MVP: CSS-Transform (bob/hop/tremble, wie im Mockup). |
+| **Antippen/Wählen** | der Würfel **hebt sich** kurz an und leuchtet (StS-Karten-Raise). | keiner (Transform + Glow). |
+| **Neu werfen** | die gewählten Würfel **taumeln an Ort und Stelle** und landen auf einer neuen Seite; Übermut-Kosten blitzen auf; am Kipp-Punkt heftigeres Schütteln. | Roll-Sequenz (wie Ziehen). |
+| **Platzieren** | der Würfel **hüpft/gleitet** aus der Hand in einen Reihe-Slot und **kippt seine gewählte Seite nach oben**; kleiner Staub-Puff auf dem Boden. | Kipp-Frames (Seite nach oben) — oder Transform-Rotation. |
+| **Auflösen** | die Reihe pulst **links→rechts**, jeder Effekt fliegt als Glyph/Projektil nach **rechts zum Monster**; Monster zuckt beim Treffer. | VFX-Glyph je Effekt-Typ (`fx.treffer` u. a.), Monster-Treffer-Frame. |
+| **Gemüt-Wechsel** | Schreck: der Würfel **zuckt**, entsättigt, eine Seite **verriegelt sichtbar** (Dornen-Riegel schnappt zu). Trösten: warmer Tau-Puls, der Würfel **richtet sich auf**. | `overlay.gesperrt`, `fx.troesten`, Wechsel Ausdruck-Zustand. |
+| **Kristallisation** (Kampfende) | Frost kriecht über die Würfel mit Rest-Übermut → Schreck. | `fx.kristallisation` (6 Frames). |
+
+**Empfehlung für die Umsetzung:** MVP rein über CSS-Transforms (Rotation/Sprung/Zittern auf den statischen Sprites — im Mockup schon zu sehen) — das trägt Ziehen, Idle, Wählen, Platzieren **ohne** zusätzliche Frames. Echte Roll- und Ausdruck-Frames (je Gemüt) sind die spätere Aufwertung, wenn Aaron sie liefert; die Keys stehen in Artefakt 11 §1 (`.idle`/`.wurf`-Sheets je Würfel). So bleibt die Reihenfolge: erst spielbar mit Transform-Animation, dann sukzessive echte Frames einsetzen — ohne UI-Umbau.
+
+---
+
+*Begleitend: `docs/12_Kampfszene_Mockup.html` (interaktives Mockup) setzt die echten, freigestellten Sprites in die StS-Arena — mit lebendigen Würfel-Idles (bob/hop/tremble je Gemüt) als Animations-Vorschau. Hochformat bleibt als Alternative darunter.*
