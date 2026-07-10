@@ -37,6 +37,20 @@ function pruefeAssets() {
   return assetsProbe;
 }
 
+// Format-Fallback (08 §2.4, E2): iOS Safari spielt kein OGG/Vorbis — dort
+// laden wir .m4a. Einmalige canPlayType-Probe; Aaron liefert beide Formate.
+let formatCache = null;
+function audioFormat() {
+  if (formatCache) return formatCache;
+  try {
+    const probe = document.createElement('audio');
+    formatCache = probe.canPlayType('audio/ogg; codecs="vorbis"') ? 'ogg' : 'm4a';
+  } catch {
+    formatCache = 'ogg'; // kein DOM (Tests) — egal, es wird ohnehin nichts geladen
+  }
+  return formatCache;
+}
+
 // Erste User-Geste entsperrt den Context (ui/main.js bindet das einmalig).
 export function entsperreAudio() {
   if (ctx || typeof AudioContext === 'undefined') return;
@@ -81,7 +95,7 @@ export async function spieleRegion(region, welkStufe) {
   }
 
   const puffer = await Promise.all(
-    [1, 2, 3, 4].map((k) => ladePuffer(`assets/audio/mus.r${region}.stem${k}.ogg`))
+    [1, 2, 3, 4].map((k) => ladePuffer(`assets/audio/mus.r${region}.stem${k}.${audioFormat()}`))
   );
   if (region !== aktiveRegion) return; // Region hat inzwischen gewechselt
   const start = ctx.currentTime + 0.05;
@@ -123,7 +137,7 @@ export function troestenRueckkehr() {
 // One-Shot-SFX aus den 08-§4.10-Slots (sfx.wurf, sfx.tischsturz, …).
 export async function sfx(name) {
   if (!ctx) return;
-  if (!sfxCache.has(name)) sfxCache.set(name, await ladePuffer(`assets/audio/sfx.${name}.ogg`));
+  if (!sfxCache.has(name)) sfxCache.set(name, await ladePuffer(`assets/audio/sfx.${name}.${audioFormat()}`));
   const buf = sfxCache.get(name);
   if (!buf) return;
   const quelle = ctx.createBufferSource();

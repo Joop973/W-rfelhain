@@ -93,6 +93,13 @@
       background: var(--pergament); border: 1px solid var(--tinte); color: var(--tinte);
     }
     button:disabled { opacity: 0.45; cursor: default; }
+    /* Mobil (E2): kein Doppeltipp-Zoom/300-ms-Delay auf Bedienelementen,
+       kein grauer Tap-Blitz (iOS/Android), keine Textauswahl beim Tippen. */
+    button, .ph--wuerfel, .ph--knoten {
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-user-select: none; user-select: none;
+    }
   </style>
 </head>
 <body>
