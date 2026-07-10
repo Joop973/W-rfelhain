@@ -216,13 +216,15 @@ Damit man schnell entscheidet *welcher Würfel was macht* und *was gut zusammens
 2. **Was synergiert?** → die entscheidenden Kombi-Signale sichtbar machen (s. §8.2). Wichtigste Synergie: **Gleichklang** (gleiche Zahlen ×1,75). Dazu Multiplikator-/Echo-Seiten, Status-Aufbau (Morsch macht den Gegner verwundbar, Brand/Fäule stapeln) und die L→R-Reihenfolge.
 3. **Was kommt dabei raus?** → **Live-Vorschau** der aktuell gelegten Reihe (projizierter Schaden/Block inkl. Gleichklang- und Morsch-Faktor). Das ist die stärkste Entscheidungshilfe.
 
-### 8.2 Drei Anzeige-Hilfen (umgesetzt im Mockup)
+### 8.2 Anzeige-Prinzip: lesbare Info, aber **keine** Synergie-Hilfen `[ENTSCHIEDEN 2026-07-09]`
 
-- **Farb-Kopplung (Rolle + Identität):** jeder Würfel trägt eine feste Akzentfarbe — Kreatur-Nummer *und* Leisten-Kachel teilen sie. Die Farbe kodiert zugleich die **Rolle** (Schaden/Rinde/Status/Pflege…), die Nummer 1–5 die exakte Zuordnung. So sieht man „diese Kreatur = diese Kachel" *und* „ich habe 3 Schaden-, 1 Block-, 1 Status-Würfel" ohne Lesen.
-- **Gleichklang-Hervorhebung:** gleiche gewürfelte Zahlen leuchten **gekoppelt** — Kreatur oben *und* Kachel unten bekommen einen Gold-Rahmen + „Gleichklang"-Band + `≙ N`-Tag. Die Synergie springt ins Auge, bevor man rechnet.
-- **Live-Reihen-Vorschau:** ein Ergebnis-Chip am Reihen-Pfeil zeigt fortlaufend, was die gelegten Würfel ergeben (`≈ 21 Schaden · Gleichklang ×1,75 · Morsch +20 %`) — Placieren wird zur sichtbaren Rechnung, nicht zum Kopfrechnen.
+Erprobt und **bewusst verworfen** wurden Farb-Kopplung (Rollen-/Identitäts-Farbe je Würfel), automatische Gleichklang-Hervorhebung (Gold-Rahmen bei gleichen Zahlen) und eine Live-Reihen-Vorschau des Ergebnisses. Entscheid: **das Erkennen der besten Synergien ist Spielerkönnen, nicht UI-Aufgabe.** Das Interface zeigt nur die **neutrale, nötige** Information:
 
-*Erweiterbar:* dieselbe Mechanik trägt weitere Synergien (Echo-Paare, Vollmond-Bereitschaft, Kraft-/Glanz-Aufbau) als eigene farbige Marker/Bänder, wenn sie im Spiel aktiv sind. Prinzip bleibt: **das lauteste Signal gehört der stärksten gerade möglichen Synergie.**
+- **Wurf-Leiste:** Typ-Symbol + Name + gewürfelte Zahl (groß) + Seiten-Effekt + Zustand (gesperrt) — einheitlich, ohne Farbkodierung.
+- **Kreatur oben:** Gemüt + Verzauberungs-Badge; **Hover/Antippen** zeigt alle Seiten & Gravuren.
+- **Verknüpfung Kreatur↔Kachel** allein über die **Nummer 1–5** (kein Farbcode).
+
+Gleiche Zahlen (Gleichklang), Multiplikator-/Echo-Seiten, Status-Aufbau und die L→R-Reihenfolge muss der Spieler **selbst** entdecken und abwägen. Das UI macht die Info dafür schnell lesbar (große Zahlen, klare Effekte), gibt aber keine Wertung ab. Die Detailtiefe (alle Seiten) bleibt auf Abruf per Hover — das ist Nachschlagen, keine Empfehlung.
 
 ---
 
