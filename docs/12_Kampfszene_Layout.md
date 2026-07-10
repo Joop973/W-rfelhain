@@ -208,7 +208,21 @@ Das ist die StS-Logik (Bühne = Bild, Hand = lesbare Karten), auf Würfelhain ü
 | B · Zahl-auf-Kreatur | Jede Kreatur trägt ihre Wurf-Zahl als großes Badge; keine untere Leiste. | Ein Ort je Würfel, aber die Zahlen/Effekte überladen die Bühne und sind bei Kreatur-Größe schwer lesbar → schlechter fürs „alles sehen". |
 | C · Fokus-Karte | Armee zeigt nur Gemüt+Verzauberung; Antippen öffnet eine große Fokus-Karte mit Zahl + allen Seiten. | Schönste Bühne, Detail auf Abruf — aber man sieht **nicht alle 5 Würfe gleichzeitig** (Durchtippen nötig) → schlechter fürs Placieren-Planen. |
 
-**Verstärkung der Kopplung `[Vorschlag]`:** zusätzlich zur Nummer je Würfel eine **feste Akzentfarbe** geben (Kreatur-Rahmen und Leisten-Kachel teilen die Farbe) — dann ist „diese Kreatur = diese Kachel" ohne Lesen erfassbar.
+### 8.1 Was der Spieler in Sekunden erfassen muss `[ENTSCHIEDEN 2026-07-09]`
+
+Damit man schnell entscheidet *welcher Würfel was macht* und *was gut zusammenspielt*, muss die Anzeige drei Fragen sofort beantworten:
+
+1. **Was macht jeder Würfel jetzt?** → Wurf-Leiste: Typ-Symbol + Farbe (Rolle) + große gewürfelte Zahl + Seiten-Effekt + Zustand (gesperrt). Kreatur oben trägt Gemüt + Verzauberung, Hover die Seiten.
+2. **Was synergiert?** → die entscheidenden Kombi-Signale sichtbar machen (s. §8.2). Wichtigste Synergie: **Gleichklang** (gleiche Zahlen ×1,75). Dazu Multiplikator-/Echo-Seiten, Status-Aufbau (Morsch macht den Gegner verwundbar, Brand/Fäule stapeln) und die L→R-Reihenfolge.
+3. **Was kommt dabei raus?** → **Live-Vorschau** der aktuell gelegten Reihe (projizierter Schaden/Block inkl. Gleichklang- und Morsch-Faktor). Das ist die stärkste Entscheidungshilfe.
+
+### 8.2 Drei Anzeige-Hilfen (umgesetzt im Mockup)
+
+- **Farb-Kopplung (Rolle + Identität):** jeder Würfel trägt eine feste Akzentfarbe — Kreatur-Nummer *und* Leisten-Kachel teilen sie. Die Farbe kodiert zugleich die **Rolle** (Schaden/Rinde/Status/Pflege…), die Nummer 1–5 die exakte Zuordnung. So sieht man „diese Kreatur = diese Kachel" *und* „ich habe 3 Schaden-, 1 Block-, 1 Status-Würfel" ohne Lesen.
+- **Gleichklang-Hervorhebung:** gleiche gewürfelte Zahlen leuchten **gekoppelt** — Kreatur oben *und* Kachel unten bekommen einen Gold-Rahmen + „Gleichklang"-Band + `≙ N`-Tag. Die Synergie springt ins Auge, bevor man rechnet.
+- **Live-Reihen-Vorschau:** ein Ergebnis-Chip am Reihen-Pfeil zeigt fortlaufend, was die gelegten Würfel ergeben (`≈ 21 Schaden · Gleichklang ×1,75 · Morsch +20 %`) — Placieren wird zur sichtbaren Rechnung, nicht zum Kopfrechnen.
+
+*Erweiterbar:* dieselbe Mechanik trägt weitere Synergien (Echo-Paare, Vollmond-Bereitschaft, Kraft-/Glanz-Aufbau) als eigene farbige Marker/Bänder, wenn sie im Spiel aktiv sind. Prinzip bleibt: **das lauteste Signal gehört der stärksten gerade möglichen Synergie.**
 
 ---
 
