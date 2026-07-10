@@ -180,7 +180,37 @@ Der Umbau ist rein `ui/`-seitig (09 §1: Präsentation liest nur) — die Spiell
 
 ---
 
-## 8. Würfel-Animation `[PROVISORISCH — Konzept]`
+## 8. Würfel-Darstellung: Split-View (Armee + Wurf-Leiste) `[ENTSCHIEDEN 2026-07-09]`
+
+Das Kern-Sichtbarkeitsproblem: ein Würfel trägt viel Information gleichzeitig (Typ, Gemüt, Verzauberung, alle 6 Seiten, die *aktuell* gewürfelte Seite, deren Effekt, gesperrte Seiten). Alles auf ein 48-px-Kreatur-Sprite zu quetschen ist unleserlich. Die Lösung **teilt die Information über zwei Orte** — Persönlichkeit oben, harte Spielinfo unten:
+
+**Oben — die Armee (Charakter-Ebene).** Die 5 Würfel-Kreaturen stehen in Formation (mit Tiefe) vor dem Hüter und zeigen nur:
+- **Gemüt** (Ausdruck: ruhig/froh/ängstlich — die Persönlichkeit),
+- **Verzauberung** als kleines Badge (welche Gravur/Blaupause der Würfel trägt),
+- eine **Nummer 1–5** (Verknüpfung zur Wurf-Leiste),
+- **Hover/Antippen → Detailkarte:** alle Seiten, Gravuren, Gemüt (die Tiefe auf Abruf).
+
+**Unten — die Wurf-Leiste (Spiel-Ebene).** Eine klar lesbare Kachel je Würfel, in derselben Reihenfolge:
+- **Typ-Symbol** (welcher Würfel — z. B. ⚔ Schaden, 🛡 Rinde),
+- die **gewürfelte Zahl** groß,
+- der **Effekt dieser Seite** (z. B. „Schärfe +2", „Brand 3", „Block 4", „gesperrt"),
+- dieselbe **Nummer 1–5** wie die Kreatur.
+
+Das ist die StS-Logik (Bühne = Bild, Hand = lesbare Karten), auf Würfelhain übertragen. Man plant die Placierung an der ruhigen unteren Leiste (große Zahlen, klare Effekte), während die Bühne oben schön und lebendig bleibt.
+
+**Erwogene Alternativen (und warum Split-View gewinnt):**
+
+| Option | Idee | Bewertung |
+|---|---|---|
+| **A · Split-View** *(gewählt)* | Kreatur oben = Gemüt + Verzauberung + Hover-Detail; Zahl + Seiten-Effekt unten in der Leiste. | **Beste Sichtbarkeit** (alle 5 Würfe auf einen Blick, große Zahlen) *und* schöne Bühne. Preis: Info je Würfel an zwei Orten — die 1–5-Kopplung muss einmal verstanden werden. |
+| B · Zahl-auf-Kreatur | Jede Kreatur trägt ihre Wurf-Zahl als großes Badge; keine untere Leiste. | Ein Ort je Würfel, aber die Zahlen/Effekte überladen die Bühne und sind bei Kreatur-Größe schwer lesbar → schlechter fürs „alles sehen". |
+| C · Fokus-Karte | Armee zeigt nur Gemüt+Verzauberung; Antippen öffnet eine große Fokus-Karte mit Zahl + allen Seiten. | Schönste Bühne, Detail auf Abruf — aber man sieht **nicht alle 5 Würfe gleichzeitig** (Durchtippen nötig) → schlechter fürs Placieren-Planen. |
+
+**Verstärkung der Kopplung `[Vorschlag]`:** zusätzlich zur Nummer je Würfel eine **feste Akzentfarbe** geben (Kreatur-Rahmen und Leisten-Kachel teilen die Farbe) — dann ist „diese Kreatur = diese Kachel" ohne Lesen erfassbar.
+
+---
+
+## 9. Würfel-Animation `[PROVISORISCH — Konzept]`
 
 Die Würfel sind **Kreaturen und Spielsteine zugleich** — die Animation muss beides bedienen: den physischen Wurf (Spielstein) und die Persönlichkeit (Kreatur). Leitidee: **der Wurf ist die Signatur-Bewegung.** Weil es Würfel sind, wird gerollt, nicht gewischt (kein StS-Karten-Gleiten).
 
@@ -199,4 +229,4 @@ Die Würfel sind **Kreaturen und Spielsteine zugleich** — die Animation muss b
 
 ---
 
-*Begleitend: `docs/12_Kampfszene_Mockup.html` (interaktives Mockup) setzt die echten, freigestellten Sprites in die StS-Arena — mit lebendigen Würfel-Idles (bob/hop/tremble je Gemüt) als Animations-Vorschau. Hochformat bleibt als Alternative darunter.*
+*Begleitend: `docs/12_Kampfszene_Mockup.html` (interaktives Mockup) setzt die echten, freigestellten Sprites in die StS-Arena — Würfel-Armee oben (Gemüt + Verzauberung, Hover-Detailkarte), Wurf-Leiste unten (Zahl + Seiten-Effekt), lebendige Idles je Gemüt. Hochformat bleibt als Alternative darunter.*
