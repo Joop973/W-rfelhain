@@ -5,7 +5,7 @@ import { DE } from '../i18n/de.js';
 import { EVENTS, HUETER_BASIS_HP, KLASSEN, REGION_HPMAX_BONUS } from '../data.js';
 import { starteRun } from '../kampf.js';
 import { zieheEvent, waehleEventOption, eventOptionMoeglich, SLICE_EVENTS } from '../knoten.js';
-import { migriere } from '../save.js';
+import { migriere, SAVE_VERSION } from '../save.js';
 import {
   mentorBeiRegionEintritt,
   mentorBeiTischsturz,
@@ -133,7 +133,7 @@ test('Save v5 → v6: Narrativ-Felder + hpMax-Rekonstruktion (D8-Bonus je Tor)',
     runState: { klasse: 'eichwart', region: 3, setzlinge: [], troestenZahl: 0 },
   };
   const v6 = migriere(structuredClone(v5));
-  assert.equal(v6.saveVersion, 6);
+  assert.equal(v6.saveVersion, SAVE_VERSION); // Kette läuft immer bis zur aktuellen Version
   assert.deepEqual(v6.runState.hinweise, []);
   assert.equal(v6.runState.wendungGesehen, false);
   assert.equal(
@@ -143,4 +143,14 @@ test('Save v5 → v6: Narrativ-Felder + hpMax-Rekonstruktion (D8-Bonus je Tor)',
   // Region ≥ 6: die Wendung gilt als gesehen (kein Replay auf Bestands-Saves).
   const spaet = migriere({ saveVersion: 5, runState: { klasse: 'eichwart', region: 6 } });
   assert.equal(spaet.runState.wendungGesehen, true);
+});
+
+test('Save v6 → v7: kampfKnoten ergänzt (kein laufender Kampf auf Bestands-Saves)', () => {
+  const v7 = migriere({ saveVersion: 6, runState: { klasse: 'eichwart', region: 2 } });
+  assert.equal(v7.saveVersion, SAVE_VERSION);
+  assert.equal(v7.runState.kampfKnoten, null);
+  // Tutorial-Texte (geführter erster Kampf) sind übersetzt.
+  for (const s of ['wurf', 'legen', 'aufloesen', 'uebermut', 'sieg']) {
+    assert.ok(`tutorial.${s}` in DE, `tutorial.${s} fehlt in i18n/de.js`);
+  }
 });

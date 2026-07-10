@@ -6,7 +6,7 @@
 
 import { erstelleStartArsenal, HUETER_BASIS_HP, KLASSEN, REGION_HPMAX_BONUS } from './data.js';
 
-export const SAVE_VERSION = 6; // [GESPERRT] Pflichtfeld, monoton steigend
+export const SAVE_VERSION = 7; // [GESPERRT] Pflichtfeld, monoton steigend
 // v2 (2026-07-04): + karte, positionKnotenId, hp, belohnungenOhneBlaupause,
 // entfernteWuerfel, troestenZahl (Etappe A3–A6, Karten-Run).
 // v3 (2026-07-06): + pflegeZahl — Gemüt-Pflege-Zähler inkl. Ermutigung,
@@ -16,6 +16,10 @@ export const SAVE_VERSION = 6; // [GESPERRT] Pflichtfeld, monoton steigend
 // v5 (2026-07-06): + setzlinge/knospeGenutzt — Heimat-Hain-Boni im Run (C5).
 // v6 (2026-07-07): + hinweise/wendungGesehen (Narrativ D4) und hpMax — seit D8
 // wächst hpMax je Regionstor (+8) und muss mitgespeichert werden.
+// v7 (2026-07-09): + kampfKnoten { knotenId, seed } — beim Betreten eines
+// Kampf-Knotens gesetzt (Stand VOR dem Kampf + fixierter RNG-Seed). Reload
+// mid-Kampf startet DENSELBEN Kampf von vorn: kein Fortschrittsverlust bei
+// Tab-Rauswurf, kein Auswürfeln per Neuladen (Anti-Save-Scumming).
 export const SAVE_KEY = 'wuerfelhain_save'; // fester Key, Migration statt Save-Verlust (09 §3.3)
 
 // --- Neuen Run anlegen (Struktur 09 §3.1) -----------------------------------
@@ -48,6 +52,7 @@ export function erstelleNeuenSave(klasseId = 'eichwart', jetzt = () => new Date(
       pflegeZahl: 0,
       hinweise: [],
       wendungGesehen: false,
+      kampfKnoten: null, // { knotenId, seed } — laufender Kampf (v7)
       aktiveFluechte: [],
       sauberSiegStreak: 0,
     },
@@ -161,6 +166,15 @@ export const MIGRATIONEN = {
           (KLASSEN[save.runState.klasse]?.hpMod ?? 0) +
           ((save.runState.setzlinge ?? []).includes('tiefwurzel') ? 5 : 0) +
           REGION_HPMAX_BONUS * ((save.runState.region ?? 1) - 1),
+    },
+  }),
+  // v6 → v7: kampfKnoten ergänzen (Bestands-Saves haben keinen laufenden Kampf).
+  6: (save) => ({
+    ...save,
+    saveVersion: 7,
+    runState: {
+      ...save.runState,
+      kampfKnoten: save.runState.kampfKnoten ?? null,
     },
   }),
 };

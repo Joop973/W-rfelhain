@@ -62,7 +62,7 @@ import {
 } from '../narrativ.js';
 import * as audio from './audio.js';
 
-const rng = new RNG((Date.now() >>> 0) || 1);
+let rng = new RNG((Date.now() >>> 0) || 1);
 const KNOTEN_LABEL = {
   kampf: '⚔ Kampf', elite: '☠ Elite', boss: '👑 Boss', markt: '🧺 Markt',
   schmiede: '🔨 Schmiede', event: '❖ Ereignis', lagerfeuer: '🔥 Lagerfeuer',
@@ -82,6 +82,20 @@ let lagerfeuerWahl = null; // 'troesten' | 'vollenden'
 let knotenKontext = null; // Angebot/Event des aktiven Knotens
 let klassenWahl = false; // Klassen-Auswahl vor neuem Run (C2/C3)
 let reifegradWahl = 0; // gewählte Ascension-Stufe für den nächsten Run (C4)
+let tutorial = null; // geführter erster Kampf (E: einmal je Profil, meta.tutorialGesehen)
+
+// Tutorial-Zeile über den Mentor-Kanal zeigen — jede höchstens einmal.
+function tutorialZeile(schritt) {
+  if (!tutorial || tutorial.gezeigt.has(schritt)) return;
+  tutorial.gezeigt.add(schritt);
+  mentorZeile = `tutorial.${schritt}`;
+}
+
+function beendeTutorial() {
+  if (!tutorial) return;
+  tutorial = null;
+  meta.tutorialGesehen = true; // persistiert über metaState (normalisiereMeta erhält das Feld)
+}
 
 const wurzel = document.getElementById('spiel');
 const hain = document.getElementById('hain');
@@ -127,6 +141,7 @@ function speichereZwischenKnoten() {
       hpMax: run.hpMax,
       hinweise: run.hinweise ?? [],
       wendungGesehen: run.wendungGesehen ?? false,
+      kampfKnoten: run.kampfKnoten ?? null,
     });
     save.metaState = meta; // Meta überlebt Run-Wechsel (C1)
     save.einstellungen.sprache = aktiveSprache(); // D7
@@ -180,8 +195,10 @@ function ladeGespeichertenRun() {
       maxRegion: 6,
       hinweise: rs.hinweise ?? [],
       wendungGesehen: rs.wendungGesehen ?? false,
+      kampfKnoten: rs.kampfKnoten ?? null,
       verloren: false,
-      abgeschlossen: findeKnotenTyp(rs) === 'boss',
+      // Boss-Position heißt nur DANN "Run fertig", wenn kein Kampf mehr läuft (v7).
+      abgeschlossen: findeKnotenTyp(rs) === 'boss' && !rs.kampfKnoten,
     };
     return !run.abgeschlossen;
   } catch {
@@ -210,6 +227,8 @@ function neuerRun(klasseId = 'eichwart', reifegrad = 0) {
 }
 
 function zurKarte() {
+  run.kampfKnoten = null; // Kampf beendet — Resume-Anker löschen (v7)
+  beendeTutorial();
   if (kampf?.regionGeschafft) {
     letztesEreignis = `Der Wächter fällt — du ziehst weiter. Region ${kampf.regionGeschafft} liegt vor dir.`;
     // Regions-Eintritt: Mentor-Zeile der neuen Region — bzw. an der Schwelle
@@ -231,9 +250,17 @@ function klickKnoten(knotenId) {
   mentorZeile = null; // die Stimme verstummt, sobald der Weg gewählt ist
   if (['kampf', 'elite', 'boss'].includes(knoten.typ)) {
     modus = 'kampf';
+    // Kampf-Seed fixieren + Stand VOR dem Kampf sichern (v7): Reload mid-Kampf
+    // startet DENSELBEN Kampf von vorn — kein Verlust, kein Auswürfeln.
+    const seed = (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) >>> 0 || 1;
+    run.kampfKnoten = { knotenId: knoten.id, seed };
+    speichereZwischenKnoten();
+    rng = new RNG(seed);
     kampf = starteKampf(run, rng, knoten.typ);
     beginneZug(run, kampf, rng);
     letztesEreignis = `${KNOTEN_LABEL[knoten.typ]} — Reihe ${knoten.reihe}.`;
+    if (!meta.tutorialGesehen && !tutorial) tutorial = { gezeigt: new Set() };
+    tutorialZeile('wurf');
   } else if (knoten.typ === 'schmiede') {
     modus = 'schmiede';
     knotenKontext = erstelleSchmiedeAngebot();
@@ -258,7 +285,10 @@ function klickKnoten(knotenId) {
 function klickWuerfel(id) {
   if (kampf.phase !== 'zug') return;
   if (kampf.reihe.includes(id)) nimmZurueck(run, kampf, id);
-  else platziere(run, kampf, id);
+  else {
+    platziere(run, kampf, id);
+    tutorialZeile('legen');
+  }
   render();
 }
 
@@ -268,6 +298,7 @@ function klickReroll() {
     ? 'TISCHSTURZ! Die Würfel stürzen vom Tisch — die ganze Hand erschrickt.'
     : 'Die Hand wird neu geworfen.';
   if (tischsturz) mentorZeile = mentorBeiTischsturz(); // die Stimme wiegelt ab (D4)
+  else tutorialZeile('uebermut');
   audio.sfx(tischsturz ? 'tischsturz' : 'reroll');
   render();
 }
@@ -293,6 +324,9 @@ function klickAufloesen() {
   if (kampf.phase === 'sieg') {
     letztesEreignis += kampf.sauberSieg ? ' Sauberer Sieg (+1 Gemüt auf Gespielte).' : '';
     if (kampf.kristallisiert > 0) letztesEreignis += ` ${kampf.kristallisiert} Übermut kristallisiert zu Schreck.`;
+    tutorialZeile('sieg');
+  } else {
+    tutorialZeile('aufloesen'); // Gegnerzug steht bevor — Blick auf die Absicht lenken
   }
   render();
 }
@@ -463,7 +497,8 @@ function statuszeile() {
       <span>Region ${run.region ?? 1}/${run.maxRegion ?? 6}</span>
       <span>❤ ${run.hp}/${run.hpMax}</span>
       <span>🪙 ${run.waehrungen.muenzen} · 🌰 ${run.waehrungen.eicheln} · 💧 ${run.waehrungen.tau}</span>
-      <span>Schreck Σ ${arsenalSchreckSumme(run)}</span>
+      <span title="End-Schreck — entscheidet mit über das Ende (≤ niedrig hilft)">Schreck Σ ${arsenalSchreckSumme(run)}</span>
+      <span title="Gezielte Trösten-Ereignisse im Run — zählen für das Ende">🕊 ${run.troestenZahl ?? 0}</span>
       ${segen ? `<span class="segen-leiste">${segen}</span>` : ''}
       <button class="sprache" data-aktion="sprache" title="Sprache wechseln / switch language">${aktiveSprache().toUpperCase()}</button>
     </section>`;
@@ -749,6 +784,7 @@ function render() {
     const ende = run.abgeschlossen ? bestimmeEnde(run) : null;
     const titel = ende ? uebersetze(ende.titelKey) : 'Der Hüter fällt';
     if (!run.jahresringeVergebenFertig) {
+      beendeTutorial(); // auch bei Niederlage: der geführte Kampf war gesehen
       run.jahresringeVergeben = verdieneJahresringe(meta, { sieg: run.abgeschlossen, kaempfe: run.kampfNummer, reifegrad: run.reifegrad ?? 0 });
       run.jahresringeVergebenFertig = true;
       if (ende) {
@@ -859,10 +895,21 @@ function verdrahte() {
 // --- Start: gespeicherten Run fortsetzen oder neu beginnen ---------------------------
 
 if (ladeGespeichertenRun()) {
-  // Falls der Save an der Schwelle zu Region 6 liegt: die Wendung zuerst (D4).
-  modus = wendungSteht(run) ? 'wendung' : 'karte';
-  letztesEreignis = 'Willkommen zurück im Hain.';
-  mentorZeile = mentorBeiRegionEintritt(run.region);
+  if (run.kampfKnoten && run.positionKnotenId === run.kampfKnoten.knotenId) {
+    // Unterbrochener Kampf (v7): DENSELBEN Kampf mit demselben Seed von vorn
+    // starten — der Save trägt den Stand von VOR dem Kampf.
+    const knoten = findeKnoten(run, run.kampfKnoten.knotenId);
+    rng = new RNG(run.kampfKnoten.seed);
+    modus = 'kampf';
+    kampf = starteKampf(run, rng, knoten.typ);
+    beginneZug(run, kampf, rng);
+    letztesEreignis = 'Der Kampf war unterbrochen — er beginnt von Neuem.';
+  } else {
+    // Falls der Save an der Schwelle zu Region 6 liegt: die Wendung zuerst (D4).
+    modus = wendungSteht(run) ? 'wendung' : 'karte';
+    letztesEreignis = 'Willkommen zurück im Hain.';
+    mentorZeile = mentorBeiRegionEintritt(run.region);
+  }
   render();
 } else {
   neuerRun();

@@ -158,6 +158,15 @@ export const DE = {
   'mentor.region.5': '„Still hier, nicht wahr? Hör nicht auf die Stille. Hör auf mich. Wir sind fast da, Kind — noch ein Tor, dann zeige ich dir die Quelle von allem. Treib sie. Ein letztes Mal. Für den Hain."',
   'mentor.tischsturz': '„Schsch. Nicht schlimm. Sie erschrecken schnell, das liegt in ihrer Natur — nicht in deiner Hand. Wirf noch einmal. Wer zögert, hat schon verloren."',
 
+  // Tutorial — geführter erster Kampf (E-Verbesserung). Der Mentor erklärt in
+  // seiner Art: gütig, drängend, Übermut absichtlich verharmlosend (01 §4.2).
+  // [ENTWURF — du redigierst]
+  'tutorial.wurf': '„Da — deine fünf Gefährten, frisch geworfen. Jeder zeigt eine Seite. Tippe an, wen du brauchst; drei Atem hast du je Zug, mehr braucht kein Hüter."',
+  'tutorial.legen': '„Gut. Sie stehen jetzt in der Reihe — und die Reihe zählt von links nach rechts, merk dir das. Wenn du fertig bist: löse auf, und der Hain tut den Rest."',
+  'tutorial.aufloesen': '„Siehst du das Zeichen über seinem Kopf? So kündigt er an, was er vorhat. Ein kluger Hüter rechnet damit — blocke, oder sei schneller fertig als er."',
+  'tutorial.uebermut': '„Neu geworfen? Recht so. Das bisschen Übermut — ach. Sie halten mehr aus, als sie zeigen. Nur wenn der Zeiger ganz rechts steht… nun. So weit kommst du sicher nie."',
+  'tutorial.sieg': '„Siehst du? Schnell und entschlossen — so gewinnt man. Merk dir dieses Gefühl. Der Hain hat keine Zeit für Zaudernde. Komm weiter, Kind."',
+
   // Zweifel-Hinweise (07 §5.3) — [ENTWURF D4 — du redigierst]. Andeuten, nie aussprechen.
   'hinweis.zweifel_1': 'Einen Atemzug lang, während die Stimme schwieg, hat der Hain geklungen wie ein Ort, der sich vor etwas duckt. Nicht vor der Dürre. Vor etwas, das spricht.',
   'hinweis.zweifel_2': 'Du bettest die Reste zur Ruhe. Werkzeug eines Hüters, Gaben eines Hüters — gehortet, bis zuletzt. Die Stimme sagt dazu nichts. Es ist das erste Mal, dass sie nichts sagt.',

@@ -170,6 +170,14 @@ export const EN = {
   'mentor.region.5': '"Quiet here, is it not? Do not listen to the silence. Listen to me. We are almost there, child — one more gate, and I will show you the source of it all. Push them. One last time. For the grove."',
   'mentor.tischsturz': '"Shhh. No harm done. They startle easily, it is in their nature — not in your hand. Throw again. Those who hesitate have already lost."',
 
+  // Tutorial — guided first fight. The mentor teaches in character:
+  // kind, urging, deliberately downplaying Recklessness (01 §4.2).
+  'tutorial.wurf': '"There — your five companions, freshly thrown. Each shows one face. Tap the ones you need; you have three Breath per turn, and no keeper needs more."',
+  'tutorial.legen': '"Good. They stand in the row now — and the row counts from left to right, remember that. When you are done: resolve, and the grove does the rest."',
+  'tutorial.aufloesen': '"Do you see the sign above its head? That is how it announces what it intends. A clever keeper counts on it — block, or be finished before it is."',
+  'tutorial.uebermut': '"Rethrown? Quite right. That little bit of recklessness — oh, please. They endure more than they show. Only when the needle sits all the way right… well. You will surely never get that far."',
+  'tutorial.sieg': '"You see? Fast and decisive — that is how one wins. Remember this feeling. The grove has no time for hesitaters. Come along, child."',
+
   // Doubt hints (07 §5.3) — imply, never state
   'hinweis.zweifel_1': 'For one breath, while the voice was silent, the grove sounded like a place ducking away from something. Not from the drought. From something that speaks.',
   'hinweis.zweifel_2': "You lay the remains to rest. A keeper's tools, a keeper's gifts — hoarded to the very last. The voice says nothing about it. It is the first time it says nothing.",
