@@ -48,12 +48,12 @@ Je Würfel drei Ausdrucks-Zustände (04 §4.1): `ruhig` (= die gelieferte Basis-
 
 ## Priorität 4 — UI-Icons (klein, 16×16)
 
-- **Seiten-Icons (16):** schaden · rinde · faeule · brand · morsch · welk · kraft · riss · echo · glanz · flaeche · beruhigung · praegung · labung · leer · wucht.
-- **Status-/Combo-Icons (15):** faeule · brand · morsch · welk · kraft · riss · glanz · wetzung · scharte · freilauf · klemme · combo.gleichklang · combo.echo · combo.vollmond · fx.kristallisation.marke.
+- ~~**Seiten-Icons (16)**~~ — **ERLEDIGT** (`assets/icons/seite.*`, 2026-07-09).
+- ~~**Status-/Combo-Icons**~~ — **ERLEDIGT**: die 8 eigenen (`status.wetzung/scharte/freilauf/klemme`, `combo.gleichklang/echo/vollmond`, `fx.kristallisation_marke`, 2026-07-09). Die restlichen 7 (faeule/brand/morsch/welk/kraft/riss/glanz) nutzen die `seite.*`-Icons wieder — keine eigenen nötig.
 - **Währung/Meta (6):** eicheln · tau · muenzen · jahresring · samen · stammbaum_knoten.
 - **Karte/Knoten (10):** kampf · elite · boss · haendler · schmiede · event · hain_segen · rast · pfad · aktuell.
 
-*(Prompts in Artefakt 11 §2–§5. Viele Icons überschneiden sich Seiten↔Status — bei Umsetzung deduplizieren.)*
+*(Prompts in Artefakt 11 §2–§5.)*
 
 ---
 
