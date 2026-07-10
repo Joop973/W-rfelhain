@@ -22,7 +22,10 @@
     "status": ["wetzung","scharte","freilauf","klemme"],
     "combo": ["gleichklang","echo","vollmond"],
     "fx": ["kristallisation_marke"],
-    "pfad": "assets/icons/<kategorie>.<key>.png"
+    "waehrung": ["eicheln","tau","muenzen"],
+    "meta": ["jahresring","samen","stammbaum_knoten"],
+    "knoten": ["kampf","elite","boss","haendler","schmiede","event","hain_segen","rast","pfad","aktuell"],
+    "pfad_schema": "assets/icons/<kategorie>.<key>.png"
   },
   "fehlend": {
     "_hinweis": "Rohbilder abgenommen (Motiv gut), aber NICHT sauber freistellbar — brauchen Neuexport mit echtem Alpha. Siehe docs/Sprite_Freistellung_Befund.md.",

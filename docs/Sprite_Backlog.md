@@ -50,10 +50,10 @@ Je Würfel drei Ausdrucks-Zustände (04 §4.1): `ruhig` (= die gelieferte Basis-
 
 - ~~**Seiten-Icons (16)**~~ — **ERLEDIGT** (`assets/icons/seite.*`, 2026-07-09).
 - ~~**Status-/Combo-Icons**~~ — **ERLEDIGT**: die 8 eigenen (`status.wetzung/scharte/freilauf/klemme`, `combo.gleichklang/echo/vollmond`, `fx.kristallisation_marke`, 2026-07-09). Die restlichen 7 (faeule/brand/morsch/welk/kraft/riss/glanz) nutzen die `seite.*`-Icons wieder — keine eigenen nötig.
-- **Währung/Meta (6):** eicheln · tau · muenzen · jahresring · samen · stammbaum_knoten.
-- **Karte/Knoten (10):** kampf · elite · boss · haendler · schmiede · event · hain_segen · rast · pfad · aktuell.
+- ~~**Währung/Meta (6)**~~ — **ERLEDIGT** (`assets/icons/waehrung.*`, `meta.*`, 2026-07-09).
+- ~~**Karte/Knoten (10)**~~ — **ERLEDIGT** (`assets/icons/knoten.*`, 2026-07-09). `knoten.aktuell` als ein Ring (Basis) — die 2-Frame-Puls-Animation ist ein späterer Nachzug.
 
-*(Prompts in Artefakt 11 §2–§5.)*
+**→ Alle UI-Icons (Priorität 4) sind fertig.** *(Prompts in Artefakt 11 §2–§5.)*
 
 ---
 
