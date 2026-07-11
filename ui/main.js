@@ -100,12 +100,31 @@ function beendeTutorial() {
 const wurzel = document.getElementById('spiel');
 const hain = document.getElementById('hain');
 
+// Sprite-Manifest (D6): vorhandene Assets; fehlt ein Key → Platzhalter-Box
+// (08 §4.0). Lädt asynchron — bis dahin rendert alles als Platzhalter.
+let sprites = null;
+fetch('assets/manifest.json')
+  .then((r) => (r.ok ? r.json() : null))
+  .then((m) => { if (m) { sprites = m; render(); } })
+  .catch(() => { /* kein Manifest — Platzhalter bleiben */ });
+
+function wuerfelSprite(typ) {
+  return sprites?.wuerfel?.[typ]?.png ?? null;
+}
+function gegnerSprite(vorlageId) {
+  return sprites?.gegner?.[vorlageId]?.png ?? null;
+}
+function seitenIcon(effektTyp) {
+  return sprites?.icons?.seite?.includes(effektTyp) ? `assets/icons/seite.${effektTyp}.png` : null;
+}
+
 // Welk-Entsättigung (D5, 08 §3.4 Variante C): Klasse welk-0…5 am Wurzel-
 // Container treibt den CSS-Filter; Audio dünnt deckungsgleich aus (08 §2.2).
 function wendeWelkStufeAn() {
   const stufe = run ? welkStufe(run) : 0;
   if (hain && !hain.classList.contains(`welk-${stufe}`)) {
-    hain.className = `welk-${stufe}`;
+    for (let i = 0; i <= 5; i += 1) hain.classList.remove(`welk-${i}`);
+    hain.classList.add(`welk-${stufe}`);
     audio.setzeWelkStufe(stufe);
   }
 }
@@ -594,35 +613,130 @@ function statusBadges(status) {
     .join(' ');
 }
 
+// --- Kampf-Arena (Artefakt 12: StS-Schema) --------------------------------------
+// Monster rechts (Absicht als Omen, HP, Status), Hüter + Würfel-Armee links
+// (Gemüt + Verzauberung; Nummer koppelt an die Wurf-Leiste), Reihe am Boden,
+// Wurf-Leiste unten (Typ · Wert · Seiten-Effekt), Aktionen rechts. Keine
+// Synergie-Hilfen — Kombis erkennt der Spieler selbst (§8.2).
+
+function absichtOmen(g) {
+  if (g.absicht.typ === 'angriff') {
+    const treffer = g.absicht.treffer > 1 ? ` ×${g.absicht.treffer}` : '';
+    return `⚔ <b>${g.absicht.wert}</b>${treffer}`;
+  }
+  if (g.absicht.typ === 'block') return '🛡';
+  return '☣'; // sieche: legt Status statt anzugreifen
+}
+
+function armeeEinheit(id, index) {
+  const w = run.arsenal.find((x) => x.id === id);
+  const s = schreck(w.gemuet);
+  const stimmung = s > 0 ? 'aengstlich' : w.gemuet > 0 ? 'froh' : 'ruhig';
+  const platziert = kampf.reihe.includes(id);
+  const sprite = wuerfelSprite(w.typ);
+  const graviert = w.stufen.filter((st) => st > 0).length;
+  const zauber = w.blaupause ? '◆' : graviert > 0 ? `✦${graviert > 1 ? graviert : ''}` : '';
+  const name = w.blaupause ? uebersetze(w.blaupause.nameKey) : uebersetze(w.nameKey);
+  return `
+    <button class="a-einheit a-pos-${index + 1} ph--wuerfel stimmung-${stimmung} ${platziert ? 'platziert' : ''}"
+            data-wuerfel="${id}" ${kampf.phase !== 'zug' ? 'disabled' : ''}
+            title="${name} · Gemüt ${w.gemuet}${s > 0 ? ` · ${gesperrteSeitenAnzahl(s)} Seiten gesperrt` : ''}">
+      <span class="nr">${index + 1}</span>
+      ${zauber ? `<span class="zauber" title="${w.blaupause ? 'Blaupause' : 'Gravur'}">${zauber}</span>` : ''}
+      ${sprite ? `<img src="${sprite}" alt="${name}">` : `<span class="ph w-platzhalter">${name}</span>`}
+      <span class="gemuet">${stimmung}${s > 0 ? ` 🔒${gesperrteSeitenAnzahl(s)}` : ''}</span>
+    </button>`;
+}
+
+function wurfKachel(id, index) {
+  const w = run.arsenal.find((x) => x.id === id);
+  const { wert, seitenIndex } = kampf.wuerfe[id];
+  const seite = w.seiten[seitenIndex];
+  const platziert = kampf.reihe.includes(id);
+  const name = w.blaupause ? uebersetze(w.blaupause.nameKey) : uebersetze(w.nameKey);
+  const hauptTyp = seite.effekt[0]?.typ ?? w.typ;
+  const ico = seitenIcon(hauptTyp);
+  const effekte = seite.effekt
+    .map((e) => `${STATUS_ICON[e.typ] ?? ''}${e.typ === 'schaden_mult' ? `×${e.wert}` : `${e.typ} ${e.wert}`}`)
+    .join(' · ') || 'leer';
+  return `
+    <button class="a-kachel ${platziert ? 'platziert' : ''}" data-wuerfel="${id}"
+            ${kampf.phase !== 'zug' ? 'disabled' : ''} title="${name}: ${effekte}">
+      <span class="kopf">
+        <span class="knr">${index + 1}</span>
+        ${ico ? `<img class="kico" src="${ico}" alt="">` : ''}
+        <span class="kname">${name}</span>
+        <span class="kwert">${wert}</span>
+      </span>
+      <span class="keff">${platziert ? `${kampf.reihe.indexOf(id) + 1}. gelegt · ` : ''}${effekte}</span>
+    </button>`;
+}
+
 function renderKampf() {
   const belohnungOffen = kampf.phase === 'sieg' && kampf.belohnung && !kampf.belohnung.erledigt;
   const g = kampf.gegner;
-  const absichtText = g.absicht.typ === 'angriff' ? `⚔ Angriff ${g.absicht.wert}` : '🛡 Block (halbiert Schaden)';
+  const mSprite = gegnerSprite(g.vorlageId);
+  const uebermut = Array.from({ length: KIPP_PUNKT }, (_, i) =>
+    `<i class="${i < kampf.uebermut ? 'an' : ''} ${i === KIPP_PUNKT - 1 ? 'kipp' : ''}"></i>`).join('');
+  const reihe = kampf.reihe.map((id) => `<span class="a-slot belegt">${kampf.wuerfe[id].wert}</span>`).join('');
+  const freieSlots = Math.max(0, kampf.atem) ;
   return `
-    <section class="ph ph--gegner">
-      <strong>${uebersetze(g.nameKey)}</strong>
-      <div class="balken"><div class="balken-fuellung" style="width:${(g.hp / g.hpMax) * 100}%"></div></div>
-      <span>${g.hp} / ${g.hpMax} HP · Absicht: ${absichtText}</span>
-      ${statusBadges(g.status) ? `<div class="badges">${statusBadges(g.status)}</div>` : ''}
-    </section>
-    <section class="status">
-      <span>❤ ${run.hp}/${run.hpMax}</span>
-      <span>Atem ${pips(3, kampf.atem, 'Atem')}</span>
-      <span>Rinde ${kampf.block}</span>
-      <span class="${kampf.uebermut >= KIPP_PUNKT ? 'warnung' : ''}">Übermut ${pips(KIPP_PUNKT, kampf.uebermut, 'Übermut')}</span>
-      <span>🪙 ${run.waehrungen.muenzen} · 🌰 ${run.waehrungen.eicheln}</span>
-      ${statusBadges(kampf.spielerStatus) ? `<span class="badges">${statusBadges(kampf.spielerStatus)}</span>` : ''}
-    </section>
-    <section class="hand">${kampf.hand.map((id) => wuerfelBox(id)).join('')}</section>
-    ${belohnungOffen ? belohnungsPanel() : ''}
-    <section class="aktionen">
-      ${kampf.phase === 'zug' ? `
-        <button data-aktion="reroll">Neu werfen ${kampf.rerollsDiesenZug === 0 ? '(gratis)' : '(+1 Übermut)'}</button>
-        <button data-aktion="aufloesen" ${kampf.reihe.length === 0 ? 'disabled' : ''}>Auflösen (${kampf.reihe.length})</button>
-      ` : ''}
-      ${kampf.phase === 'gegnerzug' ? '<button data-aktion="gegnerzug">Gegnerzug</button>' : ''}
-      ${kampf.phase === 'sieg' && !belohnungOffen ? '<button data-aktion="weiter">Weiter</button>' : ''}
-    </section>`;
+    <div class="arena">
+      <div class="a-kulisse"></div>
+      <div class="a-boden"></div>
+      <div class="a-horizont"></div>
+
+      <span class="a-drehhinweis">📱↻ Querformat empfohlen</span>
+      <div class="a-top">
+        <span class="portraet"></span>
+        <span>${uebersetze(`klasse.${run.klasse}.name`)}</span>
+        <div class="balken"><div class="balken-fuellung" style="width:${(run.hp / run.hpMax) * 100}%"></div></div>
+        <span>${run.hp}/${run.hpMax}</span>
+        <span class="a-uebermut" title="Übermut (Kipp-Punkt ${KIPP_PUNKT})">${uebermut}</span>
+        <span class="mitte">Region ${run.region ?? 1}/${run.maxRegion ?? 6} · Rinde ${kampf.block}</span>
+        <span>🪙${run.waehrungen.muenzen} 🌰${run.waehrungen.eicheln} 💧${run.waehrungen.tau}</span>
+        <span title="Segen">${(run.hainSegen ?? []).map(() => '🌿').join('') || ''}</span>
+        <span title="Ziehstapel · Ablage">▮${kampf.zieh?.ziehstapel?.length ?? 0}·▮${kampf.zieh?.ablage?.length ?? 0}</span>
+      </div>
+
+      <div class="a-monster ph--gegner">
+        <span class="a-absicht">${absichtOmen(g)}</span>
+        ${mSprite
+          ? `<img src="${mSprite}" alt="${uebersetze(g.nameKey)}">`
+          : `<span class="ph m-platzhalter">${uebersetze(g.nameKey)}</span>`}
+        <div class="a-schatten"></div>
+        <strong style="font:700 11px/1.6 monospace; text-shadow:0 1px 2px #000; color:#f2e4cc">${uebersetze(g.nameKey)}</strong>
+        <div class="a-hp"><i style="transform:scaleX(${g.hp / g.hpMax})"></i><b>${g.hp} / ${g.hpMax}</b></div>
+        ${statusBadges(g.status) ? `<div class="badges">${statusBadges(g.status)}</div>` : ''}
+      </div>
+
+      <div class="a-hueter"><div class="mantel"></div><small>Hüter</small></div>
+      ${kampf.hand.map((id, i) => armeeEinheit(id, i)).join('')}
+
+      <div class="a-reihe">
+        ${reihe}${freieSlots > 0 ? `<span class="a-slot">·</span>` : ''}
+        <span class="a-pfeil">⟶</span>
+      </div>
+      ${statusBadges(kampf.spielerStatus) ? `<div class="a-status-badges badges">${statusBadges(kampf.spielerStatus)}</div>` : ''}
+
+      <div class="a-wurf">
+        <div class="a-atem"><span class="a-orb">${kampf.atem}</span><span>Atem/3</span></div>
+        ${kampf.hand.map((id, i) => wurfKachel(id, i)).join('')}
+      </div>
+
+      <div class="a-akt">
+        ${kampf.phase === 'zug' ? `
+          <button data-aktion="reroll" class="warn">Neu werfen<br><small>${kampf.rerollsDiesenZug === 0 ? 'gratis' : '+1 Übermut'}</small></button>
+          <button data-aktion="aufloesen" ${kampf.reihe.length === 0 ? 'disabled' : ''}>Auflösen (${kampf.reihe.length})</button>
+        ` : ''}
+        ${kampf.phase === 'gegnerzug' ? '<button data-aktion="gegnerzug">Gegnerzug</button>' : ''}
+        ${kampf.phase === 'sieg' && !belohnungOffen ? '<button data-aktion="weiter">Weiter</button>' : ''}
+        ${kampf.phase === 'niederlage' ? '<button data-aktion="weiter">Weiter</button>' : ''}
+      </div>
+
+      ${belohnungOffen ? `<div class="a-belohnung">${belohnungsPanel()}</div>` : ''}
+      <div class="a-vignette"></div>
+    </div>`;
 }
 
 function renderSchmiede() {
@@ -777,6 +891,7 @@ function klickStammbaum(knotenId) {
 
 function render() {
   wendeWelkStufeAn(); // Entsättigung folgt run.welkGrad (D5)
+  hain?.classList.toggle('arena-modus', modus === 'kampf'); // Arena braucht Breite (Artefakt 12)
   const belohnungOffen = kampf?.phase === 'sieg' && kampf.belohnung && !kampf.belohnung.erledigt;
   if ((run.verloren || run.abgeschlossen) && !belohnungOffen && modus !== 'kampf') {
     // Enden-Klassifikation (01 §5, C6): nur bei Sieg — Niederlage hat kein Ende.
