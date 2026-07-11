@@ -19,6 +19,14 @@ export function aktiveSprache() {
   return aktiv;
 }
 
-export function uebersetze(key) {
-  return SPRACHEN[aktiv][key] ?? DE[key] ?? key;
+// params ersetzt {name}-Platzhalter im Text (E6: dynamische UI-Chrome-Texte,
+// z. B. 'kampf.trifft' = "Der Gegner trifft für {schaden}.").
+export function uebersetze(key, params = null) {
+  let text = SPRACHEN[aktiv][key] ?? DE[key] ?? key;
+  if (params) {
+    for (const [name, wert] of Object.entries(params)) {
+      text = text.replaceAll(`{${name}}`, String(wert));
+    }
+  }
+  return text;
 }

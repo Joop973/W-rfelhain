@@ -88,10 +88,11 @@ function wendeSiegBelohnungAn(run, kampf) {
     optionen.find((o) => o.typ === 'segen') ??
     optionen[0];
   if (option.typ === 'gravur') {
+    const frei = (w) => w.seiten.findIndex((s, i) => w.stufen[i] === 0 && !s.fluchId); // Fluch-Seiten nie gravieren
     const ziel = [...run.arsenal]
-      .filter((w) => w.typ === 'schaden' && w.stufen.some((s) => s === 0))
+      .filter((w) => w.typ === 'schaden' && frei(w) >= 0)
       .sort((a, b) => a.seiten.reduce((s, x) => s + x.wert, 0) - b.seiten.reduce((s, x) => s + x.wert, 0))[0];
-    if (ziel) wendeBelohnungAn(run, option, { wuerfel: ziel, seitenIndex: ziel.stufen.findIndex((s) => s === 0) });
+    if (ziel) wendeBelohnungAn(run, option, { wuerfel: ziel, seitenIndex: frei(ziel) });
   } else if (option.typ === 'blaupause') {
     const ziel = [...run.arsenal]
       .filter((w) => !w.blaupause)
@@ -108,7 +109,8 @@ function besucheSchmiede(run) {
   while (schutz < 20) {
     schutz += 1;
     const wuchtZiel = run.arsenal.find(
-      (w) => w.typ === 'schaden' && (w.stufen[0] === 0 || (w.seiten[0].gravurId === 'wucht' && w.stufen[0] < 3))
+      (w) => w.typ === 'schaden' && !w.seiten[0].fluchId // Fluch-Seite 0 (RG 9) blockt die Schmiede nicht
+        && (w.stufen[0] === 0 || (w.seiten[0].gravurId === 'wucht' && w.stufen[0] < 3))
     );
     const kauf = wuchtZiel ? kaufeGravur(run, run.arsenal.filter((w) => w.seiten[0]?.gravurId === 'wucht').length < 3 ? 'wucht' : 'schaerfe', wuchtZiel.id, 0) : { ok: false };
     if (!kauf.ok) break;
@@ -159,11 +161,21 @@ function simuliereVollRun(rng) {
       besucheMarkt(run, rng);
     } else if (knoten.typ === 'event') {
       const event = zieheEvent(rng, run.region);
-      const index =
-        POLITIK === 'gier'
-          ? event.optionen.findIndex((o) => o.effekt.muenzen)
-          : event.optionen.findIndex((o) => o.effekt.troesten || o.effekt.tau);
+      // Gier greift nach schnellem Gewinn (Münzen/Blaupausen-Fund — Flüche in
+      // Kauf); Standard pflegt und weicht Fluch-Optionen auf die folgenlose aus.
+      const gierIndex = event.optionen.findIndex((o) => o.effekt.muenzen || o.effekt.blaupauseChance || o.effekt.belohnung);
+      const pflegeIndex = event.optionen.findIndex((o) => o.effekt.troesten || o.effekt.tau);
+      const harmlosIndex = event.optionen.findIndex((o) => !o.effekt.fluch);
+      const index = POLITIK === 'gier' ? gierIndex : pflegeIndex >= 0 ? pflegeIndex : harmlosIndex;
       waehleEventOption(run, event, Math.max(0, index), rng);
+      // Fluch-Event-Funde (E6): offene Blaupause aufs schwächste freie Ziel.
+      for (const option of run.offeneBelohnungen ?? []) {
+        const ziel = run.arsenal
+          .filter((w) => !w.blaupause)
+          .sort((a, b) => a.seiten.reduce((s, x) => s + x.wert, 0) - b.seiten.reduce((s, x) => s + x.wert, 0))[0];
+        if (ziel) wendeBelohnungAn(run, option, { wuerfel: ziel });
+      }
+      run.offeneBelohnungen = [];
     } else if (knoten.typ === 'lagerfeuer') {
       const angst = [...run.arsenal].sort((a, b) => schreck(b.gemuet) - schreck(a.gemuet))[0];
       if (POLITIK === 'gier' || run.hp < run.hpMax * 0.7) rasteLagerfeuer(run, 'heilen');

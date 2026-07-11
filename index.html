@@ -77,7 +77,14 @@
       cursor: default; opacity: 0.55;
     }
     .ph--knoten.waehlbar { cursor: pointer; opacity: 1; border-style: solid; border-width: 2px; }
-    .ph--knoten.aktuell { background: var(--tau); opacity: 1; }
+    .ph--knoten.aktuell { background: var(--tau); opacity: 1; animation: knoten-puls 1.6s steps(1) infinite; }
+    /* Puls des aktuellen Knotens (08 §4.8, E6): steps(1) = harter 2-Frame-
+       Wechsel — 1:1 durch das spätere Puls-Sprite-Frame ersetzbar. */
+    @keyframes knoten-puls {
+      0%, 100% { box-shadow: 0 0 0 2px var(--tau); }
+      50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--tau) 55%, transparent); }
+    }
+    @media (prefers-reduced-motion: reduce) { .ph--knoten.aktuell { animation: none; } }
     .picker { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
     .ph--seite {
       min-width: 56px; min-height: 44px; cursor: pointer; font: inherit;

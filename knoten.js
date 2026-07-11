@@ -12,6 +12,7 @@ import {
   GRAVUR_WECHSEL_AUFPREIS_FAKTOR,
 } from './data.js';
 import { graviereSeite, wendeBlaupauseAn } from './belohnung.js';
+import { drueckeFluchAuf } from './fluch.js';
 import { troeste, schreck } from './push.js';
 import { gibSegen, segenEffekt, troestenBonus, zieheSegenOption } from './segen.js';
 import { reifegradMods } from './reifegrad.js';
@@ -24,9 +25,9 @@ export const ENTFERNEN_STARTPREIS = 25; // +15 je Anwendung (07 §3.3) [PROVISOR
 export const ENTFERNEN_AUFSCHLAG = 15;
 
 // Slice-Events: nur Vignetten, deren Effekte der aktuelle Code ausführen kann
-// (Münzen/Eicheln/Tau/Trösten/Gemüt/Würfel/Segen/Gravur/Selbstschaden/Hinweis).
-// Die Fluch-Events (Moderpfütze, Schrein, Trockene Quelle) folgen mit dem
-// Fluch-System (07 §5.4). Zweifel-Events R4/R5 seit D4 (07 §5.3).
+// (Münzen/Eicheln/Tau/Trösten/Gemüt/Würfel/Segen/Gravur/Selbstschaden/Hinweis/
+// Fluch/Blaupausen-Fund). Zweifel-Events R4/R5 seit D4 (07 §5.3); die drei
+// Fluch-Events seit E6 (Fluch-System, 07 §5.4).
 export const SLICE_EVENTS = [
   'ueberwucherter_brunnen',
   'veraengstigtes_kaetzchen',
@@ -34,7 +35,14 @@ export const SLICE_EVENTS = [
   'wetzstein_am_wegrand',
   'stumme_lichtung',
   'hohler_stumpf',
+  'moderpfuetze',
+  'schrein_der_raschen_gaben',
+  'trockene_quelle',
 ];
+
+// Moderpfütze: Chance, die Giftranke-Blaupause aus dem Brackwasser zu fischen
+// (07 §5.2 "Giftranke-Chance") [PROVISORISCH].
+export const BLAUPAUSE_FUND_CHANCE = 0.5;
 
 const BLAUPAUSEN_PREIS = { haeufig: 60, selten: 80, episch: 100 }; // Eicheln (07 §2.3) [PROVISORISCH]
 
@@ -51,6 +59,7 @@ export function erstelleSchmiedeAngebot() {
 // Preis/Zielstufe für eine Gravur auf einer konkreten Seite; null = Cap erreicht.
 // run (optional): für Segen-Rabatte — Krone des alten Hüters halbiert Stufe-1-Preise (07 §4.2 #15).
 export function schmiedePreis(wuerfel, gravurId, seitenIndex, run = null) {
+  if (wuerfel.seiten[seitenIndex]?.fluchId) return null; // Fluch weicht keiner Gravur (07 §5.4)
   const gravur = GRAVUREN[gravurId];
   const aktuelleStufe = wuerfel.stufen[seitenIndex];
   const gleicheGravur = aktuelleStufe > 0 && wuerfel.seiten[seitenIndex].gravurId === gravurId;
@@ -230,7 +239,7 @@ export function waehleEventOption(run, event, optionIndex, rng) {
     for (const w of ziele) {
       const kandidaten = w.seiten
         .map((s, i) => ({ s, i }))
-        .filter(({ i }) => w.stufen[i] === 0)
+        .filter(({ s, i }) => w.stufen[i] === 0 && !s.fluchId) // Fluch-Seiten schärfen sich nicht
         .sort((a, b) => a.s.wert - b.s.wert);
       if (kandidaten.length === 0) continue;
       const { s } = kandidaten[0];
@@ -240,9 +249,11 @@ export function waehleEventOption(run, event, optionIndex, rng) {
     ergebnis.push(`${ziele.length} Würfel geschärft`);
   }
   if (effekt.gravurGratis) {
-    const ziel = run.arsenal.find((w) => w.typ === 'schaden' && w.stufen.some((st) => st === 0));
+    // Fluch-Seiten (stufe 0, aber fluchId) sind nicht gravierbar — überspringen.
+    const gravierbar = (w, i) => w.stufen[i] === 0 && !w.seiten[i].fluchId;
+    const ziel = run.arsenal.find((w) => w.typ === 'schaden' && w.seiten.some((_, i) => gravierbar(w, i)));
     if (ziel) {
-      const seitenIndex = ziel.stufen.findIndex((st) => st === 0);
+      const seitenIndex = ziel.seiten.findIndex((_, i) => gravierbar(ziel, i));
       graviereSeite(ziel, effekt.gravurGratis, seitenIndex);
       ergebnis.push('eine Gravur, ohne Preis');
     }
@@ -250,6 +261,36 @@ export function waehleEventOption(run, event, optionIndex, rng) {
   if (effekt.hinweis) {
     // Zweifel-Hinweis (07 §5.3): run-weit merken — die Wendung färbt sich (D4).
     merkeHinweis(run, effekt.hinweis);
+  }
+  if (effekt.fluch) {
+    // Fluch-Aufdrückung (07 §5.4, E6): eine Fluch-Seite auf einen zufälligen
+    // Würfel — run-lang, nur über Würfel-entfernen wieder loszuwerden.
+    const getroffen = drueckeFluchAuf(run, effekt.fluch, rng);
+    if (getroffen) {
+      const label = { faeule_anfaelligkeit: 'Fäule-Fluch', fluch_seite: 'Fluch-Seite', scharte_fluch: 'Scharte-Fluch' };
+      ergebnis.push(`${label[effekt.fluch] ?? 'Fluch'} auf einen Würfel`);
+    }
+  }
+  if (effekt.blaupauseChance) {
+    // Moderpfütze: 50-%-Fund. Die Blaupause wird nicht auto-angewandt (sie
+    // überschreibt alle 6 Seiten!) — sie wandert als offene Belohnung mit,
+    // die UI/Sim wählt den Ziel-Würfel. Transient: nicht Teil des Saves
+    // (Save läuft nur zwischen Knoten, das Event wird bei Reload neu gespielt).
+    if (rng.naechsteZahl() < BLAUPAUSE_FUND_CHANCE) {
+      const id = effekt.blaupauseChance;
+      run.offeneBelohnungen = [...(run.offeneBelohnungen ?? []), { typ: 'blaupause', blaupauseId: id, nameKey: BLAUPAUSEN[id].nameKey }];
+      ergebnis.push('eine Blaupause treibt im Wasser — wähle einen Würfel');
+    } else {
+      ergebnis.push('nichts als Moder und Schlick');
+    }
+  }
+  if (effekt.belohnung === 'episch') {
+    // Schrein der raschen Gaben: der Gegenwert des Fluchs — eine epische
+    // Blaupause (Pool enthält Wildwuchs, quelle 'event_fluch', 04 §4).
+    const pool = SLICE_BLAUPAUSEN.filter((id) => BLAUPAUSEN[id].seltenheit === 'episch');
+    const id = pool[Math.floor(rng.naechsteZahl() * pool.length)];
+    run.offeneBelohnungen = [...(run.offeneBelohnungen ?? []), { typ: 'blaupause', blaupauseId: id, nameKey: BLAUPAUSEN[id].nameKey }];
+    ergebnis.push('eine epische Blaupause — wähle einen Würfel');
   }
   return ergebnis;
 }

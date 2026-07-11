@@ -21,6 +21,7 @@ import { generiereKarte } from './karte.js';
 import { TAU_PRO_REGION } from './knoten.js';
 import { segenEffekt, segenEffekte, segenHaken, troestenBonus } from './segen.js';
 import { reifegradMods } from './reifegrad.js';
+import { drueckeFluchAuf } from './fluch.js';
 
 // Gegner-Auswahl je Region: REGION_GEGNER (data.js, D1).
 
@@ -32,8 +33,8 @@ export function starteRun(klasseId = 'eichwart', rng, { reifegrad = 0, setzlinge
   let hpMax = HUETER_BASIS_HP + KLASSEN[klasseId].hpMod;
   if (setzlinge.includes('tiefwurzel')) hpMax += 5;
   const arsenal = erstelleStartArsenal(klasseId);
-  // Reifegrad-Start-Malus (03 §9 Stufe 2/9): Schreck auf einen zufälligen Würfel.
-  const { startSchreck } = reifegradMods(reifegrad);
+  // Reifegrad-Start-Malus (03 §9 Stufe 2): Schreck auf einen zufälligen Würfel.
+  const { startSchreck, startFluch } = reifegradMods(reifegrad);
   if (startSchreck > 0) {
     const ziel = arsenal[Math.floor(rng.naechsteZahl() * arsenal.length)];
     ziel.gemuet -= startSchreck;
@@ -43,7 +44,7 @@ export function starteRun(klasseId = 'eichwart', rng, { reifegrad = 0, setzlinge
     const ziel = arsenal[Math.floor(rng.naechsteZahl() * arsenal.length)];
     ziel.gemuet += 2;
   }
-  return {
+  const run = {
     klasse: klasseId,
     reifegrad,
     setzlinge: [...setzlinge],
@@ -68,6 +69,10 @@ export function starteRun(klasseId = 'eichwart', rng, { reifegrad = 0, setzlinge
     verloren: false,
     abgeschlossen: false, // Boss besiegt
   };
+  // Reifegrad 9 (03 §9): Start mit aufgedrücktem Fluch — die generische tote
+  // Fluch-Seite (07 §5.4), seit E6 echt statt der +2-Schreck-Näherung.
+  if (startFluch) drueckeFluchAuf(run, 'fluch_seite', rng);
+  return run;
 }
 
 // --- Karten-Navigation (07 §1) -------------------------------------------------
@@ -470,6 +475,29 @@ export function loeseZugAuf(run, kampf, rng) {
         });
         pendingGlanz = false;
         letzterSchadenEffWert = effWert;
+      } else if (effekt.typ === 'schaden_doppel') {
+        // Doppelschlag (04 §3.2): zwei volle Schaden-Seiten (beide Kraft/Passiv,
+        // beide Gleichklang-fähig) für EINE Atemzahlung. Riss prüft je Teil-Seite,
+        // Glanz verdoppelt nur die erste. Der Wurf zeigt die Teilwerte, nie den
+        // Höchstwert — Doppelschlag bricht Vollmond (bewusster Trade, 04 §5).
+        for (const teilwert of effekt.wert) {
+          if (kampf.spielerStatus.riss > 0 && rng.naechsteZahl() < 0.25) {
+            aussetzer += 1;
+            continue;
+          }
+          const effWert = effektiverWert(teilwert, { wetzung, scharte, klassenSockel });
+          gespielteSeiten.push({
+            typ: 'schaden',
+            effektiverWert: effWert,
+            vollmondWert: vollmondPruefwert(teilwert, { wetzung, scharte }),
+            hoechstwert,
+            kraft: spielerKraft,
+            passiv: passivFuer(w),
+            glanz: pendingGlanz,
+          });
+          pendingGlanz = false;
+          letzterSchadenEffWert = effWert;
+        }
       } else if (effekt.typ === 'echo') {
         // Echo kopiert den Beitrag der unmittelbar links platzierten Schaden-Seite
         // (Cap 1× Quelle, resolveZug); zählt für Gleichklang mit deren Wert. Der
@@ -516,6 +544,22 @@ export function loeseZugAuf(run, kampf, rng) {
         // Eigen-Riss (Wildwuchs, 04 §4): die Seite legt Riss auf den Spieler selbst.
         legeStatusAuf(kampf.spielerStatus, 'riss', effekt.wert);
         gespielteSeiten.push({ typ: 'riss', hoechstwert });
+        letzterSchadenEffWert = 0;
+      } else if (effekt.typ === 'gegner_riss') {
+        // Bruchstelle (04 §3.2): Riss gespiegelt auf den GEGNER — seine Aktionen
+        // setzen 2 Runden lang zu 25 % aus (fuehreGegnerzugAus); Neubelegung
+        // erneuert das Fenster (legeStatusAuf-Riss-Regel, 02 §8.1).
+        legeStatusAuf(kampf.gegner.status, 'riss', effekt.wert);
+        gespielteSeiten.push({ typ: 'gegner_riss', hoechstwert });
+        letzterSchadenEffWert = 0;
+      } else if (effekt.typ === 'fluch_faeule' || effekt.typ === 'fluch_scharte' || effekt.typ === 'fluch_stumpf') {
+        // Fluch-Seiten (07 §5.4, fluch.js): der Nachteil trifft den Hüter selbst.
+        // Fäule tickt ab dem nächsten Zugbeginn; Scharte 2 überlebt den Rundenende-
+        // Decay mit 1 Stapel und stumpft den nächsten Zug ab; Stumpf tut nichts —
+        // alle drei sind Nicht-Schaden-Seiten und brechen Vollmond.
+        if (effekt.typ === 'fluch_faeule') legeStatusAuf(kampf.spielerStatus, 'faeule', effekt.wert);
+        if (effekt.typ === 'fluch_scharte') legeStatusAuf(kampf.spielerStatus, 'scharte', effekt.wert);
+        gespielteSeiten.push({ typ: effekt.typ, hoechstwert });
         letzterSchadenEffWert = 0;
       } else if (effekt.typ === 'beruhigung' || effekt.typ === 'ermutigung') {
         // Trösten-Auflösung (05 §8, D3): in der Spiegel-Phase des Endboss richten
@@ -677,11 +721,18 @@ export function fuehreGegnerzugAus(run, kampf, rng) {
   };
 
   // Gegner handelt: Kraft-Buff hebt, Welk-Debuff senkt den Angriffswert (02 §8).
+  // Bruchstelle-Spiegelung (04 §3.2): Riss auf dem GEGNER lässt seine ganze
+  // Aktion zu 25 % aussetzen — das Gegenstück zum Zünd-Aussetzer des Hüters
+  // (02 §8.1: dort je Seite; der Gegner spielt eine Aktion je Runde).
   const { absicht } = kampf.gegner;
   let erlitten = 0;
   let blockRest = kampf.block;
   const aufgelegt = [];
-  if (absicht.typ === 'sieche') {
+  const ausgesetzt = status.riss > 0 && rng.naechsteZahl() < 0.25;
+  kampf.gegnerAussetzer = ausgesetzt; // Anzeige (UI)
+  if (ausgesetzt) {
+    // Die Aktion verpufft — weder Schaden noch Aktions-gebundene Auflagen.
+  } else if (absicht.typ === 'sieche') {
     // Sieche-Zyklus: kein Schaden, dafür Status auf den Hüter (05 §5).
     for (const auflage of auflagen) {
       if ((auflage.mit ?? 'sieche') === 'sieche') {
@@ -787,7 +838,7 @@ export function fuehreGegnerzugAus(run, kampf, rng) {
   } else {
     kampf.phase = 'zug';
   }
-  return { erlitten, faeule, brand, aufgelegt };
+  return { erlitten, faeule, brand, aufgelegt, ausgesetzt };
 }
 
 // Region-Übergang (D1, 07 §1.5): neue Karte, Tau-Zufluss (Basis + Segen +

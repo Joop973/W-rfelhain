@@ -102,8 +102,8 @@ Werte sind Startpunkte; Sim eicht. Preise grob an Wucht-Anker (40/60/80) gestaff
 | **Glanz-Gravur** | Glanz-Seite (s. §3.4) | — | — | — | 1 | 55 (1 Stufe) | verbraucht sich, Basis ×2 vor Mult |
 | **Beruhigungs-Gravur** | Beruhigungs-Seite | +2 Gemüt | — | — | 1 | 30 (1 Stufe) | nur Würfel mit Schreck > 0 (reaktiv); 1 Trösten = +2 |
 | **Ermutigungs-Gravur** | Ermutigungs-Seite (Wert 0, s. §3.5) | +2 Gemüt | — | — | 1 | 35 (1 Stufe) | universell (auch Gemüt ≥ 0, proaktiv); zählt **nicht** auf Frühling-Trösten-Zahl (01 §5) |
-| **Doppelschlag** | Schaden, zwei Teilwerte statt einem | 1+1 | 2+2 | 2+3 | 1 | 30/45/60 | zählt als **zwei volle Schaden-Seiten** (beide +2 Passiv, beide für Gleichklang), aber **eine** Atemzahlung — Lawine mit Wucht/Gleichklang per Sim prüfen |
-| **Bruchstelle** | Riss auf Ziel (Debuff am Gegner) | — | — | — | 1 | 50 (1 Stufe) | 25 % Aussetzer 2 Runden — auf Gegner gespiegelt; Sim klärt, ob als Offensiv-Tool sinnvoll |
+| **Doppelschlag** | Schaden, zwei Teilwerte statt einem | 1+1 | 2+2 | 2+3 | 1 | 40/55/70 | zählt als **zwei volle Schaden-Seiten** (beide +2 Passiv, beide für Gleichklang), aber **eine** Atemzahlung — Sim-geprüft (E6): als Gratis-Belohnung über Band (+2,5 pp), daher **nur Schmiede-Kauf** + Preise +10; bricht Vollmond (Teilwerte < Höchstwert) |
+| **Bruchstelle** | Riss auf Ziel (Debuff am Gegner) | — | — | — | 1 | 50 (1 Stufe) | 25 % Aussetzer 2 Runden — auf Gegner gespiegelt (E6: Effekt-Typ `gegner_riss`, die ganze Gegner-Aktion setzt aus; im Band) |
 
 **Einschränkungen `[GESPERRT-Prinzip]`:**
 

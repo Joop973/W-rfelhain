@@ -6,13 +6,14 @@ import { leeresMeta, verdieneJahresringe } from '../meta.js';
 import { schmiedePreis, rasteLagerfeuer } from '../knoten.js';
 import { schreck } from '../push.js';
 import { starteRun, starteKampf } from '../kampf.js';
+import { aktiveFluechte } from '../fluch.js';
 
 test('reifegradMods sind kumulativ und deckeln bei 10', () => {
   const s0 = reifegradMods(0);
   assert.equal(s0.eliteHpMult, 1);
   assert.equal(s0.heilungMult, 1);
   const s3 = reifegradMods(3);
-  assert.equal(s3.eliteHpMult, 1.1); // Stufe 1 enthalten
+  assert.equal(s3.eliteHpMult, 1 + REIFEGRAD_WERTE.eliteHp); // Stufe 1 enthalten
   assert.equal(s3.eliteBossSchadenMult, 1.1); // nachgeeicht: nur Elite/Boss
   assert.equal(s3.schmiedePreisMult, 1); // Stufe 4 noch nicht
   const s10 = reifegradMods(99); // über Cap
@@ -20,14 +21,17 @@ test('reifegradMods sind kumulativ und deckeln bei 10', () => {
   assert.equal(s10.tischsturzZuschlag, 2);
 });
 
-test('Stufe 2/9: Start-Schreck auf einem Würfel (1 bzw. kumulativ 3)', () => {
+test('Stufe 2: Start-Schreck · Stufe 9: echter Start-Fluch statt Schreck-Näherung (E6)', () => {
   const rng = new RNG(1100);
   const r0 = starteRun('eichwart', rng, { reifegrad: 0 });
   assert.equal(r0.arsenal.reduce((s, w) => s + schreck(w.gemuet), 0), 0);
+  assert.equal(aktiveFluechte(r0).length, 0);
   const r2 = starteRun('eichwart', rng, { reifegrad: 2 });
-  assert.equal(r2.arsenal.reduce((s, w) => s + schreck(w.gemuet), 0), 1);
+  assert.equal(r2.arsenal.reduce((s, w) => s + schreck(w.gemuet), 0), REIFEGRAD_WERTE.startSchreck);
   const r9 = starteRun('eichwart', rng, { reifegrad: 9 });
-  assert.equal(r9.arsenal.reduce((s, w) => s + schreck(w.gemuet), 0), 3); // 1 + Fluch-Näherung 2
+  assert.equal(r9.arsenal.reduce((s, w) => s + schreck(w.gemuet), 0), REIFEGRAD_WERTE.startSchreck); // nur Stufe 2
+  assert.equal(aktiveFluechte(r9).length, 1); // Stufe 9: aufgedrückte Fluch-Seite
+  assert.equal(aktiveFluechte(r9)[0].fluchId, 'fluch_seite');
 });
 
 test('Stufe 1/5/10: Gegner-HP-Mults nach Rolle', () => {

@@ -23,6 +23,15 @@ test('Keine leeren oder identischen Übersetzungen bei Fließtexten', () => {
   assert.deepEqual(verdaechtig, []);
 });
 
+test('uebersetze mit Platzhaltern: {name}-Parameter werden ersetzt (E6, UI-Chrome)', () => {
+  setzeSprache('de');
+  assert.equal(uebersetze('ui.gegner_trifft', { schaden: 7 }), 'Der Gegner trifft für 7.');
+  assert.equal(uebersetze('ui.region', { region: 2, max: 6 }), 'Region 2/6');
+  setzeSprache('en');
+  assert.equal(uebersetze('ui.gegner_trifft', { schaden: 7 }), 'The enemy hits for 7.');
+  setzeSprache('de');
+});
+
 test('Sprachwahl: Umschalten, Fallback auf DE, unbekannte Codes → de', () => {
   assert.equal(aktiveSprache(), 'de');
   assert.equal(uebersetze('klasse.eichwart.name'), 'Eichwart');

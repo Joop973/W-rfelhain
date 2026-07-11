@@ -63,10 +63,12 @@ import {
 import * as audio from './audio.js';
 
 let rng = new RNG((Date.now() >>> 0) || 1);
-const KNOTEN_LABEL = {
-  kampf: '⚔ Kampf', elite: '☠ Elite', boss: '👑 Boss', markt: '🧺 Markt',
-  schmiede: '🔨 Schmiede', event: '❖ Ereignis', lagerfeuer: '🔥 Lagerfeuer',
+// Icon je Knotentyp — der Name kommt als Text-Key (ui.knoten.<typ>, E6).
+const KNOTEN_ICON = {
+  kampf: '⚔', elite: '☠', boss: '👑', markt: '🧺',
+  schmiede: '🔨', event: '❖', lagerfeuer: '🔥',
 };
+const knotenLabel = (typ) => `${KNOTEN_ICON[typ]} ${uebersetze(`ui.knoten.${typ}`)}`;
 
 let run = null;
 let kampf = null;
@@ -240,7 +242,7 @@ function neuerRun(klasseId = 'eichwart', reifegrad = 0) {
   kampf = null;
   modus = 'karte';
   belohnungsWahl = schmiedeWahl = marktWahl = lagerfeuerWahl = knotenKontext = null;
-  letztesEreignis = 'Ein neuer Hüter betritt den Saumhain. Wähle deinen Weg.';
+  letztesEreignis = uebersetze('ui.neuer_run');
   mentorZeile = mentorBeiRegionEintritt(1); // die Eiche spricht zum ersten Mal (01 §7)
   render();
 }
@@ -249,7 +251,7 @@ function zurKarte() {
   run.kampfKnoten = null; // Kampf beendet — Resume-Anker löschen (v7)
   beendeTutorial();
   if (kampf?.regionGeschafft) {
-    letztesEreignis = `Der Wächter fällt — du ziehst weiter. Region ${kampf.regionGeschafft} liegt vor dir.`;
+    letztesEreignis = uebersetze('ui.region_geschafft', { region: kampf.regionGeschafft });
     // Regions-Eintritt: Mentor-Zeile der neuen Region — bzw. an der Schwelle
     // zu Region 6 die Wendung (01 §4.3), dort schweigt der Mentor für immer.
     mentorZeile = mentorBeiRegionEintritt(run.region);
@@ -277,17 +279,17 @@ function klickKnoten(knotenId) {
     rng = new RNG(seed);
     kampf = starteKampf(run, rng, knoten.typ);
     beginneZug(run, kampf, rng);
-    letztesEreignis = `${KNOTEN_LABEL[knoten.typ]} — Reihe ${knoten.reihe}.`;
+    letztesEreignis = uebersetze('ui.knoten_betreten', { knoten: knotenLabel(knoten.typ), reihe: knoten.reihe });
     if (!meta.tutorialGesehen && !tutorial) tutorial = { gezeigt: new Set() };
     tutorialZeile('wurf');
   } else if (knoten.typ === 'schmiede') {
     modus = 'schmiede';
     knotenKontext = erstelleSchmiedeAngebot();
-    letztesEreignis = 'Die Schmiede glüht. Gravuren gegen Münzen.';
+    letztesEreignis = uebersetze('ui.schmiede_gruss');
   } else if (knoten.typ === 'markt') {
     modus = 'markt';
     knotenKontext = erstelleMarktAngebot(rng, run);
-    letztesEreignis = 'Ein Markt am Wegesrand.';
+    letztesEreignis = uebersetze('ui.markt_gruss');
   } else if (knoten.typ === 'event') {
     modus = 'event';
     knotenKontext = { event: zieheEvent(rng, run.region), ergebnis: null, hinweisKey: null };
@@ -295,7 +297,7 @@ function klickKnoten(knotenId) {
   } else if (knoten.typ === 'lagerfeuer') {
     modus = 'lagerfeuer';
     knotenKontext = { genutzt: false };
-    letztesEreignis = 'Ein ruhiges Feuer vor dem Boss. Eine Handlung.';
+    letztesEreignis = uebersetze('ui.lagerfeuer_gruss');
   }
   render();
 }
@@ -313,9 +315,7 @@ function klickWuerfel(id) {
 
 function klickReroll() {
   const { tischsturz } = rerolle(run, kampf, rng);
-  letztesEreignis = tischsturz
-    ? 'TISCHSTURZ! Die Würfel stürzen vom Tisch — die ganze Hand erschrickt.'
-    : 'Die Hand wird neu geworfen.';
+  letztesEreignis = uebersetze(tischsturz ? 'ui.tischsturz' : 'ui.neu_geworfen');
   if (tischsturz) mentorZeile = mentorBeiTischsturz(); // die Stimme wiegelt ab (D4)
   else tutorialZeile('uebermut');
   audio.sfx(tischsturz ? 'tischsturz' : 'reroll');
@@ -325,24 +325,24 @@ function klickReroll() {
 function klickAufloesen() {
   const pools = loeseZugAuf(run, kampf, rng);
   if (!pools) return;
-  letztesEreignis = `Paket aufgelöst: ${pools.schaden} Schaden, ${pools.rinde} Rinde.`;
+  letztesEreignis = uebersetze('ui.paket_aufgeloest', { schaden: pools.schaden, rinde: pools.rinde });
   const c = pools.combos;
-  if (c?.gleichklangAnzahl >= 2) letztesEreignis += ` Gleichklang ×${c.gleichklangMult} (${c.gleichklangAnzahl} gleiche)!`;
-  if (c?.vollmond) letztesEreignis += ` 🌕 Vollmond +${c.vollmondBurst}!`;
-  if (c?.widerhallBonus > 0) letztesEreignis += ` 🔔 Widerhall +${c.widerhallBonus}!`;
-  if (kampf.geheilt > 0) letztesEreignis += ` 💧 Labung +${kampf.geheilt} HP.`;
-  if (kampf.gepraegt > 0) letztesEreignis += ` 🪙 Prägung +${kampf.gepraegt} Münzen.`;
-  if (kampf.getroestet > 0) letztesEreignis += ` 🍃 ${kampf.getroestet}× getröstet (+2 Gemüt).`;
-  if (kampf.aussetzer > 0) letztesEreignis += ` (${kampf.aussetzer}× Riss-Aussetzer.)`;
+  if (c?.gleichklangAnzahl >= 2) letztesEreignis += ` ${uebersetze('ui.gleichklang', { mult: c.gleichklangMult, anzahl: c.gleichklangAnzahl })}`;
+  if (c?.vollmond) letztesEreignis += ` 🌕 ${uebersetze('ui.vollmond', { burst: c.vollmondBurst })}`;
+  if (c?.widerhallBonus > 0) letztesEreignis += ` 🔔 ${uebersetze('ui.widerhall', { bonus: c.widerhallBonus })}`;
+  if (kampf.geheilt > 0) letztesEreignis += ` 💧 ${uebersetze('ui.labung', { hp: kampf.geheilt })}`;
+  if (kampf.gepraegt > 0) letztesEreignis += ` 🪙 ${uebersetze('ui.praegung', { muenzen: kampf.gepraegt })}`;
+  if (kampf.getroestet > 0) letztesEreignis += ` 🍃 ${uebersetze('ui.getroestet', { anzahl: kampf.getroestet })}`;
+  if (kampf.aussetzer > 0) letztesEreignis += ` ${uebersetze('ui.riss_aussetzer', { anzahl: kampf.aussetzer })}`;
   if (kampf.bossGetroestet > 0 && !kampf.befriedet) {
-    letztesEreignis += ` 🕊 Du tröstest den Hüter — sein Schreck sinkt auf ${kampf.gegner.bossSchreck}.`;
+    letztesEreignis += ` 🕊 ${uebersetze('ui.boss_getroestet', { schreck: kampf.gegner.bossSchreck })}`;
   }
   if (kampf.befriedet) {
-    letztesEreignis = '🕊 Der frühere Hüter wird still. Die Gier löst sich — du hast ihn getröstet, nicht erschlagen.';
+    letztesEreignis = `🕊 ${uebersetze('ui.befriedet')}`;
   }
   if (kampf.phase === 'sieg') {
-    letztesEreignis += kampf.sauberSieg ? ' Sauberer Sieg (+1 Gemüt auf Gespielte).' : '';
-    if (kampf.kristallisiert > 0) letztesEreignis += ` ${kampf.kristallisiert} Übermut kristallisiert zu Schreck.`;
+    letztesEreignis += kampf.sauberSieg ? ` ${uebersetze('ui.sauberer_sieg')}` : '';
+    if (kampf.kristallisiert > 0) letztesEreignis += ` ${uebersetze('ui.kristallisiert', { anzahl: kampf.kristallisiert })}`;
     tutorialZeile('sieg');
   } else {
     tutorialZeile('aufloesen'); // Gegnerzug steht bevor — Blick auf die Absicht lenken
@@ -355,17 +355,23 @@ function klickGegnerzug() {
   if (!ergebnis) return;
   const dot = (ergebnis.faeule || 0) + (ergebnis.brand || 0);
   if (ergebnis.besiegt) {
-    letztesEreignis = 'Der Status frisst den Gegner auf — besiegt.';
+    letztesEreignis = uebersetze('ui.status_besiegt');
+  } else if (ergebnis.ausgesetzt) {
+    // Bruchstelle (04 §3.2): der Riss lässt die Gegner-Aktion verpuffen.
+    letztesEreignis = `⚡ ${uebersetze('ui.gegner_aussetzer')}`;
   } else {
     letztesEreignis = ergebnis.erlitten > 0
-      ? `Der Gegner trifft für ${ergebnis.erlitten}.`
-      : 'Der Gegner holt aus — kein Schaden durchgedrungen.';
-    if (ergebnis.aufgelegt?.length) letztesEreignis += ` Er legt ${ergebnis.aufgelegt.join(' + ')} auf dich!`;
+      ? uebersetze('ui.gegner_trifft', { schaden: ergebnis.erlitten })
+      : uebersetze('ui.gegner_geblockt');
+    if (ergebnis.aufgelegt?.length) {
+      const namen = ergebnis.aufgelegt.map((typ) => uebersetze(`status.${typ}`)).join(' + ');
+      letztesEreignis += ` ${uebersetze('ui.gegner_legt_auf', { status: namen })}`;
+    }
     if (kampf.hohlesEchoGeheilt) {
-      letztesEreignis += ` 🌑 Das hohle Echo: dein Übermut heilt ihn um ${kampf.hohlesEchoGeheilt}.`;
+      letztesEreignis += ` 🌑 ${uebersetze('ui.hohles_echo', { heilung: kampf.hohlesEchoGeheilt })}`;
       kampf.hohlesEchoGeheilt = 0;
     }
-    if (dot > 0) letztesEreignis += ` (Status: ${dot} an den Gegner.)`;
+    if (dot > 0) letztesEreignis += ` ${uebersetze('ui.status_dot', { schaden: dot })}`;
   }
   if (kampf.phase === 'zug') beginneZug(run, kampf, rng);
   render();
@@ -373,13 +379,13 @@ function klickGegnerzug() {
 
 // Belohnungs-Flow (A1/A2)
 function optionLabel(option) {
-  if (option.typ === 'muenzen') return `+${option.betrag} Münzen`;
-  if (option.typ === 'blaupause') return `Blaupause: ${uebersetze(option.nameKey)}`;
+  if (option.typ === 'muenzen') return uebersetze('ui.opt_muenzen', { betrag: option.betrag });
+  if (option.typ === 'blaupause') return `${uebersetze('ui.blaupause')}: ${uebersetze(option.nameKey)}`;
   if (option.typ === 'segen') {
-    const haken = option.hakenTextKey ? ` — Haken: ${uebersetze(option.hakenTextKey)}` : '';
-    return `Segen: ${uebersetze(option.textKey)}${haken}`;
+    const haken = option.hakenTextKey ? ` — ${uebersetze('ui.haken')}: ${uebersetze(option.hakenTextKey)}` : '';
+    return `${uebersetze('ui.segen')}: ${uebersetze(option.textKey)}${haken}`;
   }
-  return `Gravur: ${uebersetze(option.nameKey)}`;
+  return `${uebersetze('ui.gravur')}: ${uebersetze(option.nameKey)}`;
 }
 
 function waehleBelohnung(index) {
@@ -389,8 +395,8 @@ function waehleBelohnung(index) {
     kampf.belohnung.erledigt = true;
     letztesEreignis =
       option.typ === 'segen'
-        ? `Segen aufgenommen: ${uebersetze(option.textKey)}`
-        : `${option.betrag} Münzen eingestrichen.`;
+        ? uebersetze('ui.segen_aufgenommen', { segen: uebersetze(option.textKey) })
+        : uebersetze('ui.muenzen_eingestrichen', { betrag: option.betrag });
   } else {
     belohnungsWahl = { option };
   }
@@ -401,7 +407,7 @@ function waehleZielWuerfel(wuerfelId) {
   const wuerfel = run.arsenal.find((w) => w.id === wuerfelId);
   if (belohnungsWahl.option.typ === 'blaupause') {
     wendeBelohnungAn(run, belohnungsWahl.option, { wuerfel });
-    letztesEreignis = `${uebersetze(belohnungsWahl.option.nameKey)} auf ${uebersetze(wuerfel.nameKey)} angewandt.`;
+    letztesEreignis = uebersetze('ui.angewandt_auf', { was: uebersetze(belohnungsWahl.option.nameKey), wuerfel: uebersetze(wuerfel.nameKey) });
     kampf.belohnung.erledigt = true;
     belohnungsWahl = null;
   } else {
@@ -413,7 +419,12 @@ function waehleZielWuerfel(wuerfelId) {
 function waehleZielSeite(seitenIndex) {
   const wuerfel = run.arsenal.find((w) => w.id === belohnungsWahl.wuerfelId);
   wendeBelohnungAn(run, belohnungsWahl.option, { wuerfel, seitenIndex });
-  letztesEreignis = `${uebersetze(belohnungsWahl.option.nameKey)} auf Seite ${seitenIndex + 1} von ${uebersetze(wuerfel.nameKey)} graviert (Stufe ${wuerfel.stufen[seitenIndex]}).`;
+  letztesEreignis = uebersetze('ui.graviert_auf', {
+    was: uebersetze(belohnungsWahl.option.nameKey),
+    seite: seitenIndex + 1,
+    wuerfel: uebersetze(wuerfel.nameKey),
+    stufe: wuerfel.stufen[seitenIndex],
+  });
   kampf.belohnung.erledigt = true;
   belohnungsWahl = null;
   render();
@@ -422,7 +433,7 @@ function waehleZielSeite(seitenIndex) {
 function ueberspringeBelohnung() {
   belohnungsWahl = null;
   kampf.belohnung.erledigt = true;
-  letztesEreignis = 'Belohnung ausgeschlagen.';
+  letztesEreignis = uebersetze('ui.belohnung_ausgeschlagen');
   render();
 }
 
@@ -430,8 +441,8 @@ function ueberspringeBelohnung() {
 function schmiedeKauf(seitenIndex) {
   const ergebnis = kaufeGravur(run, schmiedeWahl.gravurId, schmiedeWahl.wuerfelId, seitenIndex);
   letztesEreignis = ergebnis.ok
-    ? `Graviert für ${ergebnis.preis} Münzen (Stufe ${ergebnis.stufe}).`
-    : ergebnis.grund === 'muenzen' ? 'Zu wenige Münzen.' : 'Diese Seite ist am Cap.';
+    ? uebersetze('ui.graviert_fuer', { preis: ergebnis.preis, stufe: ergebnis.stufe })
+    : uebersetze(ergebnis.grund === 'muenzen' ? 'ui.zu_wenig_muenzen' : 'ui.seite_cap');
   if (ergebnis.ok) schmiedeWahl = null;
   render();
 }
@@ -440,7 +451,9 @@ function schmiedeKauf(seitenIndex) {
 function marktKaufWuerfel(index) {
   const angebot = knotenKontext.wuerfel[index];
   const ergebnis = kaufeWuerfel(run, angebot.vorlageId, angebot.preisEicheln);
-  letztesEreignis = ergebnis.ok ? `${uebersetze(ergebnis.wuerfel.nameKey)} gekauft.` : 'Zu wenige Eicheln.';
+  letztesEreignis = ergebnis.ok
+    ? uebersetze('ui.gekauft', { name: uebersetze(ergebnis.wuerfel.nameKey) })
+    : uebersetze('ui.zu_wenig_eicheln');
   if (ergebnis.ok) knotenKontext.wuerfel.splice(index, 1);
   render();
 }
@@ -448,7 +461,9 @@ function marktKaufWuerfel(index) {
 function marktKaufSegen() {
   const s = knotenKontext.segen;
   const ergebnis = kaufeMarktSegen(run, s.segenId, s.preisEicheln);
-  letztesEreignis = ergebnis.ok ? `Segen aufgenommen: ${uebersetze(s.textKey)}` : 'Zu wenige Eicheln.';
+  letztesEreignis = ergebnis.ok
+    ? uebersetze('ui.segen_aufgenommen', { segen: uebersetze(s.textKey) })
+    : uebersetze('ui.zu_wenig_eicheln');
   if (ergebnis.ok) knotenKontext.segen = null;
   render();
 }
@@ -457,16 +472,18 @@ function marktZiel(wuerfelId) {
   if (marktWahl.aktion === 'blaupause') {
     const b = knotenKontext.blaupause;
     const ergebnis = kaufeMarktBlaupause(run, b.blaupauseId, b.preisEicheln, wuerfelId);
-    letztesEreignis = ergebnis.ok ? `${uebersetze(b.nameKey)} angewandt.` : 'Zu wenige Eicheln.';
+    letztesEreignis = ergebnis.ok
+      ? uebersetze('ui.angewandt', { name: uebersetze(b.nameKey) })
+      : uebersetze('ui.zu_wenig_eicheln');
     if (ergebnis.ok) knotenKontext.blaupause = null;
   } else if (marktWahl.aktion === 'entfernen') {
     const ergebnis = entferneWuerfel(run, wuerfelId);
     letztesEreignis = ergebnis.ok
-      ? `Würfel entfernt (${ergebnis.preis} Münzen).`
-      : ergebnis.grund === 'muenzen' ? 'Zu wenige Münzen.' : 'Das Arsenal ist am Minimum.';
+      ? uebersetze('ui.wuerfel_entfernt', { preis: ergebnis.preis })
+      : uebersetze(ergebnis.grund === 'muenzen' ? 'ui.zu_wenig_muenzen' : 'ui.arsenal_minimum');
   } else if (marktWahl.aktion === 'troesten') {
     const ergebnis = troesteDienst(run, wuerfelId);
-    letztesEreignis = ergebnis.ok ? '+2 Gemüt.' : 'Zu wenig Tau.';
+    letztesEreignis = uebersetze(ergebnis.ok ? 'ui.plus_gemuet' : 'ui.zu_wenig_tau');
     if (ergebnis.ok) audio.troestenRueckkehr(); // Zier-Stem kehrt kurz zurück (08 §2.2)
   }
   marktWahl = null;
@@ -477,10 +494,21 @@ function marktZiel(wuerfelId) {
 function eventOption(index) {
   const option = knotenKontext.event.optionen[index];
   const wirkungen = waehleEventOption(run, knotenKontext.event, index, rng);
-  knotenKontext.ergebnis = wirkungen.length ? wirkungen.join(' · ') : 'Du gehst weiter.';
+  knotenKontext.ergebnis = wirkungen.length ? wirkungen.join(' · ') : uebersetze('ui.du_gehst_weiter');
   // Zweifel-Hinweis (07 §5.3): der stille Text, der Unbehagen sät, als eigener Absatz.
   knotenKontext.hinweisKey = option.effekt.hinweis ? `hinweis.${option.effekt.hinweis}` : null;
   if (option.effekt.troesten) audio.troestenRueckkehr();
+  render();
+}
+
+// Offene Event-Belohnung (E6): gefundene Blaupause auf den gewählten Würfel.
+function eventBelohnungZiel(wuerfelId) {
+  const option = run.offeneBelohnungen?.[0];
+  if (!option) return;
+  const wuerfel = run.arsenal.find((w) => w.id === wuerfelId);
+  wendeBelohnungAn(run, option, { wuerfel });
+  run.offeneBelohnungen = run.offeneBelohnungen.slice(1);
+  letztesEreignis = uebersetze('ui.angewandt_auf', { was: uebersetze(option.nameKey), wuerfel: uebersetze(wuerfel.nameKey) });
   render();
 }
 
@@ -494,7 +522,7 @@ function lagerfeuerAktion(wahl, wuerfelId = null) {
   const ergebnis = rasteLagerfeuer(run, wahl, wuerfelId);
   knotenKontext.genutzt = !ergebnis.rastFrei; // Frühjahrs-Knospe schenkt die Rast (C5)
   lagerfeuerWahl = null;
-  letztesEreignis = `Rast: ${ergebnis.text}.`;
+  letztesEreignis = uebersetze('ui.rast', { text: ergebnis.text });
   if (wahl === 'troesten' && ergebnis.ok) audio.troestenRueckkehr();
   render();
 }
@@ -513,11 +541,11 @@ function statuszeile() {
     .join(' ');
   return `
     <section class="status">
-      <span>Region ${run.region ?? 1}/${run.maxRegion ?? 6}</span>
+      <span>${uebersetze('ui.region', { region: run.region ?? 1, max: run.maxRegion ?? 6 })}</span>
       <span>❤ ${run.hp}/${run.hpMax}</span>
       <span>🪙 ${run.waehrungen.muenzen} · 🌰 ${run.waehrungen.eicheln} · 💧 ${run.waehrungen.tau}</span>
-      <span title="End-Schreck — entscheidet mit über das Ende (≤ niedrig hilft)">Schreck Σ ${arsenalSchreckSumme(run)}</span>
-      <span title="Gezielte Trösten-Ereignisse im Run — zählen für das Ende">🕊 ${run.troestenZahl ?? 0}</span>
+      <span title="${uebersetze('ui.schreck_tooltip')}">${uebersetze('ui.schreck_summe', { summe: arsenalSchreckSumme(run) })}</span>
+      <span title="${uebersetze('ui.troesten_tooltip')}">🕊 ${run.troestenZahl ?? 0}</span>
       ${segen ? `<span class="segen-leiste">${segen}</span>` : ''}
       <button class="sprache" data-aktion="sprache" title="Sprache wechseln / switch language">${aktiveSprache().toUpperCase()}</button>
     </section>`;
@@ -529,7 +557,7 @@ function arsenalPicker(datenAttribut, filter = () => true) {
       ${run.arsenal.filter(filter).map((w) => `
         <button class="ph ph--seite" data-${datenAttribut}="${w.id}">
           <span class="label">${uebersetze(w.nameKey)}</span>
-          <span class="stufe">${w.gemuet !== 0 ? `Gemüt ${w.gemuet}` : ''} ${w.atem === 0 ? '· 0 Atem' : ''}</span>
+          <span class="stufe">${w.gemuet !== 0 ? uebersetze('ui.gemuet_wert', { wert: w.gemuet }) : ''} ${w.atem === 0 ? uebersetze('ui.null_atem') : ''}</span>
         </button>`).join('')}
     </div>`;
 }
@@ -544,7 +572,7 @@ function renderKarte() {
           ${reihe.map((k) => `
             <button class="ph ph--knoten ${waehlbar.has(k.id) ? 'waehlbar' : ''} ${run.positionKnotenId === k.id ? 'aktuell' : ''}"
                     data-knoten="${k.id}" ${waehlbar.has(k.id) ? '' : 'disabled'}>
-              ${KNOTEN_LABEL[k.typ]}
+              ${knotenLabel(k.typ)}
             </button>`).join('')}
         </div>`).join('')}
     </section>`;
@@ -574,11 +602,11 @@ function belohnungsPanel() {
     const wuerfel = run.arsenal.find((w) => w.id === belohnungsWahl.wuerfelId);
     return `
       <section class="ph ph--belohnung">
-        <strong>${uebersetze(belohnungsWahl.option.nameKey)} — Seite wählen (${uebersetze(wuerfel.nameKey)})</strong>
+        <strong>${uebersetze(belohnungsWahl.option.nameKey)} — ${uebersetze('ui.seite_waehlen')} (${uebersetze(wuerfel.nameKey)})</strong>
         <div class="picker">
           ${wuerfel.seiten.map((s, i) => `
-            <button class="ph ph--seite" data-ziel-seite="${i}">
-              <span class="wert">${s.wert}</span>
+            <button class="ph ph--seite" data-ziel-seite="${i}" ${s.fluchId ? `disabled title="${uebersetze('ui.fluch_seite_gesperrt')}"` : ''}>
+              <span class="wert">${s.fluchId ? '💀' : s.wert}</span>
               ${wuerfel.stufen[i] > 0 ? `<span class="stufe">St.${wuerfel.stufen[i]}</span>` : ''}
             </button>`).join('')}
         </div>
@@ -587,16 +615,16 @@ function belohnungsPanel() {
   if (belohnungsWahl) {
     return `
       <section class="ph ph--belohnung">
-        <strong>${optionLabel(belohnungsWahl.option)} — Würfel wählen</strong>
+        <strong>${optionLabel(belohnungsWahl.option)} — ${uebersetze('ui.wuerfel_waehlen')}</strong>
         ${arsenalPicker('ziel-wuerfel')}
       </section>`;
   }
   return `
     <section class="ph ph--belohnung">
-      <strong>Sieg! +${b.einkommen.muenzen} Münzen, +${b.einkommen.eicheln} Eicheln</strong>
+      <strong>${uebersetze('ui.sieg_einkommen', { muenzen: b.einkommen.muenzen, eicheln: b.einkommen.eicheln })}</strong>
       <div class="picker">
         ${b.optionen.map((o, i) => `<button data-opt="${i}">${optionLabel(o)}</button>`).join('')}
-        <button data-aktion="ueberspringen">Überspringen</button>
+        <button data-aktion="ueberspringen">${uebersetze('ui.ueberspringen')}</button>
       </div>
     </section>`;
 }
@@ -606,10 +634,22 @@ const STATUS_ICON = {
   wetzung: '🔪', scharte: '🩹', freilauf: '🎲', klemme: '🔒',
 };
 
+// Kurz-Label eines Seiten-Effekts für die Wurf-Leiste; die E6-Typen brauchen
+// eigene Formen (Doppelschlag = Wertepaar, Gegner-Riss/Flüche = benannt).
+function effektKurz(e) {
+  if (e.typ === 'schaden_mult') return `×${e.wert}`;
+  if (e.typ === 'schaden_doppel') return `⚔${e.wert.join('+')}`;
+  if (e.typ === 'gegner_riss') return `⚡${uebersetze('ui.eff_gegner_riss')}`;
+  if (e.typ === 'fluch_faeule') return `💀${uebersetze('ui.eff_fluch_selbst', { icon: '☣', wert: e.wert })}`;
+  if (e.typ === 'fluch_scharte') return `💀${uebersetze('ui.eff_fluch_selbst', { icon: '🩹', wert: e.wert })}`;
+  if (e.typ === 'fluch_stumpf') return `💀${uebersetze('ui.eff_fluch_stumpf')}`;
+  return `${STATUS_ICON[e.typ] ?? ''}${uebersetze(`status.${e.typ}`)} ${e.wert}`;
+}
+
 function statusBadges(status) {
   return Object.entries(STATUS_ICON)
     .filter(([typ]) => status[typ] > 0)
-    .map(([typ, icon]) => `<span class="badge" title="${typ}">${icon}${status[typ]}</span>`)
+    .map(([typ, icon]) => `<span class="badge" title="${uebersetze(`status.${typ}`)}">${icon}${status[typ]}</span>`)
     .join(' ');
 }
 
@@ -640,11 +680,11 @@ function armeeEinheit(id, index) {
   return `
     <button class="a-einheit a-pos-${index + 1} ph--wuerfel stimmung-${stimmung} ${platziert ? 'platziert' : ''}"
             data-wuerfel="${id}" ${kampf.phase !== 'zug' ? 'disabled' : ''}
-            title="${name} · Gemüt ${w.gemuet}${s > 0 ? ` · ${gesperrteSeitenAnzahl(s)} Seiten gesperrt` : ''}">
+            title="${name} · ${uebersetze('ui.gemuet_wert', { wert: w.gemuet })}${s > 0 ? ` · ${uebersetze('ui.seiten_gesperrt', { anzahl: gesperrteSeitenAnzahl(s) })}` : ''}">
       <span class="nr">${index + 1}</span>
-      ${zauber ? `<span class="zauber" title="${w.blaupause ? 'Blaupause' : 'Gravur'}">${zauber}</span>` : ''}
+      ${zauber ? `<span class="zauber" title="${uebersetze(w.blaupause ? 'ui.blaupause' : 'ui.gravur')}">${zauber}</span>` : ''}
       ${sprite ? `<img src="${sprite}" alt="${name}">` : `<span class="ph w-platzhalter">${name}</span>`}
-      <span class="gemuet">${stimmung}${s > 0 ? ` 🔒${gesperrteSeitenAnzahl(s)}` : ''}</span>
+      <span class="gemuet">${uebersetze(`ui.stimmung.${stimmung}`)}${s > 0 ? ` 🔒${gesperrteSeitenAnzahl(s)}` : ''}</span>
     </button>`;
 }
 
@@ -656,9 +696,7 @@ function wurfKachel(id, index) {
   const name = w.blaupause ? uebersetze(w.blaupause.nameKey) : uebersetze(w.nameKey);
   const hauptTyp = seite.effekt[0]?.typ ?? w.typ;
   const ico = seitenIcon(hauptTyp);
-  const effekte = seite.effekt
-    .map((e) => `${STATUS_ICON[e.typ] ?? ''}${e.typ === 'schaden_mult' ? `×${e.wert}` : `${e.typ} ${e.wert}`}`)
-    .join(' · ') || 'leer';
+  const effekte = seite.effekt.map(effektKurz).join(' · ') || uebersetze('ui.leer');
   return `
     <button class="a-kachel ${platziert ? 'platziert' : ''}" data-wuerfel="${id}"
             ${kampf.phase !== 'zug' ? 'disabled' : ''} title="${name}: ${effekte}">
@@ -668,7 +706,7 @@ function wurfKachel(id, index) {
         <span class="kname">${name}</span>
         <span class="kwert">${wert}</span>
       </span>
-      <span class="keff">${platziert ? `${kampf.reihe.indexOf(id) + 1}. gelegt · ` : ''}${effekte}</span>
+      <span class="keff">${platziert ? `${uebersetze('ui.gelegt', { position: kampf.reihe.indexOf(id) + 1 })} · ` : ''}${effekte}</span>
     </button>`;
 }
 
@@ -686,17 +724,17 @@ function renderKampf() {
       <div class="a-boden"></div>
       <div class="a-horizont"></div>
 
-      <span class="a-drehhinweis">📱↻ Querformat empfohlen</span>
+      <span class="a-drehhinweis">📱↻ ${uebersetze('ui.querformat')}</span>
       <div class="a-top">
         <span class="portraet"></span>
         <span>${uebersetze(`klasse.${run.klasse}.name`)}</span>
         <div class="balken"><div class="balken-fuellung" style="width:${(run.hp / run.hpMax) * 100}%"></div></div>
         <span>${run.hp}/${run.hpMax}</span>
-        <span class="a-uebermut" title="Übermut (Kipp-Punkt ${KIPP_PUNKT})">${uebermut}</span>
-        <span class="mitte">Region ${run.region ?? 1}/${run.maxRegion ?? 6} · Rinde ${kampf.block}</span>
+        <span class="a-uebermut" title="${uebersetze('ui.uebermut_tooltip', { kipp: KIPP_PUNKT })}">${uebermut}</span>
+        <span class="mitte">${uebersetze('ui.region', { region: run.region ?? 1, max: run.maxRegion ?? 6 })} · ${uebersetze('ui.rinde_wert', { wert: kampf.block })}</span>
         <span>🪙${run.waehrungen.muenzen} 🌰${run.waehrungen.eicheln} 💧${run.waehrungen.tau}</span>
-        <span title="Segen">${(run.hainSegen ?? []).map(() => '🌿').join('') || ''}</span>
-        <span title="Ziehstapel · Ablage">▮${kampf.zieh?.ziehstapel?.length ?? 0}·▮${kampf.zieh?.ablage?.length ?? 0}</span>
+        <span title="${uebersetze('ui.segen')}">${(run.hainSegen ?? []).map(() => '🌿').join('') || ''}</span>
+        <span title="${uebersetze('ui.stapel_tooltip')}">▮${kampf.zieh?.ziehstapel?.length ?? 0}·▮${kampf.zieh?.ablage?.length ?? 0}</span>
       </div>
 
       <div class="a-monster ph--gegner">
@@ -710,7 +748,7 @@ function renderKampf() {
         ${statusBadges(g.status) ? `<div class="badges">${statusBadges(g.status)}</div>` : ''}
       </div>
 
-      <div class="a-hueter"><div class="mantel"></div><small>Hüter</small></div>
+      <div class="a-hueter"><div class="mantel"></div><small>${uebersetze('ui.hueter')}</small></div>
       ${kampf.hand.map((id, i) => armeeEinheit(id, i)).join('')}
 
       <div class="a-reihe">
@@ -720,18 +758,18 @@ function renderKampf() {
       ${statusBadges(kampf.spielerStatus) ? `<div class="a-status-badges badges">${statusBadges(kampf.spielerStatus)}</div>` : ''}
 
       <div class="a-wurf">
-        <div class="a-atem"><span class="a-orb">${kampf.atem}</span><span>Atem/3</span></div>
+        <div class="a-atem"><span class="a-orb">${kampf.atem}</span><span>${uebersetze('ui.atem_label')}</span></div>
         ${kampf.hand.map((id, i) => wurfKachel(id, i)).join('')}
       </div>
 
       <div class="a-akt">
         ${kampf.phase === 'zug' ? `
-          <button data-aktion="reroll" class="warn">Neu werfen<br><small>${kampf.rerollsDiesenZug === 0 ? 'gratis' : '+1 Übermut'}</small></button>
-          <button data-aktion="aufloesen" ${kampf.reihe.length === 0 ? 'disabled' : ''}>Auflösen (${kampf.reihe.length})</button>
+          <button data-aktion="reroll" class="warn">${uebersetze('ui.neu_werfen')}<br><small>${uebersetze(kampf.rerollsDiesenZug === 0 ? 'ui.gratis' : 'ui.plus_uebermut')}</small></button>
+          <button data-aktion="aufloesen" ${kampf.reihe.length === 0 ? 'disabled' : ''}>${uebersetze('ui.aufloesen', { anzahl: kampf.reihe.length })}</button>
         ` : ''}
-        ${kampf.phase === 'gegnerzug' ? '<button data-aktion="gegnerzug">Gegnerzug</button>' : ''}
-        ${kampf.phase === 'sieg' && !belohnungOffen ? '<button data-aktion="weiter">Weiter</button>' : ''}
-        ${kampf.phase === 'niederlage' ? '<button data-aktion="weiter">Weiter</button>' : ''}
+        ${kampf.phase === 'gegnerzug' ? `<button data-aktion="gegnerzug">${uebersetze('ui.gegnerzug')}</button>` : ''}
+        ${kampf.phase === 'sieg' && !belohnungOffen ? `<button data-aktion="weiter">${uebersetze('ui.weiter')}</button>` : ''}
+        ${kampf.phase === 'niederlage' ? `<button data-aktion="weiter">${uebersetze('ui.weiter')}</button>` : ''}
       </div>
 
       ${belohnungOffen ? `<div class="a-belohnung">${belohnungsPanel()}</div>` : ''}
@@ -744,14 +782,14 @@ function renderSchmiede() {
     const wuerfel = run.arsenal.find((w) => w.id === schmiedeWahl.wuerfelId);
     return `
       <section class="ph ph--belohnung">
-        <strong>Seite wählen (${uebersetze(wuerfel.nameKey)})</strong>
+        <strong>${uebersetze('ui.seite_waehlen')} (${uebersetze(wuerfel.nameKey)})</strong>
         <div class="picker">
           ${wuerfel.seiten.map((s, i) => {
             const angebot = schmiedePreis(wuerfel, schmiedeWahl.gravurId, i, run);
             return `
               <button class="ph ph--seite" data-schmiede-seite="${i}" ${angebot ? '' : 'disabled'}>
-                <span class="wert">${s.wert}</span>
-                <span class="stufe">${angebot ? `${angebot.preis} 🪙${angebot.typWechsel ? ' (Wechsel)' : ''}` : 'Cap'}</span>
+                <span class="wert">${s.fluchId ? '💀' : s.wert}</span>
+                <span class="stufe">${angebot ? `${angebot.preis} 🪙${angebot.typWechsel ? ` ${uebersetze('ui.wechsel')}` : ''}` : uebersetze(s.fluchId ? 'ui.fluch_kurz' : 'ui.cap')}</span>
               </button>`;
           }).join('')}
         </div>
@@ -760,13 +798,13 @@ function renderSchmiede() {
   if (schmiedeWahl) {
     return `
       <section class="ph ph--belohnung">
-        <strong>Würfel wählen</strong>
+        <strong>${uebersetze('ui.wuerfel_waehlen')}</strong>
         ${arsenalPicker('schmiede-wuerfel')}
       </section>`;
   }
   return `
     <section class="ph ph--belohnung">
-      <strong>Schmiede — Gravuren (Stufe 1/2/3: 40/60/80 🪙)</strong>
+      <strong>${uebersetze('ui.schmiede_titel')}</strong>
       <div class="picker">
         ${knotenKontext.map((g) => `<button data-schmiede-gravur="${g.gravurId}">${uebersetze(g.nameKey)}</button>`).join('')}
       </div>
@@ -775,25 +813,29 @@ function renderSchmiede() {
 
 function renderMarkt() {
   if (marktWahl) {
-    const titel = marktWahl.aktion === 'blaupause' ? 'Blaupause anwenden auf' : marktWahl.aktion === 'entfernen' ? 'Würfel entfernen' : 'Würfel trösten';
-    return `<section class="ph ph--belohnung"><strong>${titel} — Würfel wählen</strong>${arsenalPicker('markt-ziel')}</section>`;
+    const titel = uebersetze(`ui.markt_aktion.${marktWahl.aktion}`);
+    return `<section class="ph ph--belohnung"><strong>${titel} — ${uebersetze('ui.wuerfel_waehlen')}</strong>${arsenalPicker('markt-ziel')}</section>`;
   }
   const k = knotenKontext;
   return `
     <section class="ph ph--belohnung">
-      <strong>Markt</strong>
+      <strong>${uebersetze('ui.knoten.markt')}</strong>
       <div class="picker">
         ${k.wuerfel.map((a, i) => `<button data-markt-wuerfel="${i}">${uebersetze(`wuerfel.${a.vorlageId}.name`)} (${a.preisEicheln} 🌰)</button>`).join('')}
-        ${k.blaupause ? `<button data-markt-aktion="blaupause">Blaupause ${uebersetze(k.blaupause.nameKey)} (${k.blaupause.preisEicheln} 🌰)</button>` : ''}
-        ${k.segen ? `<button data-markt-aktion="segen">Segen ${uebersetze(k.segen.textKey).split(':')[0]} (${k.segen.preisEicheln} 🌰)</button>` : ''}
-        <button data-markt-aktion="entfernen">Würfel entfernen (${entfernenPreis(run)} 🪙)</button>
-        <button data-markt-aktion="troesten">Trösten-Dienst (${TROESTEN_DIENST_TAU} 💧)</button>
+        ${k.blaupause ? `<button data-markt-aktion="blaupause">${uebersetze('ui.blaupause')} ${uebersetze(k.blaupause.nameKey)} (${k.blaupause.preisEicheln} 🌰)</button>` : ''}
+        ${k.segen ? `<button data-markt-aktion="segen">${uebersetze('ui.segen')} ${uebersetze(k.segen.textKey).split(':')[0]} (${k.segen.preisEicheln} 🌰)</button>` : ''}
+        <button data-markt-aktion="entfernen">${uebersetze('ui.markt_aktion.entfernen')} (${entfernenPreis(run)} 🪙)</button>
+        <button data-markt-aktion="troesten">${uebersetze('ui.troesten_dienst')} (${TROESTEN_DIENST_TAU} 💧)</button>
       </div>
     </section>`;
 }
 
 function renderEvent() {
   const { event, ergebnis, hinweisKey } = knotenKontext;
+  // Offene Event-Belohnung (E6, Fluch-Events): gefundene Blaupause braucht
+  // einen Ziel-Würfel, BEVOR es weitergeht (transient — Save läuft erst am
+  // Knoten-Ende, ein Reload spielt das Event neu).
+  const offen = run.offeneBelohnungen?.[0];
   return `
     <section class="ph ph--belohnung">
       <strong>${uebersetze(event.titelKey)}</strong>
@@ -805,6 +847,11 @@ function renderEvent() {
               .map((o, i) => `<button data-event-opt="${i}" ${eventOptionMoeglich(run, o) ? '' : 'disabled'}>${uebersetze(o.textKey)}</button>`)
               .join('')}
           </div>`}
+      ${offen ? `
+        <p><strong>${uebersetze(offen.nameKey)}</strong> — ${uebersetze('ui.blaupause_ziel_frage')}</p>
+        <div class="picker">
+          ${run.arsenal.map((w) => `<button data-event-belohnung="${w.id}">${w.blaupause ? `◆ ${uebersetze(w.blaupause.nameKey)}` : uebersetze(w.nameKey)}</button>`).join('')}
+        </div>` : ''}
     </section>`;
 }
 
@@ -812,26 +859,26 @@ function renderEvent() {
 function renderWendung() {
   return `
     <section class="ph ph--wendung">
-      <strong>Das Hohle Herz</strong>
+      <strong>${uebersetze('ui.wendung_titel')}</strong>
       ${wendungSzene(run).map((key) => `<p>${uebersetze(key)}</p>`).join('')}
-      <button data-aktion="wendung-weiter">Weitergehen</button>
+      <button data-aktion="wendung-weiter">${uebersetze('ui.weitergehen')}</button>
     </section>`;
 }
 
 function renderLagerfeuer() {
   if (lagerfeuerWahl) {
-    return `<section class="ph ph--belohnung"><strong>${lagerfeuerWahl === 'troesten' ? 'Trösten' : 'Vollenden'} — Würfel wählen</strong>${arsenalPicker('lagerfeuer-ziel')}</section>`;
+    return `<section class="ph ph--belohnung"><strong>${uebersetze(`ui.lagerfeuer.${lagerfeuerWahl}`)} — ${uebersetze('ui.wuerfel_waehlen')}</strong>${arsenalPicker('lagerfeuer-ziel')}</section>`;
   }
   if (knotenKontext.genutzt) {
-    return '<section class="ph ph--belohnung"><strong>Das Feuer brennt ruhig herunter.</strong></section>';
+    return `<section class="ph ph--belohnung"><strong>${uebersetze('ui.feuer_genutzt')}</strong></section>`;
   }
   return `
     <section class="ph ph--belohnung">
-      <strong>Lagerfeuer — eine Handlung</strong>
+      <strong>${uebersetze('ui.lagerfeuer_titel')}</strong>
       <div class="picker">
-        <button data-lagerfeuer="heilen">Heilen (+30 % HP)</button>
-        <button data-lagerfeuer="troesten">Trösten (+2 Gemüt)</button>
-        <button data-lagerfeuer="vollenden">Vollenden (−1 Atem)</button>
+        <button data-lagerfeuer="heilen">${uebersetze('ui.lagerfeuer_heilen')}</button>
+        <button data-lagerfeuer="troesten">${uebersetze('ui.lagerfeuer_troesten')}</button>
+        <button data-lagerfeuer="vollenden">${uebersetze('ui.lagerfeuer_vollenden')}</button>
       </div>
     </section>`;
 }
@@ -842,10 +889,10 @@ function renderKlassenWahl() {
     .map((id) => `<button data-klasse="${id}">${uebersetze(KLASSEN[id].nameKey)} (${HUETER_BASIS_HP + KLASSEN[id].hpMod} ❤)</button>`)
     .join(' ');
   const stufen = (meta.maxReifegrad ?? 0) > 0
-    ? `<p>Reifegrad: ${Array.from({ length: (meta.maxReifegrad ?? 0) + 1 }, (_, i) =>
+    ? `<p>${uebersetze('ui.reifegrad_label')}: ${Array.from({ length: (meta.maxReifegrad ?? 0) + 1 }, (_, i) =>
         `<button data-reifegrad="${i}" ${i === reifegradWahl ? 'disabled' : ''}>${i}</button>`).join(' ')}</p>`
     : '';
-  return `<section class="ph ph--klassenwahl"><strong>Hüter wählen</strong>${stufen}<p>${knoepfe}</p></section>`;
+  return `<section class="ph ph--klassenwahl"><strong>${uebersetze('ui.hueter_waehlen')}</strong>${stufen}<p>${knoepfe}</p></section>`;
 }
 
 // Heimat-Hain-Panel (C5): Setzlinge pflanzen mit Samen (Enden-Währung).
@@ -856,12 +903,14 @@ function renderHeimatHain() {
     return `<p><button data-setzling="${k.id}" ${pruefung.ok ? '' : 'disabled'}>
       ${uebersetze(k.textKey)} (${k.kosten.samen} 🌱)</button></p>`;
   });
-  return `<section class="ph ph--heimathain"><strong>Heimat-Hain (🌱 ${meta.samen})</strong>${zeilen.join('')}</section>`;
+  return `<section class="ph ph--heimathain"><strong>${uebersetze('ui.heimathain_titel')} (🌱 ${meta.samen})</strong>${zeilen.join('')}</section>`;
 }
 
 function klickSetzling(setzlingId) {
   const ergebnis = pflanzeSetzling(meta, setzlingId);
-  letztesEreignis = ergebnis.ok ? `${uebersetze(ergebnis.setzling.textKey)} — gepflanzt.` : 'Noch nicht pflanzbar.';
+  letztesEreignis = ergebnis.ok
+    ? uebersetze('ui.gepflanzt', { name: uebersetze(ergebnis.setzling.textKey) })
+    : uebersetze('ui.nicht_pflanzbar');
   speichereNurMeta();
   render();
 }
@@ -877,14 +926,14 @@ function renderStammbaum() {
     return `<p><button data-stammbaum="${k.id}" ${pruefung.ok ? '' : 'disabled'}>
       ${uebersetze(k.textKey)} (${k.kosten.jahresringe} 🪵)</button>${hinweis}</p>`;
   });
-  return `<section class="ph ph--stammbaum"><strong>Stammbaum</strong>${zeilen.join('')}</section>`;
+  return `<section class="ph ph--stammbaum"><strong>${uebersetze('ui.stammbaum_titel')}</strong>${zeilen.join('')}</section>`;
 }
 
 function klickStammbaum(knotenId) {
   const ergebnis = kaufeStammbaumKnoten(meta, knotenId, { reifegrad: meta.maxReifegrad ?? 0 });
   letztesEreignis = ergebnis.ok
-    ? `${uebersetze(ergebnis.knoten.textKey)} — gekauft.`
-    : 'Noch nicht kaufbar.';
+    ? uebersetze('ui.gekauft_meta', { name: uebersetze(ergebnis.knoten.textKey) })
+    : uebersetze('ui.nicht_kaufbar');
   speichereNurMeta();
   render();
 }
@@ -897,7 +946,7 @@ function render() {
     // Enden-Klassifikation (01 §5, C6): nur bei Sieg — Niederlage hat kein Ende.
     // bossBefriedet ist bis zum Endboss (D3) ein Platzhalter (default true).
     const ende = run.abgeschlossen ? bestimmeEnde(run) : null;
-    const titel = ende ? uebersetze(ende.titelKey) : 'Der Hüter fällt';
+    const titel = ende ? uebersetze(ende.titelKey) : uebersetze('ui.hueter_faellt');
     if (!run.jahresringeVergebenFertig) {
       beendeTutorial(); // auch bei Niederlage: der geführte Kampf war gesehen
       run.jahresringeVergeben = verdieneJahresringe(meta, { sieg: run.abgeschlossen, kaempfe: run.kampfNummer, reifegrad: run.reifegrad ?? 0 });
@@ -912,11 +961,11 @@ function render() {
       <div class="ph ph--ende">
         <h2>${titel}</h2>
         ${ende ? endeSzenen(ende.id).map((key) => `<p class="ph ph--ende-text">${uebersetze(key)}</p>`).join('') : ''}
-        <p>End-Schreck: ${endSchreck(run)} · Trösten: ${run.troestenZahl} · 🪙 ${run.waehrungen.muenzen}</p>
-        <p>🪵 +${run.jahresringeVergeben || 0} Jahresringe (gesamt ${meta.jahresringe})${run.samenVergeben ? ` · 🌱 +${run.samenVergeben} Samen (gesamt ${meta.samen})` : ''}</p>
+        <p>${uebersetze('ui.ende_statistik', { schreck: endSchreck(run), troesten: run.troestenZahl })} · 🪙 ${run.waehrungen.muenzen}</p>
+        <p>🪵 ${uebersetze('ui.jahresringe_vergeben', { neu: run.jahresringeVergeben || 0, gesamt: meta.jahresringe })}${run.samenVergeben ? ` · 🌱 ${uebersetze('ui.samen_vergeben', { neu: run.samenVergeben, gesamt: meta.samen })}` : ''}</p>
         ${renderStammbaum()}
         ${renderHeimatHain()}
-        ${klassenWahl ? renderKlassenWahl() : '<button data-aktion="neu">Neuer Run</button>'}
+        ${klassenWahl ? renderKlassenWahl() : `<button data-aktion="neu">${uebersetze('ui.neuer_run_knopf')}</button>`}
       </div>`;
     verdrahte();
     return;
@@ -931,10 +980,11 @@ function render() {
   else if (modus === 'wendung') inhalt = statuszeile() + renderWendung();
   else inhalt = statuszeile() + renderKarte();
 
-  const verlassenSichtbar = ['schmiede', 'markt', 'lagerfeuer'].includes(modus) || (modus === 'event' && knotenKontext?.ergebnis);
+  const verlassenSichtbar = ['schmiede', 'markt', 'lagerfeuer'].includes(modus)
+    || (modus === 'event' && knotenKontext?.ergebnis && !run.offeneBelohnungen?.length);
   wurzel.innerHTML = `
     ${inhalt}
-    ${verlassenSichtbar ? '<section class="aktionen"><button data-aktion="verlassen">Weiterziehen</button></section>' : ''}
+    ${verlassenSichtbar ? `<section class="aktionen"><button data-aktion="verlassen">${uebersetze('ui.weiterziehen')}</button></section>` : ''}
     ${mentorZeile && modus !== 'wendung' ? `<section class="ph ph--mentor"><em>${uebersetze(mentorZeile)}</em></section>` : ''}
     <section class="ph ph--log">${letztesEreignis}</section>
   `;
@@ -971,6 +1021,7 @@ function verdrahte() {
   });
   binde('[data-markt-ziel]', (el) => marktZiel(el.dataset.marktZiel));
   binde('[data-event-opt]', (el) => eventOption(Number(el.dataset.eventOpt)));
+  binde('[data-event-belohnung]', (el) => eventBelohnungZiel(el.dataset.eventBelohnung));
   binde('[data-lagerfeuer]', (el) => lagerfeuerAktion(el.dataset.lagerfeuer));
   binde('[data-lagerfeuer-ziel]', (el) => lagerfeuerAktion(lagerfeuerWahl, el.dataset.lagerfeuerZiel));
   binde('[data-stammbaum]', (el) => klickStammbaum(el.dataset.stammbaum));
@@ -1018,11 +1069,11 @@ if (ladeGespeichertenRun()) {
     modus = 'kampf';
     kampf = starteKampf(run, rng, knoten.typ);
     beginneZug(run, kampf, rng);
-    letztesEreignis = 'Der Kampf war unterbrochen — er beginnt von Neuem.';
+    letztesEreignis = uebersetze('ui.kampf_resume');
   } else {
     // Falls der Save an der Schwelle zu Region 6 liegt: die Wendung zuerst (D4).
     modus = wendungSteht(run) ? 'wendung' : 'karte';
-    letztesEreignis = 'Willkommen zurück im Hain.';
+    letztesEreignis = uebersetze('ui.willkommen_zurueck');
     mentorZeile = mentorBeiRegionEintritt(run.region);
   }
   render();

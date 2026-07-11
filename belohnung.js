@@ -61,8 +61,15 @@ function zieheBlaupausenOption(rng) {
   return { typ: 'blaupause', blaupauseId: id, nameKey: BLAUPAUSEN[id].nameKey };
 }
 
+// Doppelschlag nur gegen Münzen (Schmiede): als Gratis-Belohnung hob er die
+// Voll-Run-Siegrate über das Band (04 §5-Lawinen-Check, E6: 71,3 % statt
+// 65–70 — zwei Teil-Seiten + Selbst-Gleichklang auf der schwächsten Seite
+// sind die effizienteste Gravur; der Kaufpreis ist die Bremse). [PROVISORISCH]
+const NUR_SCHMIEDE_GRAVUREN = new Set(['doppelschlag']);
+
 function zieheGravurOption(rng) {
-  const id = SLICE_GRAVUREN[Math.floor(rng.naechsteZahl() * SLICE_GRAVUREN.length)];
+  const pool = SLICE_GRAVUREN.filter((id) => !NUR_SCHMIEDE_GRAVUREN.has(id));
+  const id = pool[Math.floor(rng.naechsteZahl() * pool.length)];
   return { typ: 'gravur', gravurId: id, nameKey: GRAVUREN[id].nameKey };
 }
 
@@ -121,10 +128,16 @@ export function zieheBossBelohnung(run, rng) {
 // Blaupause überschreibt alle 6 Seiten UND setzt alle Stufen zurück (04 §1.1/09 §2.2, gesperrt).
 export function wendeBlaupauseAn(wuerfel, blaupauseId) {
   const bp = BLAUPAUSEN[blaupauseId];
+  // Fluch-Seiten überleben die Blaupause (07 §5.4: nur Würfel-entfernen löst
+  // den Fluch) — sonst wäre der Schrein-Gegenwert sein eigener Fluch-Löser.
+  const fluchSeiten = wuerfel.seiten
+    .map((s, i) => (s.fluchId ? { s, i } : null))
+    .filter(Boolean);
   wuerfel.seiten = bp.seitenVorlage.map((s) => ({
     wert: s.wert,
     effekt: s.effekt.map((e) => ({ ...e })),
   }));
+  for (const { s, i } of fluchSeiten) wuerfel.seiten[i] = s;
   wuerfel.stufen = [0, 0, 0, 0, 0, 0];
   wuerfel.typ = bp.typ;
   wuerfel.blaupause = { id: bp.id, nameKey: bp.nameKey };
@@ -155,6 +168,7 @@ function baueGravurSeite(gravur, effektWert, basisWert) {
 export function graviereSeite(wuerfel, gravurId, seitenIndex) {
   const gravur = GRAVUREN[gravurId];
   const seite = wuerfel.seiten[seitenIndex];
+  if (seite.fluchId) return null; // Fluch-Seiten sind nicht überschmiedbar (07 §5.4)
   const gleicheGravur = wuerfel.stufen[seitenIndex] > 0 && seite.gravurId === gravurId;
   const neueStufe = gleicheGravur
     ? Math.min(gravur.maxStufen, wuerfel.stufen[seitenIndex] + 1)

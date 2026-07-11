@@ -285,10 +285,12 @@ export const GRAVUREN = {
     id: 'doppelschlag',
     nameKey: 'gravur.doppelschlag.name',
     ueberschreibtZu: 'schaden_doppel',
+    // Preise nachgeeicht +10 (E6-Sim: Doppelschlag ist die effizienteste
+    // Gravur — zwei volle Schaden-Seiten + Selbst-Gleichklang). [PROVISORISCH]
     stufen: [
-      { stufe: 1, effektWert: [1, 1], preisMuenzen: 30 },
-      { stufe: 2, effektWert: [2, 2], preisMuenzen: 45 },
-      { stufe: 3, effektWert: [2, 3], preisMuenzen: 60 },
+      { stufe: 1, effektWert: [1, 1], preisMuenzen: 40 },
+      { stufe: 2, effektWert: [2, 2], preisMuenzen: 55 },
+      { stufe: 3, effektWert: [2, 3], preisMuenzen: 70 },
     ],
     maxStufen: 3,
     atemAenderung: 0,
@@ -297,7 +299,9 @@ export const GRAVUREN = {
   bruchstelle: {
     id: 'bruchstelle',
     nameKey: 'gravur.bruchstelle.name',
-    ueberschreibtZu: 'riss',
+    // Eigener Effekt-Typ: 'riss' ist der EIGEN-Riss auf den Spieler (Wildwuchs,
+    // 04 §4) — Bruchstelle legt Riss gespiegelt auf den GEGNER (04 §3.2).
+    ueberschreibtZu: 'gegner_riss',
     stufen: [{ stufe: 1, effektWert: 1, preisMuenzen: 50 }],
     maxStufen: 1,
     atemAenderung: 0,
@@ -310,12 +314,13 @@ export const GRAVUR_WECHSEL_AUFPREIS_FAKTOR = 1.5;
 
 // Slice-Gravuren, deren Effekte der Kampf-Loop ausführen kann: Mult/Aufschlag
 // (Wucht/Schärfe/Borke) + Status/Glanz seit Etappe B1 (Gift/Zunder/Fäulnis-Hauch/
-// Dürre-Hauch/Markhärtung/Glanz). Doppelschlag/Bruchstelle folgen später. [PROVISORISCH]
+// Dürre-Hauch/Markhärtung/Glanz). [PROVISORISCH]
 export const SLICE_GRAVUREN = [
   'wucht', 'schaerfe', 'borke',
   'gift', 'zunder', 'faeulnis_hauch', 'duerre_hauch', 'markhaertung', 'glanz_gravur',
   'echo_gravur', // seit B3 (Echo im Loop)
   'beruhigungs_gravur', 'ermutigungs_gravur', // seit B5 (Pflege-Seiten im Loop)
+  'doppelschlag', 'bruchstelle', // seit E6 (zwei Teil-Seiten / Gegner-Riss im Loop)
 ];
 
 // --- Blaupausen (04 §4, Schema 09 §2.3) ---------------------------------------
