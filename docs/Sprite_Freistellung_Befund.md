@@ -30,3 +30,26 @@ Alle Motive treffen Artefakt 11. Kanten halten über Magenta ohne Halo; eingesch
 - Die Aufbereitung ist reproduzierbar: `python3 tools/sprite_freistellen.py <bild.png> 256 72 <ausgabeordner> <name>`.
 
 **Nächster Schritt:** Kampfszenen-Layout (Artefakt 12) — legt fest, wo Kreaturen, Würfel, Tisch, Effekte und Zustände hingehören, bevor weitere Assets in Serie gehen.
+
+## Nachtrag 2026-07-11 — HUD-Charge (20 Sprites, 6 Blätter)
+
+Neue Fälle gegenüber den Kreaturen-/Icon-Chargen:
+
+- **Automatische Segmentierung:** Blätter werden jetzt als Ganzes geflutet und
+  in Zusammenhangs-Komponenten zerlegt (Treiber über `tools/sprite_freistellen.py`);
+  Beschriftungstext fällt durch den Flächen-Filter (< 1500 px) heraus. Kein
+  manuelles Boxen-Setzen mehr.
+- **Echtes Alpha erkannt und genutzt:** das Atem/Gemüt-Blatt kam als RGBA mit
+  echter Transparenz (weiche Glow-Kanten) — hier wird das Alpha direkt als
+  Gewicht übernommen statt geflutet. **Für Aaron: genau so liefern, das ist
+  der Idealfall.**
+- **Rechteckige Ausgabe:** UI-Elemente (Leisten 4:1, Knöpfe 2:1, Pergament)
+  werden nicht mehr quadratisch gepolstert — längste Seite = Zielgröße,
+  Seitenverhältnis bleibt.
+- **JPEG-Quelle (Pool-Feld):** einmalig via Pillow nach PNG gewandelt,
+  Flood-Toleranz 52 gegen die Kompressions-Artefakte — Ergebnis kantensauber.
+  **Bitte trotzdem PNG liefern**, JPEG bleibt ein Risiko.
+- **Gemalte Boden-Schattenlinien** (Übermut-Leisten): frei schwebende
+  Schatten-Streifen unter dem Motiv werden spaltenweise entfernt (unterster
+  dünner Lauf nach Lücke); direkt angewachsene Unterkanten-Schattierung
+  bleibt als Teil des Motivs. **Bitte ohne Boden-Schatten exportieren.**

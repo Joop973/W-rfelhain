@@ -1,10 +1,12 @@
 # Würfelhain — Sprite-Backlog (offene Assets)
 
-*Stand 2026-07-09. Was fertig freigestellt in `assets/` liegt, ist unten unter „Erledigt" vermerkt. Alle Bildgenerierungs-Prompts stehen in `docs/11_Bild_Prompts.md`; Export-Regeln (Alpha, kein Nebel, mittig) in `docs/Sprite_Freistellung_Befund.md`. Prioritäts-Reihenfolge: was den spielbaren R1-Kampf blockiert zuerst.*
+*Stand 2026-07-11. Was fertig freigestellt in `assets/` liegt, ist unten unter „Erledigt" vermerkt. Alle Bildgenerierungs-Prompts stehen in `docs/11_Bild_Prompts.md`; Export-Regeln (Alpha, kein Nebel, mittig) in `docs/Sprite_Freistellung_Befund.md`. Prioritäts-Reihenfolge: was den spielbaren R1-Kampf blockiert zuerst.*
 
-## Erledigt (12)
+## Erledigt (72)
 Würfel: `schaden` · `faeule` · `brand` · `rinde` · `schliff` · `stuetze` · `ermutigung` · `zuversicht`
 Gegner: `astbeisser` · `borkenkriecher` · `moosgnom` · `dornalter`
+Icons (40): Seiten (16) · Status/Combo/FX (8) · Währung (3) · Meta (3) · Knoten (10)
+**HUD (20, 2026-07-11):** `atem.pip(+_leer)` · `gemuet.leiste` + 2 Marker · `schreck.marke` · `overlay.gesperrt` · `pool.feld` · `uebermut.leiste(+.kipp)` · 3 Knöpfe × 2 Frames · `karte.pergament` · `rahmen.9slice` · `overlay.gespiegelt.1/.2` — **damit ist Artefakt 11 §6 (HUD) komplett**; Verdrahtung ins Spiel-HUD ist ein E-Restposten
 
 ---
 
@@ -59,7 +61,7 @@ Je Würfel drei Ausdrucks-Zustände (04 §4.1): `ruhig` (= die gelieferte Basis-
 
 ## Priorität 5 — HUD, VFX, Szenen
 
-- **HUD (~13):** Atem-Pip (voll/leer) · Gemüt-Leiste · Schreck-Marke · overlay.gesperrt · Pool-Feld · Übermut-Leiste · Knöpfe (Wurf/Reroll/Trösten) · Karten-Pergament · 9-Slice-Rahmen · overlay.gespiegelt. *(Im Mockup als CSS gebaut — echte Sprites optional, wo diegetisch gewünscht.)*
+- ~~**HUD (~13)**~~ — **ERLEDIGT** (20 Dateien in `assets/ui/`, 2026-07-11; Manifest-Sektion `ui`).
 - **VFX (6 Sequenzen):** tischsturz · vollmond · kristallisation · troesten · treffer · heilung_tau. (Prompts Artefakt 11 §10.)
 - **Szenen-Illustrationen (5):** `szene.wendung` · `szene.ende.fruehling` · `szene.ende.stiller_hain` · `szene.ende.hohles_erbe` · `szene.titel`. (Artefakt 11 §11.)
 
@@ -80,7 +82,7 @@ Je Würfel drei Ausdrucks-Zustände (04 §4.1): `ruhig` (= die gelieferte Basis-
 | Boden-Ebenen | 6 |
 | Kulissen | 6 |
 | Seiten-/Status-/Währung-/Knoten-Icons | ~47 |
-| HUD | ~13 |
+| HUD | ~~13~~ **0 — erledigt** |
 | VFX | 6 Sequenzen |
 | Szenen | 5 |
 
