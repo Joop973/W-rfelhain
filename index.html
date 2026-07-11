@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Würfelhain</title>
+  <link rel="icon" href="data:,">
+  <style>
+    /* Rollen-Slots (08 §1.4) + Welk-Stufen-MVP via Filter (08 §3.4 Variante C). */
+    #hain {
+      --holz: #8a5a3b; --rinde: #3d2a1e; --laub: #6a8f3c; --tau: #7fb7c4;
+      --glut: #c8552e; --pergament: #e8dcc0; --tinte: #2a2018;
+    }
+    /* Weicher Swap an Region-Grenzen, ~600 ms (08 §3.4); welk-0 explizit
+       saturate(1), damit der filter-Übergang interpoliert (none animiert nicht). */
+    #hain { transition: filter 600ms ease; }
+    #hain.welk-0 { filter: saturate(1); }
+    #hain.welk-1 { filter: saturate(0.85); }
+    #hain.welk-2 { filter: saturate(0.7) sepia(0.15); }
+    #hain.welk-3 { filter: saturate(0.5) sepia(0.25); }
+    #hain.welk-4 { filter: saturate(0.3) sepia(0.2) brightness(0.95); }
+    #hain.welk-5 { filter: saturate(0.1) brightness(0.9); }
+
+    * { box-sizing: border-box; margin: 0; }
+    body { background: var(--rinde, #3d2a1e); display: flex; justify-content: center; }
+    #hain {
+      width: 100%; max-width: 448px; min-height: 100vh;
+      background: var(--holz); color: var(--tinte);
+      font: 14px/1.4 monospace; padding: 12px; image-rendering: pixelated;
+    }
+    h1 { font-size: 16px; color: var(--pergament); margin-bottom: 8px; }
+    section { margin-bottom: 10px; }
+
+    /* Platzhalter-Konvention (08 §4.0): beschriftete Boxen, keine fertige Kunst. */
+    .ph { border: 1px dashed var(--tinte); background: var(--pergament); padding: 6px; }
+    .ph--gegner { text-align: center; }
+    .ph--log { min-height: 2.8em; font-style: italic; }
+    .ph--ende { text-align: center; padding: 24px 12px; }
+    .ph--ende-text { text-align: left; margin: 8px 0; }
+    /* Narrativ (D4): Mentor-Stimme, Zweifel-Hinweise, Wendungs-Szene */
+    .ph--mentor { font-style: italic; border-style: dotted; opacity: 0.9; }
+    .ph--hinweis { font-style: italic; margin-top: 6px; opacity: 0.85; }
+    .ph--wendung { padding: 18px 12px; }
+    .ph--wendung p { margin: 8px 0; }
+    .ph--wendung button { margin-top: 8px; }
+
+    .balken { height: 8px; background: var(--rinde); margin: 4px 0; }
+    .balken-fuellung { height: 100%; background: var(--glut); transition: width 0.2s; }
+
+    .status { display: flex; flex-wrap: wrap; gap: 10px; color: var(--pergament); }
+    .status .warnung { color: var(--glut); font-weight: bold; }
+    .pips { letter-spacing: 2px; }
+    .badges { display: inline-flex; gap: 4px; }
+    .badge { background: var(--rinde); color: var(--pergament); border-radius: 3px; padding: 0 3px; font-size: 11px; }
+    .ph--gegner .badges { justify-content: center; margin-top: 4px; }
+
+    .hand { display: flex; flex-wrap: wrap; gap: 6px; }
+    .ph--wuerfel {
+      position: relative; width: 72px; height: 72px; cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      font: inherit;
+    }
+    .ph--wuerfel .wert { font-size: 22px; font-weight: bold; }
+    .ph--wuerfel .label { font-size: 8px; }
+    .ph--wuerfel.typ-rinde { background: color-mix(in srgb, var(--pergament) 70%, var(--laub)); }
+    .ph--wuerfel.stimmung-froh { outline: 2px solid var(--tau); }
+    .ph--wuerfel.stimmung-aengstlich { outline: 2px solid var(--glut); opacity: 0.85; }
+    .ph--wuerfel.platziert { border-style: solid; border-width: 2px; background: var(--tau); }
+    .ph--wuerfel .gesperrt { position: absolute; top: 2px; right: 2px; font-size: 9px; }
+    .ph--wuerfel .position { position: absolute; top: 2px; left: 4px; font-size: 10px; font-weight: bold; }
+
+    .ph--belohnung { background: color-mix(in srgb, var(--pergament) 80%, var(--tau)); }
+    .ph--karte { display: flex; flex-direction: column; gap: 8px; }
+    .karten-reihe { display: flex; justify-content: center; gap: 8px; }
+    .ph--knoten {
+      min-width: 88px; min-height: 40px; font: inherit; font-size: 11px;
+      cursor: default; opacity: 0.55;
+    }
+    .ph--knoten.waehlbar { cursor: pointer; opacity: 1; border-style: solid; border-width: 2px; }
+    .ph--knoten.aktuell { background: var(--tau); opacity: 1; animation: knoten-puls 1.6s steps(1) infinite; }
+    /* Puls des aktuellen Knotens (08 §4.8, E6): steps(1) = harter 2-Frame-
+       Wechsel — 1:1 durch das spätere Puls-Sprite-Frame ersetzbar. */
+    @keyframes knoten-puls {
+      0%, 100% { box-shadow: 0 0 0 2px var(--tau); }
+      50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--tau) 55%, transparent); }
+    }
+    @media (prefers-reduced-motion: reduce) { .ph--knoten.aktuell { animation: none; } }
+    .picker { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .ph--seite {
+      min-width: 56px; min-height: 44px; cursor: pointer; font: inherit;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .ph--seite .wert { font-size: 16px; font-weight: bold; }
+    .ph--seite .label { font-size: 8px; }
+    .ph--seite .stufe { font-size: 8px; color: var(--glut); }
+
+    .aktionen { display: flex; gap: 8px; }
+    button:not(.ph--wuerfel) {
+      font: inherit; padding: 8px 12px; cursor: pointer;
+      background: var(--pergament); border: 1px solid var(--tinte); color: var(--tinte);
+    }
+    button:disabled { opacity: 0.45; cursor: default; }
+
+    /* ===== Kampf-Arena (Artefakt 12: StS-Schema, Querformat-freundlich) =====
+       Zwei austauschbare Ebenen (Kulisse + Boden), alle Figuren auf der
+       Boden-Ebene; Monster rechts, Hüter + Würfel-Armee links, Wurf-Leiste
+       unten. Sprites aus assets/ (manifest.json); fehlt eins → Platzhalter. */
+    #hain.arena-modus { max-width: 960px; }
+    .arena {
+      position: relative; width: 100%; aspect-ratio: 16 / 9; min-height: 330px;
+      overflow: hidden; border-radius: 10px; border: 1px solid #120b06;
+      font-family: monospace;
+    }
+    .arena .a-kulisse { position: absolute; inset: 0;
+      background: linear-gradient(180deg,#bfe3c8 0%,#a9d6b4 32%,#8fbf95 52%,#6f9c6f 72%,#55704e 100%); }
+    .arena .a-kulisse::before { content: ""; position: absolute; left: 0; right: 0; top: 22%; height: 32%;
+      background:
+        radial-gradient(closest-side,#5f8a54 92%,transparent) 12% 60%/70px 108px no-repeat,
+        radial-gradient(closest-side,#557d4c 92%,transparent) 32% 42%/98px 150px no-repeat,
+        radial-gradient(closest-side,#6b955c 92%,transparent) 54% 66%/80px 116px no-repeat,
+        radial-gradient(closest-side,#4f7345 92%,transparent) 76% 46%/110px 160px no-repeat;
+      filter: blur(.5px); opacity: .82; }
+    .arena .a-boden { position: absolute; left: 0; right: 0; bottom: 0; height: 46%;
+      background: linear-gradient(180deg,#725638,#503a26 50%,#382a1c);
+      box-shadow: 0 2px 0 rgba(255,240,210,.12) inset; }
+    .arena .a-horizont { position: absolute; left: 0; right: 0; bottom: 46%; height: 2px;
+      background: linear-gradient(90deg,transparent,rgba(255,240,210,.22),transparent); }
+    .arena .a-vignette { position: absolute; inset: 0; pointer-events: none; z-index: 40;
+      background: radial-gradient(60% 60% at 16% 14%,rgba(255,241,214,.13),transparent 60%),
+        linear-gradient(180deg,rgba(0,0,0,.14),transparent 15% 70%,rgba(0,0,0,.3)); }
+
+    .a-top { position: absolute; z-index: 26; top: 0; left: 0; right: 0; height: 11%; min-height: 30px;
+      display: flex; align-items: center; gap: 8px; padding: 0 10px;
+      background: linear-gradient(180deg,rgba(24,15,8,.96),rgba(24,15,8,.62));
+      border-bottom: 1px solid #120b06; font: 600 11px/1 monospace; color: #eadfc7; }
+    .a-top .portraet { width: 22px; height: 22px; border-radius: 50%; flex: none;
+      background: radial-gradient(circle at 40% 35%,#8a5a3b,#3d2a1e); border: 1.5px solid #6a4a2c; }
+    .a-top .balken { width: 64px; height: 8px; }
+    .a-top .mitte { flex: 1; text-align: center; color: #d9c9a6; }
+    .a-uebermut { display: inline-flex; gap: 2px; }
+    .a-uebermut i { width: 6px; height: 12px; border-radius: 2px; background: #3a2c1c; border: 1px solid #000; }
+    .a-uebermut i.an { background: linear-gradient(180deg,#e2743c,#b8481f); }
+    .a-uebermut i.kipp { box-shadow: 0 0 6px 1px rgba(200,85,46,.7); }
+
+    .a-monster { position: absolute; z-index: 14; right: 3%; top: 15%; width: 34%;
+      display: flex; flex-direction: column; align-items: center; border: 0; background: none; padding: 0; }
+    .a-absicht { padding: 3px 10px 4px; border-radius: 12px; background: rgba(28,18,10,.9);
+      color: #ffd9a0; border: 1px solid #6a4a2c; font: 700 14px/1 monospace; position: relative; }
+    .a-absicht::after { content: ""; position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%);
+      border: 6px solid transparent; border-top-color: rgba(28,18,10,.9); border-bottom: 0; }
+    .a-monster img, .a-monster .m-platzhalter { height: min(26vw, 190px); width: auto;
+      filter: drop-shadow(0 8px 6px rgba(0,0,0,.34)); animation: a-bob 4.8s ease-in-out infinite; }
+    .a-monster .m-platzhalter { height: min(22vw, 160px); width: min(22vw, 160px);
+      display: grid; place-items: center; font-size: 10px; }
+    .a-schatten { width: 45%; height: 14px; margin-top: -8px; border-radius: 50%;
+      background: radial-gradient(closest-side,rgba(20,12,6,.5),transparent); }
+    .a-hp { margin-top: 4px; width: 60%; height: 11px; border-radius: 6px; background: #241811;
+      border: 1px solid #000; position: relative; overflow: hidden; }
+    .a-hp i { position: absolute; inset: 0; background: linear-gradient(180deg,#e06a3a,#b23f22);
+      transform-origin: left; }
+    .a-hp b { position: absolute; inset: 0; display: grid; place-items: center;
+      font: 600 8px/1 monospace; color: #fff; text-shadow: 0 1px 1px #000; }
+
+    .a-hueter { position: absolute; z-index: 9; left: 1%; bottom: 30%; text-align: center; }
+    .a-hueter .mantel { width: 58px; height: 86px; margin: 0 auto; position: relative;
+      background: linear-gradient(180deg,#4a3526,#2a1c12);
+      border-radius: 46% 46% 24% 24% / 62% 62% 14% 14%;
+      box-shadow: 0 8px 8px -5px rgba(0,0,0,.5), 0 0 0 2px #1a110a; animation: a-bob 5.4s ease-in-out infinite; }
+    .a-hueter .mantel::after { content: ""; position: absolute; left: 50%; top: 20px; transform: translateX(-50%);
+      width: 17px; height: 7px;
+      background: radial-gradient(circle at 30% 50%,var(--tau) 0 24%,transparent 26%),
+                  radial-gradient(circle at 70% 50%,var(--tau) 0 24%,transparent 26%); }
+    .a-hueter small { font: 600 8px/1.4 monospace; color: #c8b48f; }
+
+    .a-einheit { position: absolute; z-index: 14; width: 72px; border: 0; background: none; padding: 0;
+      display: flex; flex-direction: column; align-items: center; cursor: pointer; color: #eadfc7; }
+    .a-einheit::after { content: ""; position: absolute; left: 50%; top: 56px; transform: translateX(-50%);
+      width: 50px; height: 10px; border-radius: 50%; z-index: -1;
+      background: radial-gradient(closest-side,rgba(18,10,5,.55),transparent); }
+    .a-einheit img, .a-einheit .w-platzhalter { width: 62px; height: 62px;
+      filter: drop-shadow(0 5px 4px rgba(0,0,0,.42)); animation: a-bob 3.4s ease-in-out infinite; }
+    .a-einheit .w-platzhalter { display: grid; place-items: center; font-size: 8px; }
+    .a-einheit:nth-of-type(odd) img { animation-delay: .6s; }
+    .a-einheit.stimmung-froh img { animation: a-hop 2.4s ease-in-out infinite; }
+    .a-einheit.stimmung-aengstlich img { animation: a-zittern .5s steps(3) infinite;
+      filter: drop-shadow(0 5px 4px rgba(0,0,0,.42)) saturate(.5) brightness(.82); }
+    .a-einheit.platziert { opacity: .45; }
+    .a-einheit .nr { position: absolute; top: -4px; left: 0; width: 15px; height: 15px; border-radius: 50%;
+      background: #1c120a; color: #ffd9a0; border: 1px solid #6a4a2c; font: 700 9px/15px monospace; }
+    .a-einheit .zauber { position: absolute; top: -4px; right: 0; min-width: 17px; height: 17px; border-radius: 9px;
+      background: rgba(20,12,6,.9); border: 1px solid var(--tau); font: 700 9px/17px monospace; padding: 0 2px; }
+    .a-einheit .gemuet { font: 600 8px/1.4 monospace; color: #c8b48f; text-shadow: 0 1px 2px #000; }
+    .a-einheit.stimmung-aengstlich .gemuet { color: var(--tau); }
+    .a-pos-1 { left: 8%;  bottom: 27%; }
+    .a-pos-2 { left: 19%; bottom: 23%; }
+    .a-pos-3 { left: 30%; bottom: 27%; }
+    .a-pos-4 { left: 13%; bottom: 40%; transform: scale(.84); z-index: 11; }
+    .a-pos-5 { left: 26%; bottom: 41%; transform: scale(.82); z-index: 11; }
+
+    .a-reihe { position: absolute; z-index: 16; left: 42%; top: 57%;
+      display: flex; align-items: center; gap: 6px; }
+    .a-slot { width: 38px; height: 38px; border-radius: 8px; background: rgba(30,18,10,.34);
+      border: 1.5px dashed rgba(20,12,6,.6); display: grid; place-items: center;
+      font: 700 15px/1 monospace; color: #ffcf9c; }
+    .a-slot.belegt { border-style: solid; border-color: #8a3d24; background: rgba(120,44,20,.3); }
+    .a-pfeil { font: 700 14px/1 monospace; color: #ffd9a0; animation: a-fluss 1.8s ease-in-out infinite; }
+
+    .a-wurf { position: absolute; z-index: 24; bottom: 2.5%; left: 1.5%; width: 70%;
+      display: flex; align-items: stretch; gap: 5px; }
+    .a-atem { flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 2px; width: 40px; border-radius: 9px; background: rgba(16,10,6,.6); border: 1px solid #2a1a0e;
+      color: #eadfc7; font: 700 7.5px/1 monospace; }
+    .a-orb { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
+      background: radial-gradient(circle at 40% 34%,#9fd3dd,#3f7d8a); border: 2px solid #14343b;
+      color: #08202a; font: 800 11px/1 monospace; }
+    .a-kachel { flex: 1; min-width: 34px; min-height: 36px; border-radius: 9px; padding: 4px 6px; position: relative;
+      background: linear-gradient(180deg,rgba(46,30,18,.96),rgba(30,20,12,.96)); border: 1px solid #2a1a0e;
+      display: flex; flex-direction: column; gap: 1px; color: #eadfc7; cursor: pointer; text-align: left; }
+    .a-kachel .kopf { display: flex; align-items: center; gap: 4px; }
+    .a-kachel .knr { width: 13px; height: 13px; border-radius: 50%; background: #1c120a; color: #ffd9a0;
+      border: 1px solid #6a4a2c; font: 700 8px/13px monospace; text-align: center; flex: none; }
+    .a-kachel .kico { width: 15px; height: 15px; image-rendering: pixelated; flex: none; }
+    .a-kachel .kname { font: 600 8.5px/1 monospace; color: #c8b48f; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis; }
+    .a-kachel .kwert { margin-left: auto; font: 800 19px/1 monospace; color: #ffe4b0; text-shadow: 0 1px 2px #000; }
+    .a-kachel .keff { font: 700 9px/1.2 monospace; color: #9fd3dd; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis; }
+    .a-kachel.platziert { outline: 2px solid #8a3d24; opacity: .85; }
+    .a-kachel.platziert .kwert { color: #ff9c6b; }
+    .a-akt { position: absolute; z-index: 24; right: 1.5%; bottom: 2.5%; width: 26%;
+      display: flex; flex-direction: column; gap: 5px; }
+    .a-akt button { padding: 8px 6px; min-height: 38px; border-radius: 9px; font: 700 11px/1.2 system-ui,sans-serif;
+      background: linear-gradient(180deg,#7a5230,#5c3a20); color: #f2e4cc; border: 1px solid #2a1a0e;
+      box-shadow: 0 3px 0 #2a1a0e; }
+    .a-akt button.warn { background: linear-gradient(180deg,#a5502a,#7c3a1c); }
+    .a-belohnung { position: absolute; inset: 0; z-index: 50; display: grid; place-items: center;
+      background: rgba(14,9,5,.55); }
+    .a-belohnung > section { width: min(420px, 92%); max-height: 90%; overflow-y: auto; }
+    .a-status-badges { position: absolute; z-index: 18; left: 42%; top: 47%; }
+
+    /* Alt-Stile in der Arena neutralisieren (Platzhalter-Kästen/Buttons) */
+    #hain.arena-modus h1 { display: none; }
+    .arena .a-einheit.ph--wuerfel, .arena .a-einheit.ph--wuerfel.platziert {
+      border: 0; background: none; outline: none; width: 72px; height: auto; }
+    .arena .a-einheit .w-platzhalter { border: 1px dashed var(--tinte); background: var(--pergament);
+      color: var(--tinte); width: 62px; height: 62px; }
+    .arena button.a-kachel { background: linear-gradient(180deg,rgba(46,30,18,.96),rgba(30,20,12,.96));
+      border: 1px solid #2a1a0e; color: #eadfc7; }
+    .arena button.a-kachel.platziert { background: linear-gradient(180deg,rgba(66,38,22,.98),rgba(46,26,14,.98)); }
+    .arena .a-monster { border: 0; background: none; }
+
+    @keyframes a-bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+    @keyframes a-hop { 0%,72%,100% { transform: translateY(0); } 82% { transform: translateY(-6px); } 92% { transform: translateY(0); } }
+    @keyframes a-zittern { 0% { transform: translateX(-1px); } 50% { transform: translateX(1px); } 100% { transform: translateX(-1px); } }
+    @keyframes a-fluss { 0%,100% { transform: translateX(0); opacity: .7; } 50% { transform: translateX(4px); opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) {
+      .a-monster img, .a-einheit img, .a-hueter .mantel, .a-pfeil { animation: none !important; }
+    }
+    /* Hochformat: Arena strecken (Positionen sind %-basiert) + Dreh-Hinweis.
+       Querformat ist die Zielausrichtung (Artefakt 12 §7). */
+    .a-drehhinweis { display: none; }
+    @media (orientation: portrait) {
+      .arena { aspect-ratio: auto; height: min(72vh, 640px); }
+      .a-drehhinweis { display: block; position: absolute; z-index: 27; top: 12%; left: 50%;
+        transform: translateX(-50%); padding: 3px 10px; border-radius: 10px;
+        background: rgba(24,15,8,.8); color: #c8b48f; font: 600 9px/1.4 monospace; white-space: nowrap; }
+    }
+    /* Mobil (E2): kein Doppeltipp-Zoom/300-ms-Delay auf Bedienelementen,
+       kein grauer Tap-Blitz (iOS/Android), keine Textauswahl beim Tippen. */
+    button, .ph--wuerfel, .ph--knoten {
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-user-select: none; user-select: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="hain" class="welk-0">
+    <h1>Würfelhain</h1>
+    <div id="spiel"></div>
+  </div>
+  <script type="module" src="ui/main.js"></script>
+</body>
+</html>
