@@ -2,7 +2,19 @@
 
 *Arbeitsdokument mit fortschreibbaren Häkchen. Etappen = Wellen aus 00 §2, Etappen-Grenzen und Balance-Tore sind fix; Reihenfolge innerhalb einer Etappe darf nach Abhängigkeiten optimiert werden. Rollen: **[C]** = Claude (Code-Session), **[D]** = Du (Design/Playtest/Assets), **[C+D]** = gemeinsam.*
 
-*Stand: 2026-07-04. Erstfassung nach Abschluss des Welle-1-Slices.*
+*Stand: 2026-07-11 (Erstfassung 2026-07-04 nach dem Welle-1-Slice). Repo-Stand: 189 Tests grün · Save v7 · alle 3 Balance-Tore abgenommen · Bänder RG 0 = 68,8 % / RG 10 = 25,2 % (n=2000).*
+
+## Status-Übersicht *(zuerst lesen — der Rest ist Verlauf)*
+
+| Etappe | Status | Offen |
+|---|---|---|
+| A — Region 1 voll | ✅ komplett | — |
+| B — Tiefe (Tor 2) | ✅ komplett | — |
+| C — Meta | ✅ komplett | — |
+| D — Voller Umfang (Tor 3) | ✅ bis auf D6 | **D6**: Kunst/Audio (52 Sprites da, Rest s. `Sprite_Backlog.md`; Audio komplett offen) |
+| E — Release | E1/E2/E5/E6 + Arena ✅ | **E3** Beta · **E4** Doku-Endstand · **E7** Kleinrest |
+
+**Nächster Claude-Schritt [C]:** E7 (klein) oder auf Zuruf. **Deine nächsten Schritte [D]:** gesammelt in der Sektion „Offene [D]-Punkte" am Ende — die Etappen-interne Streuung ist dort konsolidiert.
 
 ---
 
@@ -26,7 +38,7 @@
 
 ---
 
-## Etappe A — Welle 2: Region 1 voll *(als Nächstes)*
+## Etappe A — Welle 2: Region 1 voll
 
 Ziel: kompletter Region-1-Run mit Karte, Belohnungen, Händlern, Boss, Save — „lesbare Handy-UI, Tutorial-Boden" (00 §2 Stufe 6).
 
@@ -36,14 +48,10 @@ Ziel: kompletter Region-1-Run mit Karte, Belohnungen, Händlern, Boss, Save — 
 - [x] **A4 [C] Knotentypen**: Markt (Eicheln-Käufe, Würfel entfernen 25+15/Anwendung, Trösten-Dienst 3 Tau), Event-Vignetten (Slice: Brunnen + Kätzchen), Lagerfeuer (Heilen/Trösten/Vollenden), Tau +6/Region *(07 §1.3/§2/§3)* — `knoten.js`, 2026-07-04
 - [x] **A5 [C] Boss 1 Saumhüter**: 2 Phasen, Twist „Erste Geduld" (jede 3. Runde Block), Sonder-Belohnung = Blaupausen-Wahl *(05 §6)* — 2026-07-04 *(mehrfach-Treffer der Phase 2 folgen mit Etappe B)*
 - [x] **A6 [C] Save v2**: Karte/Position/HP/Pity in `runState`, Migration 1→2 aktiv (Kettenpflicht-Test greift), UI lädt gespeicherten Run beim Start *(09 §3)* — 2026-07-04
-- [ ] **A7 [C+D] Handy-UI-Ausbau**: Karten-/Belohnungs-/Händler-Screens, Tutorial-Hinweise — weiter in Platzhalter-Konvention (08 §4.0). **Du testest auf dem echten Handy** (Lesbarkeit ist Design-Kriterium, 08 §1.3)
-- [x] **A8 [C] Region-1-Nach-Eichung gemessen**: `sim/region1_run.js` läuft über den echten Spielcode (Karte/Knoten/Belohnungen); Gegner-Schaden nachgeeicht (Normal 8–13, Elite 12–13, Boss 12–14) → Standard 70,5 % im Zielband, Pflege 92,8 % > Gier 21,2 % — Befund: `docs/Region1_Karten_Kalibrierung_Befund.md`, 2026-07-04. **[D] Endwert-Entscheid offen** (inkl. Frage 03-§7-Kurve nachziehen vs. Heilung senken, s. Befund §5) *(03 §13, 05 §1.2)*
+- [x] **A7 [C+D] Handy-UI-Ausbau**: Karten-/Belohnungs-/Händler-Screens, Tutorial-Hinweise — weiter in Platzhalter-Konvention (08 §4.0) *(über die Etappen hinweg vollständig gebaut: alle Screens (A), Tutorial (E5), Touch-Härtung + Geräte-Smoke (E2), Kampf-Arena mit echten Sprites (Artefakt 12, s. Etappe E). Der [D]-Teil „echtes Handy" ist in der E2-Checkliste (`docs/Geraete_Matrix_Befund.md`) aufgegangen)* — 2026-07-11
+- [x] **A8 [C] Region-1-Nach-Eichung gemessen**: `sim/region1_run.js` läuft über den echten Spielcode (Karte/Knoten/Belohnungen); Gegner-Schaden nachgeeicht (Normal 8–13, Elite 12–13, Boss 12–14) → Standard 70,5 % im Zielband, Pflege 92,8 % > Gier 21,2 % — Befund: `docs/Region1_Karten_Kalibrierung_Befund.md`, 2026-07-04. *Der damals offene [D]-Endwert-Entscheid ist durch die Tor-3-Abnahme überholt (D8, 2026-07-07: Kalibrierungs-Hebel gesperrt)* *(03 §13, 05 §1.2)*
 
-**Deine Entscheide in Etappe A [D]:**
-- [ ] Ziehmodell-Default bestätigen (je Zug 5 frisch — 02 §2.2)
-- [ ] Rinde-Reserve zünden ja/nein (04 §2, falls Block zu dünn wirkt)
-- [ ] Sauber-Sieg-Bedingung: „ohne HP-Verlust" zu streng? (03 §11)
-- [ ] Ökonomie-Gefühl: reichen ~12–13 Gravuren/Run?
+**Deine Entscheide in Etappe A [D]:** → konsolidiert in „Offene [D]-Punkte" (Ende des Dokuments); die drei Tore haben die Werte implizit im Band bestätigt, formale Sperrung = E4.
 
 ---
 
@@ -62,10 +70,7 @@ Ziel: alle Systeme voll aktiv, mehrere Build-Pfade. Endet mit **Balance-Tor 2**.
 
 **Etappe B ist damit abgeschlossen** (Tor 2 passiert). Beobachtungspunkt für Etappe C/D: Status-Build in R1 strukturell schwächster Pfad — Region-2-Kalibrierung (Moderbruch) prüft.
 
-**Deine Entscheide in Etappe B [D]:**
-- [ ] Alle `[PROVISORISCH]`-Gravur-/Blaupausen-Werte nach Sim-Befund sperren
-- [ ] Freilauf/Klemme-Verrechnung bestätigen (02 §7.5)
-- [ ] Tau-Knappheit prüfen: reicht der Trösten-Zugang in R1–2 gegen die Schreck-Spirale? *(Kernfrage 03 §12.1)*
+**Deine Entscheide in Etappe B [D]:** → konsolidiert in „Offene [D]-Punkte" (Ende des Dokuments).
 
 ---
 
@@ -90,7 +95,7 @@ Endet mit **Balance-Tor 3** (voller Run balanciert).
 - [x] **D3 [C] Endboss**: 3 Phasen, Twist „Hohles Echo", personalisierte Phase aus dem ängstlichsten Arsenal, Trösten-Auflösung via `bossSchreck` *(05 §7/§8)* *(Spiegel-Module aus gesperrten Seiten; Befriedung beendet ohne Kill und setzt run.bossBefriedet — das Frühling-Gate in enden.js ist damit scharf; Endboss ohne Item-Belohnung)* — 2026-07-06
 - [x] **D4 [C+D] 3 Enden + Narrativ**: Mentor-Stimme über den Run (Text-Keys!), Zweifel-Events R4/R5, Wendungs-Szene, Enden-Inszenierung — **du redigierst alle Texte** (Ton 01 §6 ist Chefsache) *(`narrativ.js` DOM-frei: Mentor-Zeile je Regions-Eintritt 1–5 + Tischsturz; Zweifel-Events Stumme Lichtung/Hohler Stumpf regions-gegated R4/R5, Hinweise färben die Wendung („geahnt"); Wendungs-Szene einmalig an der Schwelle zu R6; Enden mit 3-Absatz-Inszenierung; Event-Slice 2→6 Vignetten (neue Effekte: Segen/Selbstschaden/Seiten-Schärfung/Gratis-Gravur/Preis-Gate); Save v6 (+hinweise/wendungGesehen/hpMax — schließt das D8-hpMax-Loch im Loader); 8 Tests. Voll-Run-Nachmessung nach Event-Ausbau: 70,0 % (n=2000, obere Bandkante — Events geben ~+2 pp, im Band). **Alle Texte [ENTWURF] — deine Redaktion offen**)* — 2026-07-07
 - [x] **D5 [C+D] Welk-Grad/Entsättigung**: Filter-MVP ist vorbereitet → Rollen-Swap (08 §3.4 A/B) sobald echte Sprites da sind; Audio-Stems mit diegetischem Ausdünnen (08 §2.2). Claude Technik, **du/Aaron Assets** *(Technik fertig: `welk-N`-Klasse folgt `run.welkGrad` (clamp 0–5, `welkStufe` in narrativ.js), CSS-Filter-Swap mit 600-ms-Übergang; `ui/audio.js` mit Stem-Mixing je Welk-Stufe (Ausdünn-Kurve 08 §2.2), Trösten-Zier-Rückkehr, SFX-Slots — alles stille No-Ops bis Aaron `assets/audio/` + `manifest.json` liefert (D6). Rollen-Swap A/B wartet auf echte Sprites)* — 2026-07-07
-- [ ] **D6 [D→C] Kunst/Audio-Produktion**: Sprites nach Platzhalter-Specs (~136 Boxen, 08 §4), Musik-Stems (~24), SFX (~13), Bitmap-Font mit Umlauten — Platzhalter werden 1:1 ersetzt (gleiche Maße/Keys). **Du/Aaron liefert**, Claude integriert
+- [ ] **D6 [D→C] Kunst/Audio-Produktion**: Sprites nach Platzhalter-Specs (~136 Boxen, 08 §4), Musik-Stems (~24), SFX (~13), Bitmap-Font mit Umlauten — Platzhalter werden 1:1 ersetzt (gleiche Maße/Keys). **Du/Aaron liefert**, Claude integriert. *Teilstand 2026-07-10/11: **52 Sprites geliefert, freigestellt und im Spiel** (8 Würfel, 4 Gegner R1, 40 Icons — Pipeline `tools/sprite_freistellen.py`, `assets/manifest.json`, Fallback auf Platzhalter-Boxen); Prompts für alles Weitere in `docs/11_Bild_Prompts.md`, offene Liste priorisiert in `docs/Sprite_Backlog.md` (zuerst: Hüter-Kampf-Sprite, widerhall/saumhueter-Neuexport, Kulisse+Boden R1). Audio: Technik-Slots stehen (D5), null Dateien geliefert*
 - [x] **D7 [C+D] Lokalisierung EN**: `i18n/en.js` (Struktur steht). Claude übersetzt, du prüfst *(alle 209 Keys übersetzt, Terminologie-Register im Datei-Kopf (Hüter=Keeper, Schreck=Fright, Übermut=Recklessness, …); `i18n/sprache.js` mit Fallback-Kette EN→DE→Key; DE/EN-Toggle in der Statuszeile, persistiert in `einstellungen.sprache`; Paritäts- und Fließtext-Tests. **Deine Prüfung der Übersetzungen offen**; UI-Chrome-Strings in ui/main.js sind noch hart deutsch — Merkposten)* — 2026-07-07
 - [x] **D8 [C+D] BALANCE-TOR 3**: Voll-Run-Monte-Carlo gegen 03 §13 (Reifegrad 0: 65–70 % … Reifegrad 10: 25–30 %), Enden-Schwellen nacheichen, Gier-darf-nie-dominieren-Kriterium auf jeder Stufe. Claude misst, **du nimmst ab** *(gemessen via `sim/vollrun.js`: RG 0 = 67,6 %, RG 10 = 25,2 %, monoton dazwischen; Gier 6,4 %/4,0 %/0,4 % auf RG 0/5/10 — dominiert nie; Enden-Schwellen halten (Ø Trösten 10,9 ≥ 8, Stiller Hain kanonisch). Kalibrierung 0 %→67,6 % über REGION_TUNING, Vollheilung + hpMax+8 am Regionstor, Einkommens-Skalierung, Twist-Raten — Details `docs/BalanceTor3_Befund.md`. **Abgenommen 2026-07-07** — Kalibrierungs-Hebel gesperrt)* — 2026-07-07
 
@@ -101,8 +106,9 @@ Endet mit **Balance-Tor 3** (voller Run balanciert).
 - [x] **E1 [C+D] Deployment**: GitHub Pages (statisch, kein Build — passt exakt zur Architektur). Claude bereitet vor, **du aktivierst Pages in den Repo-Settings** und entscheidest den Merge *(vorbereitet: `.github/workflows/pages.yml` (Test-Job → Deploy der Repo-Wurzel bei Push auf main), `.nojekyll`, README mit Anleitung, Titel entstaubt; Subpfad-Smoke unter `/W-rfelhain/` grün — alle Pfade relativ. **Deine Seite: Settings → Pages → Source „GitHub Actions" + Merge-Entscheid des Feature-Branches**)* — 2026-07-07
 - [x] **E2 [C+D] Geräte-Matrix-Test**: iOS Safari + Android Chrome (Audio-Fallback `.m4a`, LocalStorage, Performance Integer-Scaling). Claude automatisiert was geht, **du testest real** *(automatisierter Teil fertig: `tools/geraete_smoke.mjs` — Android-/iPhone-Emulation mit Touch-Taps, Overflow-, Touch-Ziel-, Save/Resume- und Performance-Checks, alles grün (~0,5 s bis interaktiv, Tap-Render < 70 ms). Eingebaut: Audio-Format-Fallback `.ogg → .m4a` via canPlayType (Aaron liefert BEIDE Formate!) + `touch-action: manipulation`. **Deine Seite: reale Tests nach der Checkliste in `docs/Geraete_Matrix_Befund.md`** — echtes iOS-Safari ist nicht emulierbar)* — 2026-07-09
 - [ ] **E3 [D→C] Beta mit echten Spielern**, Feedback-Runde, letzte Eichung. **Du organisierst**, Claude fixt
-- [ ] **E4 [C+D] Doku-Endstand**: alle verbleibenden `[PROVISORISCH]` → `[GESPERRT]` oder gestrichen; Index 00 final
+- [ ] **E4 [C+D] Doku-Endstand**: alle verbleibenden `[PROVISORISCH]` → `[GESPERRT]` oder gestrichen; Index 00 final. *Sperr-Kandidaten, die sich seit Tor 3 angesammelt haben: Doppelschlag-Preise 40/55/70 + Nur-Schmiede-Regel (E6) · Fluch-Werte/-Platzierung (fluch.js) · Event-Gegenwerte der 3 Fluch-Events · Reifegrad-Werte (E6-Nachschärfung) · Meta-Einkommen/Setzlinge/Samen (C1/C5) · Lagerfeuer/Markt/Trösten-Dienst-Preise · Tutorial-/Mentor-/Enden-Texte nach deiner Redaktion. Dazu die formale Bestätigung der Alt-Entscheide aus „Offene [D]-Punkte"*
 - [x] **E5 [C] Verbesserungsrunde 1** (Review 2026-07-09, Entscheide D): *(a) Tutorial: geführter erster Kampf je Profil — Mentor erklärt Wurf/Legen/Auflösen/Gegner-Absicht in seiner Art, verharmlost Übermut absichtlich (Tutorial + Narrativ in einem; `meta.tutorialGesehen`, Texte [ENTWURF]). (b) Enden-Zähler sichtbar: Trösten-Zahl 🕊 + Schreck Σ in der Statuszeile mit Ende-Hinweis-Tooltip. (c) Meta-Pacing gemessen (`sim/meta_loop.js`): Dorfschamane Ø Run 2,1 · Glöckner 5,0 · Schleiferin 9,8 · Setzlinge alle ≤ Run ~10 — gesund; **Befund: Rodbauer ist für reine RG-0-Spieler unerreichbar (0 %), nur Kletterer ~Run 17** — gewollt als Experten-Gate? [D-Beobachtung]. (d) Kampf-Seed (Save v7, `kampfKnoten`): Reload mid-Kampf startet denselben Kampf mit demselben Seed von vorn — kein Verlust bei Tab-Rauswurf, kein Auswürfeln per Neuladen. Gestrichen: Befriedungs-Sichtbarkeit (Entscheid: erstmal nicht))* — 2026-07-09
+- [x] **E5b [C+D] Kampf-Arena nach Artefakt 12** *(fehlte bisher im Plan — nachgetragen)*: Kampf-Screen vom Listen-Layout zur StS-Arena umgebaut — Kulisse/Boden-Ebene je Region austauschbar, Monster rechts (Sprite, Absicht-Omen ⚔/×/🛡/☣, HP-Balken, Status-Badges), Hüter-Silhouette + Würfel-Armee auf der Boden-Ebene (Gemüt-Idles, ✦/◆-Marker, 🔒), Wurf-Leiste unten (Nummer·Icon·Name·Wert·Effekt), Atem-Orb, StS-Topbar, Belohnung als Overlay; Hochformat 72 vh + „Querformat empfohlen". **Design-Entscheide [D] eingeflossen:** 1 Gegner vs. Würfel-Armee, alle Figuren auf einer Boden-Ebene, KEINE Synergie-/Farb-Hilfen (§8.2 — „der Spieler soll selber schauen"). Layout-Doku: `docs/12_Kampfszene_Layout.md` + Mockup — 2026-07-11
 - [x] **E6 [C] Restposten** — alle fünf Punkte umgesetzt, 189 Tests grün — 2026-07-11:
   - [x] **Doppelschlag verdrahtet** (04 §3.2): `schaden_doppel` expandiert im Kampf-Loop zu zwei vollen Schaden-Seiten (beide Passiv/Kraft, beide Gleichklang-fähig, Riss prüft je Teil-Seite, Glanz nur auf die erste) für EINE Atemzahlung; bricht Vollmond (Teilwerte < Höchstwert, bewusst). **Lawinen-Check aus 04 §5 schlug an:** als Gratis-Belohnungs-Gravur hob Doppelschlag RG 0 auf 71,3 % (n=4000, über Band; ohne ihn 68,8 %) — Konsequenz: **nur noch Schmiede-Kauf** (`NUR_SCHMIEDE_GRAVUREN` in belohnung.js), Preise 30/45/60 → 40/55/70 [PROVISORISCH]
   - [x] **Bruchstelle verdrahtet**: Namenskonflikt gelöst — `ueberschreibtZu: 'gegner_riss'` (der Typ `riss` bleibt der Wildwuchs-EIGEN-Riss auf den Spieler); legt Riss auf den GEGNER (Dauer-erneuernd), in `fuehreGegnerzugAus` setzt seine ganze Aktion zu 25 % aus (Spiegel des Hüter-Zünd-Aussetzers, `ergebnis.ausgesetzt` + UI-Meldung)
@@ -110,7 +116,28 @@ Endet mit **Balance-Tor 3** (voller Run balanciert).
   - [x] **Reifegrad-1/2-Nachschärfung**: Ist-Messung RG 1 = 70,8 / RG 2 = 71,1 % — im Rauschen ÜBER RG 0 (70,4). Neu: Elite-HP +10 → **+25 %**, Start-Schreck 1 → **2**. Nachmessung: RG 2 = 69,6 (< RG 0 ✓), RG 3 = 63,5; **Bänder halten: RG 0 = 68,8 % · RG 10 = 25,2 %** (je n=2000, nach Doppelschlag-Bremse), Gier dominiert nie (RG 0: 5,9 % · RG 10: 0,3 %). RG 1 bleibt in der Sim unsichtbar (Politik meidet Elites) — fühlbar für Spieler auf Segen-Jagd, als Politik-Grenze akzeptiert
   - [x] **`knoten.aktuell`-Puls**: `steps(1)`-Keyframe (harter 2-Frame-Wechsel, 1:1 durch das spätere Puls-Sprite ersetzbar), `prefers-reduced-motion` respektiert
   - [x] **UI-Chrome-Strings → Text-Keys** (D7-Merkposten): ~120 neue `ui.*`/`status.*`-Keys in de/en, `uebersetze()` mit `{name}`-Platzhaltern, EN im Browser verifiziert („⚔ Fight — row 1."). *(Kleiner Rest s. E7)*
-- [ ] **E7 [C] Restposten 2**: Engine-seitige Ergebnistexte auf Keys umziehen (`waehleEventOption`-Wirkungsliste + `rasteLagerfeuer`-Texte in knoten.js liefern noch deutsche Strings an die UI) · Fluch-Anzeige im Arsenal außerhalb des Kampfes (💀 aktuell nur in Seiten-Pickern/Wurf-Leiste sichtbar) · `docs/Reifegrad_Kalibrierung_Befund.md` um E6-Nachschärfung ergänzt (erledigt, s. u.) — Rest bei Gelegenheit, nichts blockiert E3/E4
+- [ ] **E7 [C] Restposten 2** *(klein, nichts davon blockiert E3/E4)*: Engine-seitige Ergebnistexte auf Keys umziehen (`waehleEventOption`-Wirkungsliste + `rasteLagerfeuer`-Texte in knoten.js liefern noch deutsche Strings an die UI) · Fluch-Anzeige im Arsenal außerhalb des Kampfes (💀 aktuell nur in Seiten-Pickern/Wurf-Leiste sichtbar) · falls E3-Beta es braucht: Elite-suchende Sim-Politik für eine echte RG-1-Messung (Befund §5) · optional nach deinem Geräte-Test: Web-App-Manifest („Zum Startbildschirm"), `100dvh`-Umstellung, History-Guard (alle drei [D]-abhängig, E2-Checkliste)
+
+---
+
+## Offene [D]-Punkte — alles Deine an EINEM Ort *(Stand 2026-07-11)*
+
+**Blockiert den Release-Pfad (in dieser Reihenfolge):**
+- [ ] **GitHub Pages aktivieren + Merge-Entscheid** (E1: Settings → Pages → Source „GitHub Actions"; Feature-Branch → main)
+- [ ] **Reale Geräte-Tests** nach Checkliste `docs/Geraete_Matrix_Befund.md` (E2 — echtes iOS-Safari ist nicht emulierbar; Ergebnisse dort nachtragen, Bugs werden E-Punkte)
+- [ ] **Text-Redaktion**: alle [ENTWURF]-Texte — Mentor/Zweifel/Wendung/Enden (D4), Tutorial (E5); Ton 01 §6 ist Chefsache
+- [ ] **EN-Übersetzungs-Prüfung** (D7; seit E6 inkl. ~120 UI-Chrome-Keys)
+- [ ] **E3 Beta organisieren** (echte Spieler, Feedback-Runde)
+
+**Asset-Lieferungen (D6, Aaron — Prompts in 11, Prioritäten in `Sprite_Backlog.md`):**
+- [ ] Priorität 1: Hüter-Kampf-Sprite · widerhall/saumhueter-Neuexport (Alpha-tauglich) · Kulisse+Boden R1
+- [ ] danach: Gegner R2–R6, Gemüt-Varianten, HUD/VFX/Szenen, Böden/Kulissen R2–R6
+- [ ] Audio komplett: Stems ~24 + SFX ~13, **je in .ogg UND .m4a** (iOS) · Bitmap-Font mit Umlauten
+
+**Design-Entscheide (keine Eile — formale Sperrung gehört zu E4):**
+- [ ] Rodbauer-Gate: für reine RG-0-Spieler unerreichbar (0 %, nur Kletterer ~Run 17) — gewollt als Experten-Gate? (E5-Befund)
+- [ ] Alt-Entscheide aus Etappe A/B, durch die Tor-Abnahmen implizit bestätigt, formal aber offen: Ziehmodell „je Zug 5 frisch" (02 §2.2) · Rinde-Reserve nein (04 §2) · Sauber-Sieg „ohne HP-Verlust" (03 §11) · Gravur-Ökonomie ~12–13/Run · Freilauf/Klemme-Verrechnung (02 §7.5) · Tau-Knappheit R1–2 (03 §12.1 — Tor 3: Ø Trösten 10,9 ≥ 8, hält)
+- [ ] Web-App-Manifest / `100dvh` / History-Guard — nur falls deine Geräte-Tests es nahelegen (E2-Checkliste „Beide")
 
 ---
 

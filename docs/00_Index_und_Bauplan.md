@@ -139,7 +139,9 @@
 
 ---
 
-## 4. Build-Stand *(Sync 2026-07-07 — Etappen A–D abgeschlossen bis auf D6)*
+## 4. Build-Stand *(Sync 2026-07-11 — A–D bis auf D6-Rest komplett; E1/E2/E5/E5b/E6 fertig, offen E3/E4/E7)*
+
+**Nachzug 2026-07-11 (E-Etappe):** `fluch.js` (Fluch-System 07 §5.4, 3 Flüche + Fluch-Events, RG 9 echt) · Doppelschlag/Bruchstelle im Kampf-Loop (Bruchstelle als `gegner_riss`) · Reifegrad 1/2 nachgeschärft, Bänder RG 0 = 68,8 % / RG 10 = 25,2 % (n=2000) · Kampf-Arena nach Artefakt 12 (StS-Schema, echte Sprites) · 52 Sprites integriert (`assets/` + Manifest, Pipeline `tools/sprite_freistellen.py`) · Save **v7** (Kampf-Seed-Resume) · Tutorial + Enden-Zähler (E5) · Geräte-Smoke `tools/geraete_smoke.mjs` (E2) · Pages-Workflow vorbereitet (E1) · UI komplett auf Text-Keys (~120 `ui.*`-Keys, DE/EN) · **189 Tests grün**. Der Rest dieses Abschnitts ist der historische Stand 2026-07-07; maßgeblich ist `docs/10_Entwicklungsplan.md`.
 
 **Claude-Code-Repo (echter Spielcode):**
 - **Kern (DOM-frei, Node+Browser):** `rng.js` · `engine.js` · `push.js` · `ziehstapel.js` · `status.js` · `kampf.js` (Run/Karte/Kampf-Loop, Regionen 1–6, Bosse mit Phasen/Twists, Endboss mit Spiegel-Modulen + Befriedung) · `karte.js` · `knoten.js` (Schmiede/Markt/Event/Lagerfeuer, 6 Slice-Events regions-gegated) · `belohnung.js` · `segen.js` (16 Hain-Segen) · `data.js` (16 Blaupausen, 12 Gravuren, 31 Gegner/Bosse, REGION_TUNING) · `meta.js` (Jahresringe/Stammbaum/Samen/Setzlinge) · `reifegrad.js` (Stufen 1–10) · `enden.js` (3 Enden, Frühling-Gate scharf) · `narrativ.js` (Mentor/Zweifel/Wendung/Welk-Stufe) · `save.js` (SAVE_VERSION 6, lückenlose Migrationskette).
@@ -149,9 +151,9 @@
 
 **Balance-Tore:** Tor 1 (Gier<Pflege, 12er-Re-Run) ✓ · Tor 2 (Build-Pfade/Lawine, `docs/BalanceTor2_Befund.md`) ✓ · **Tor 3 (Voll-Run: RG 0 = 67,6 %, RG 10 = 25,2 %, Gier nie dominant — abgenommen 2026-07-07, `docs/BalanceTor3_Befund.md`)** ✓.
 
-**Design-Stand:** Artefakte 00–10 liegen im Repo (`docs/`); 11 (Bild-Prompts für Aaron) ergänzt 2026-07-07. Offen nur die Asset-Produktion (D6, Aaron) und Text-Redaktionen (D4/D7-Entwürfe).
+**Design-Stand:** Artefakte 00–12 liegen im Repo (`docs/`); 11 (Bild-Prompts) 2026-07-07, 12 (Kampfszenen-Layout + Mockup) 2026-07-10. Offen: Rest-Asset-Produktion (D6/`Sprite_Backlog.md`, Aaron) und Text-Redaktionen (D4/D7/E5-Entwürfe).
 
-**Gesamtstatus:** Etappen A–C komplett; Etappe D bis auf **D6 (Kunst/Audio — eure Seite)** komplett. Nächster Claude-Schritt: **Etappe E (Release)** — E1 Deployment-Vorbereitung.
+**Gesamtstatus (2026-07-11):** A–C komplett; D bis auf **D6-Rest** komplett; E: E1/E2/E5/E5b/E6 fertig — offen **E3 (Beta, deine Seite)**, **E4 (Doku-Endstand)**, **E7 (Kleinrest)**. Offene [D]-Punkte gesammelt am Ende von Artefakt 10.
 
 ---
 
