@@ -1,29 +1,26 @@
 # Würfelhain — Sprite-Backlog (offene Assets)
 
-*Stand 2026-07-11. Was fertig freigestellt in `assets/` liegt, ist unten unter „Erledigt" vermerkt. Alle Bildgenerierungs-Prompts stehen in `docs/11_Bild_Prompts.md`; Export-Regeln (Alpha, kein Nebel, mittig) in `docs/Sprite_Freistellung_Befund.md`. Prioritäts-Reihenfolge: was den spielbaren R1-Kampf blockiert zuerst.*
+*Stand 2026-07-11 (Priorität-1-Charge + HUD erledigt). Was fertig freigestellt in `assets/` liegt, ist unten unter „Erledigt" vermerkt. Alle Bildgenerierungs-Prompts stehen in `docs/11_Bild_Prompts.md`; Export-Regeln (Alpha, kein Nebel, mittig) in `docs/Sprite_Freistellung_Befund.md`. Prioritäts-Reihenfolge: was den spielbaren R1-Kampf blockiert zuerst.*
 
-## Erledigt (72)
+## Erledigt (77)
 Würfel: `schaden` · `faeule` · `brand` · `rinde` · `schliff` · `stuetze` · `ermutigung` · `zuversicht`
 Gegner: `astbeisser` · `borkenkriecher` · `moosgnom` · `dornalter`
 Icons (40): Seiten (16) · Status/Combo/FX (8) · Währung (3) · Meta (3) · Knoten (10)
+**Priorität-1-Figuren (5, 2026-07-11):** `hueter.kampf` (Spielfigur, `assets/figur/`) · `wuerfel.widerhall` (Neuexport, sauber) · `boss.saumhueter` (Neuexport ohne Nebel) · `boden.r1` + `bg.kulisse.r1` (Arena-Ebenen, `assets/szene/`) — **damit ist Region 1 ohne einen Platzhalter bebildert**
 **HUD (20, 2026-07-11):** `atem.pip(+_leer)` · `gemuet.leiste` + 2 Marker · `schreck.marke` · `overlay.gesperrt` · `pool.feld` · `uebermut.leiste(+.kipp)` · 3 Knöpfe × 2 Frames · `karte.pergament` · `rahmen.9slice` · `overlay.gespiegelt.1/.2` — **damit ist Artefakt 11 §6 (HUD) komplett**; Verdrahtung ins Spiel-HUD ist ein E-Restposten
 
 ---
 
 ## Priorität 1 — blockiert die Kampfszene (R1 spielbar)
 
-**Neuexport (Motiv abgenommen, nur technisch nachliefern — mit Alpha):**
-- `wuerfel.widerhall` — dunkler Würfel war farbgleich zum dunklen Hintergrund.
-- `boss.saumhueter` — Nebel-Hintergrund verschmolz mit dem Körper (ohne Nebel exportieren).
+- [x] ~~`wuerfel.widerhall`~~ — sauber nachgeliefert 2026-07-11.
+- [x] ~~`boss.saumhueter`~~ — sauber nachgeliefert 2026-07-11 (ohne Nebel).
+- [x] ~~`hueter.kampf`~~ — geliefert 2026-07-11 (`assets/figur/hueter_kampf.png`).
+- [x] ~~`boden.r1`~~ / ~~`bg.kulisse.r1`~~ — geliefert 2026-07-11 (`assets/szene/`).
 
-**Neuer Bedarf (steht noch in keinem Artefakt):**
-- `hueter.kampf` — **Hüter-Kampf-Sprite** (Charakter links in der Arena). ~Elite-Größe, Licht oben links, Ruhe-Idle; optional Treffer-Zucken. *Fehlt in Artefakt 11 — Prompt noch zu schreiben.*
-
-**Boden-Ebene je Region (aus der Zwei-Ebenen-Entscheidung, Artefakt 12):**
-- `boden.r1` … `boden.r6` (6) — die Standfläche, je Region austauschbar (nicht nur der Hintergrund).
-
-**Hintergrund-Ebene (Kulisse) je Region:**
-- `bg.kulisse.r1` … `bg.kulisse.r6` (6).
+**→ Region 1 ist vollständig bebildert.** Verbleibende Ebenen der anderen Regionen:
+- `boden.r2` … `boden.r6` (5) — Standfläche je Region.
+- `bg.kulisse.r2` … `bg.kulisse.r6` (5) — Kulisse je Region.
 
 ---
 
@@ -75,12 +72,12 @@ Je Würfel drei Ausdrucks-Zustände (04 §4.1): `ruhig` (= die gelieferte Basis-
 ## Zusammenfassung der offenen Zahlen
 | Kategorie | Offen |
 |---|---|
-| Würfel (Basis-Neuexport) | 1 (widerhall) |
+| Würfel (Basis-Neuexport) | ~~1~~ **0 — erledigt** |
 | Würfel Gemüt-Varianten | 18 |
-| Hüter-Kampf-Sprite | 1 (neu) |
-| Gegner & Bosse | 32 (inkl. Saumhüter-Neuexport) |
-| Boden-Ebenen | 6 |
-| Kulissen | 6 |
+| Hüter-Kampf-Sprite | ~~1~~ **0 — erledigt** |
+| Gegner & Bosse | 31 (Saumhüter erledigt) |
+| Boden-Ebenen | 5 (R1 erledigt) |
+| Kulissen | 5 (R1 erledigt) |
 | Seiten-/Status-/Währung-/Knoten-Icons | ~47 |
 | HUD | ~~13~~ **0 — erledigt** |
 | VFX | 6 Sequenzen |

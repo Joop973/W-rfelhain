@@ -8,13 +8,24 @@
     "schliff":     { "png": "assets/wuerfel/schliff.png",     "px": 256, "displayLogisch": 32 },
     "stuetze":     { "png": "assets/wuerfel/stuetze.png",     "px": 256, "displayLogisch": 32 },
     "ermutigung":  { "png": "assets/wuerfel/ermutigung.png",  "px": 256, "displayLogisch": 32 },
-    "zuversicht":  { "png": "assets/wuerfel/zuversicht.png",  "px": 256, "displayLogisch": 32 }
+    "zuversicht":  { "png": "assets/wuerfel/zuversicht.png",  "px": 256, "displayLogisch": 32 },
+    "widerhall":   { "png": "assets/wuerfel/widerhall.png",   "px": 256, "displayLogisch": 32 }
   },
   "gegner": {
     "astbeisser":     { "png": "assets/gegner/astbeisser.png",     "px": 256, "displayLogisch": 48 },
     "borkenkriecher": { "png": "assets/gegner/borkenkriecher.png", "px": 256, "displayLogisch": 48 },
     "moosgnom":       { "png": "assets/gegner/moosgnom.png",       "px": 256, "displayLogisch": 48 },
-    "dornalter":      { "png": "assets/gegner/dornalter.png",      "px": 256, "displayLogisch": 64 }
+    "dornalter":      { "png": "assets/gegner/dornalter.png",      "px": 256, "displayLogisch": 64 },
+    "saumhueter":     { "png": "assets/gegner/saumhueter.png",     "px": 256, "displayLogisch": 96 }
+  },
+  "figur": {
+    "_hinweis": "Spielfigur (Hüter) für die Arena, links (Artefakt 12). Quadratisch RGBA wie die Gegner.",
+    "hueter_kampf": { "png": "assets/figur/hueter_kampf.png", "px": 256, "displayLogisch": 88 }
+  },
+  "szene": {
+    "_hinweis": "Arena-Ebenen je Region (Artefakt 12): bg.kulisse = Hintergrund, boden = Standfläche. Rechteckige RGB-Vollbilder (kein Alpha), Breite 640, per CSS über die Arena-Breite gezogen.",
+    "boden.r1":      { "png": "assets/szene/boden.r1.png",      "b": 640, "h": 272 },
+    "bg.kulisse.r1": { "png": "assets/szene/bg.kulisse.r1.png", "b": 640, "h": 455 }
   },
   "icons": {
     "_hinweis": "16×16-Icons (08 §4.2/§4.6), geliefert als Blätter, geschnitten + freigestellt via tools/sprite_freistellen.py. Alle 64×64 RGBA. Keys = Dateiname ohne .png.",
@@ -51,8 +62,6 @@
     }
   },
   "fehlend": {
-    "_hinweis": "Rohbilder abgenommen (Motiv gut), aber NICHT sauber freistellbar — brauchen Neuexport mit echtem Alpha. Siehe docs/Sprite_Freistellung_Befund.md.",
-    "wuerfel.widerhall": "dunkler Würfelkörper farbgleich zum dunklen Hintergrund",
-    "boss.saumhueter": "Nebel-/Dunst-Hintergrund verschmilzt mit dem Körper, Geweih geht verloren"
+    "_hinweis": "Rohbilder abgenommen, aber NICHT sauber freistellbar — brauchen Neuexport. Aktuell keine offenen Fälle (widerhall + saumhueter am 2026-07-11 sauber nachgeliefert)."
   }
 }

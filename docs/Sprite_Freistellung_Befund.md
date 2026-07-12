@@ -53,3 +53,22 @@ Neue Fälle gegenüber den Kreaturen-/Icon-Chargen:
   Schatten-Streifen unter dem Motiv werden spaltenweise entfernt (unterster
   dünner Lauf nach Lücke); direkt angewachsene Unterkanten-Schattierung
   bleibt als Teil des Motivs. **Bitte ohne Boden-Schatten exportieren.**
+
+## Nachtrag 2026-07-11 (2) — Priorität-1-Figuren + die zwei „fehlend"-Fälle gelöst
+
+- **`wuerfel.widerhall`** (früher „fehlend"): kam diesmal auf dunklem **Uni-Grund**
+  (kein Checkerboard). Rand-Referenz-Flood mit knapper Toleranz (30) trennt den
+  Würfelkörper sauber vom Grund — der alte Farbgleichheits-Fehler ist weg.
+- **`boss.saumhueter`** (früher „fehlend"): diesmal **ohne Nebel** und auf weißem
+  Grund geliefert → Standard-Flood, Geweih bleibt vollständig erhalten.
+  **Bestätigt: „ohne Dunst, heller Grund" ist die richtige Export-Regel.**
+- **`hueter.kampf`**: Checkerboard-Alpha, eine große Komponente, unkompliziert.
+  Neuer Ordner `assets/figur/` + Manifest-Sektion `figur`.
+- **Figuren quadratisch eingebettet:** die rechteckig freigestellten Figuren
+  werden auf 256×256 transparent zentriert (Manifest-Schema-Konsistenz mit den
+  bestehenden Würfeln/Gegnern: `px: 256`).
+- **Hintergründe (`boden.r1`, `bg.kulisse.r1`):** randlose RGB-Vollbilder,
+  **kein Freistellen** — nur sauberer LANCZOS-Downscale auf Breite 640, neuer
+  Ordner `assets/szene/` + Manifest-Sektion `szene` (RGB, kein Alpha).
+
+Damit ist die Manifest-Sektion `fehlend` leer.
