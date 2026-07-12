@@ -797,14 +797,14 @@ function renderKampf() {
         ${kampf.hand.map((id, i) => wurfKachel(id, i)).join('')}
       </div>
 
-      <div class="a-akt">
+      <div class="a-akt${uiSprite('knopf.wurf') ? ' plakette' : ''}">
         ${kampf.phase === 'zug' ? `
-          <button data-aktion="reroll" class="warn">${uebersetze('ui.neu_werfen')}<br><small>${uebersetze(kampf.rerollsDiesenZug === 0 ? 'ui.gratis' : 'ui.plus_uebermut')}</small></button>
-          <button data-aktion="aufloesen" ${kampf.reihe.length === 0 ? 'disabled' : ''}>${uebersetze('ui.aufloesen', { anzahl: kampf.reihe.length })}</button>
+          <button data-aktion="reroll" class="warn k-reroll">${uebersetze('ui.neu_werfen')}<br><small>${uebersetze(kampf.rerollsDiesenZug === 0 ? 'ui.gratis' : 'ui.plus_uebermut')}</small></button>
+          <button data-aktion="aufloesen" class="k-wurf" ${kampf.reihe.length === 0 ? 'disabled' : ''}>${uebersetze('ui.aufloesen', { anzahl: kampf.reihe.length })}</button>
         ` : ''}
-        ${kampf.phase === 'gegnerzug' ? `<button data-aktion="gegnerzug">${uebersetze('ui.gegnerzug')}</button>` : ''}
-        ${kampf.phase === 'sieg' && !belohnungOffen ? `<button data-aktion="weiter">${uebersetze('ui.weiter')}</button>` : ''}
-        ${kampf.phase === 'niederlage' ? `<button data-aktion="weiter">${uebersetze('ui.weiter')}</button>` : ''}
+        ${kampf.phase === 'gegnerzug' ? `<button data-aktion="gegnerzug" class="k-wurf">${uebersetze('ui.gegnerzug')}</button>` : ''}
+        ${kampf.phase === 'sieg' && !belohnungOffen ? `<button data-aktion="weiter" class="k-wurf">${uebersetze('ui.weiter')}</button>` : ''}
+        ${kampf.phase === 'niederlage' ? `<button data-aktion="weiter" class="k-wurf">${uebersetze('ui.weiter')}</button>` : ''}
       </div>
 
       ${belohnungOffen ? `<div class="a-belohnung">${belohnungsPanel()}</div>` : ''}

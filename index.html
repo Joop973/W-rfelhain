@@ -69,7 +69,12 @@
     .ph--wuerfel .gesperrt { position: absolute; top: 2px; right: 2px; font-size: 9px; }
     .ph--wuerfel .position { position: absolute; top: 2px; left: 4px; font-size: 10px; font-weight: bold; }
 
-    .ph--belohnung { background: color-mix(in srgb, var(--pergament) 80%, var(--tau)); }
+    .ph--belohnung { background: color-mix(in srgb, var(--pergament) 80%, var(--tau));
+      /* Geschnitzter Holzrahmen + Pergament-Füllung (D6, rahmen.9slice). Fällt
+         auf den Hintergrund zurück, falls das Bild nicht lädt. */
+      border: 16px solid transparent;
+      border-image: url(assets/ui/rahmen.9slice.png) 60 fill / 16px stretch;
+      image-rendering: pixelated; padding: 4px 10px; }
     .ph--karte { display: flex; flex-direction: column; gap: 8px; }
     .karten-reihe { display: flex; justify-content: center; gap: 8px; }
     .ph--knoten {
@@ -244,6 +249,19 @@
       background: linear-gradient(180deg,#7a5230,#5c3a20); color: #f2e4cc; border: 1px solid #2a1a0e;
       box-shadow: 0 3px 0 #2a1a0e; }
     .a-akt button.warn { background: linear-gradient(180deg,#a5502a,#7c3a1c); }
+    /* Geschnitzte Holz-Plaketten (D6, knopf.*): Symbol links eingebrannt, Label
+       rechts im Freiraum. Aktiv-Frame = *.gedrueckt (1 px versenkt). */
+    .a-akt.plakette button { background: none; border: 0; box-shadow: none;
+      min-height: 50px; padding: 4px 9px 4px 46%; border-radius: 0;
+      background-repeat: no-repeat; background-size: 100% 100%; image-rendering: pixelated;
+      color: #f6ead2; text-shadow: 0 1px 2px #000, 0 0 2px rgba(0,0,0,.8); font-weight: 800;
+      display: flex; flex-direction: column; justify-content: center; align-items: flex-start; text-align: left; }
+    .a-akt.plakette button small { font-weight: 700; opacity: .85; }
+    .a-akt.plakette .k-reroll { background-image: url(assets/ui/knopf.reroll.png); }
+    .a-akt.plakette .k-reroll:active { background-image: url(assets/ui/knopf.reroll.gedrueckt.png); }
+    .a-akt.plakette .k-wurf { background-image: url(assets/ui/knopf.wurf.png); }
+    .a-akt.plakette .k-wurf:active { background-image: url(assets/ui/knopf.wurf.gedrueckt.png); }
+    .a-akt.plakette button:disabled { filter: grayscale(.55) brightness(.82); }
     .a-belohnung { position: absolute; inset: 0; z-index: 50; display: grid; place-items: center;
       background: rgba(14,9,5,.55); }
     .a-belohnung > section { width: min(420px, 92%); max-height: 90%; overflow-y: auto; }
