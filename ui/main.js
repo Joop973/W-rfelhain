@@ -119,6 +119,12 @@ function gegnerSprite(vorlageId) {
 function seitenIcon(effektTyp) {
   return sprites?.icons?.seite?.includes(effektTyp) ? `assets/icons/seite.${effektTyp}.png` : null;
 }
+function figurSprite(key) {
+  return sprites?.figur?.[key]?.png ?? null;
+}
+function szeneSprite(key) {
+  return sprites?.szene?.[key]?.png ?? null; // z. B. "boden.r1", "bg.kulisse.r1"
+}
 
 // Welk-Entsättigung (D5, 08 §3.4 Variante C): Klasse welk-0…5 am Wurzel-
 // Container treibt den CSS-Filter; Audio dünnt deckungsgleich aus (08 §2.2).
@@ -634,6 +640,14 @@ const STATUS_ICON = {
   wetzung: '🔪', scharte: '🩹', freilauf: '🎲', klemme: '🔒',
 };
 
+// Lesbarer Effekt-Name: Status-Typen haben status.*, die Nicht-Status-Effekte
+// (schaden/rinde/echo/…) eigene effekt.*-Keys. Fallback = Typ selbst, nie ein
+// roher „status.foo"-Key in der UI (E7-Fix des E6-Migrationsfehlers).
+const STATUS_TYPEN = new Set(['faeule', 'brand', 'morsch', 'welk', 'kraft', 'riss', 'wetzung', 'scharte', 'freilauf', 'klemme']);
+function effektName(typ) {
+  return uebersetze(STATUS_TYPEN.has(typ) ? `status.${typ}` : `effekt.${typ}`);
+}
+
 // Kurz-Label eines Seiten-Effekts für die Wurf-Leiste; die E6-Typen brauchen
 // eigene Formen (Doppelschlag = Wertepaar, Gegner-Riss/Flüche = benannt).
 function effektKurz(e) {
@@ -643,7 +657,7 @@ function effektKurz(e) {
   if (e.typ === 'fluch_faeule') return `💀${uebersetze('ui.eff_fluch_selbst', { icon: '☣', wert: e.wert })}`;
   if (e.typ === 'fluch_scharte') return `💀${uebersetze('ui.eff_fluch_selbst', { icon: '🩹', wert: e.wert })}`;
   if (e.typ === 'fluch_stumpf') return `💀${uebersetze('ui.eff_fluch_stumpf')}`;
-  return `${STATUS_ICON[e.typ] ?? ''}${uebersetze(`status.${e.typ}`)} ${e.wert}`;
+  return `${STATUS_ICON[e.typ] ?? ''}${effektName(e.typ)} ${e.wert}`;
 }
 
 function statusBadges(status) {
@@ -718,10 +732,16 @@ function renderKampf() {
     `<i class="${i < kampf.uebermut ? 'an' : ''} ${i === KIPP_PUNKT - 1 ? 'kipp' : ''}"></i>`).join('');
   const reihe = kampf.reihe.map((id) => `<span class="a-slot belegt">${kampf.wuerfe[id].wert}</span>`).join('');
   const freieSlots = Math.max(0, kampf.atem) ;
+  // Arena-Ebenen je Region (Artefakt 12): echtes Bild wenn geliefert, sonst der
+  // CSS-Verlauf (spätere Regionen haben noch keine Kulisse/Boden).
+  const region = run.region ?? 1;
+  const kulisse = szeneSprite(`bg.kulisse.r${region}`);
+  const boden = szeneSprite(`boden.r${region}`);
+  const hueterImg = figurSprite('hueter_kampf');
   return `
     <div class="arena">
-      <div class="a-kulisse"></div>
-      <div class="a-boden"></div>
+      <div class="a-kulisse${kulisse ? ' hat-bild' : ''}"${kulisse ? ` style="background-image:url(${kulisse})"` : ''}></div>
+      <div class="a-boden${boden ? ' hat-bild' : ''}"${boden ? ` style="background-image:url(${boden})"` : ''}></div>
       <div class="a-horizont"></div>
 
       <span class="a-drehhinweis">📱↻ ${uebersetze('ui.querformat')}</span>
@@ -748,7 +768,7 @@ function renderKampf() {
         ${statusBadges(g.status) ? `<div class="badges">${statusBadges(g.status)}</div>` : ''}
       </div>
 
-      <div class="a-hueter"><div class="mantel"></div><small>${uebersetze('ui.hueter')}</small></div>
+      <div class="a-hueter">${hueterImg ? `<img src="${hueterImg}" alt="${uebersetze('ui.hueter')}">` : '<div class="mantel"></div>'}<small>${uebersetze('ui.hueter')}</small></div>
       ${kampf.hand.map((id, i) => armeeEinheit(id, i)).join('')}
 
       <div class="a-reihe">

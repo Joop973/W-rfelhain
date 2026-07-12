@@ -116,7 +116,14 @@ Endet mit **Balance-Tor 3** (voller Run balanciert).
   - [x] **Reifegrad-1/2-Nachschärfung**: Ist-Messung RG 1 = 70,8 / RG 2 = 71,1 % — im Rauschen ÜBER RG 0 (70,4). Neu: Elite-HP +10 → **+25 %**, Start-Schreck 1 → **2**. Nachmessung: RG 2 = 69,6 (< RG 0 ✓), RG 3 = 63,5; **Bänder halten: RG 0 = 68,8 % · RG 10 = 25,2 %** (je n=2000, nach Doppelschlag-Bremse), Gier dominiert nie (RG 0: 5,9 % · RG 10: 0,3 %). RG 1 bleibt in der Sim unsichtbar (Politik meidet Elites) — fühlbar für Spieler auf Segen-Jagd, als Politik-Grenze akzeptiert
   - [x] **`knoten.aktuell`-Puls**: `steps(1)`-Keyframe (harter 2-Frame-Wechsel, 1:1 durch das spätere Puls-Sprite ersetzbar), `prefers-reduced-motion` respektiert
   - [x] **UI-Chrome-Strings → Text-Keys** (D7-Merkposten): ~120 neue `ui.*`/`status.*`-Keys in de/en, `uebersetze()` mit `{name}`-Platzhaltern, EN im Browser verifiziert („⚔ Fight — row 1."). *(Kleiner Rest s. E7)*
-- [ ] **E7 [C] Restposten 2** *(klein, nichts davon blockiert E3/E4)*: HUD-Sprites (assets/ui, 2026-07-11) ins Kampf-HUD verdrahten (Knöpfe/Atem-Pips/Übermut-Leiste/Schreck-Marke/overlay.gesperrt; Pergament/9-Slice für Panels) · Engine-seitige Ergebnistexte auf Keys umziehen (`waehleEventOption`-Wirkungsliste + `rasteLagerfeuer`-Texte in knoten.js liefern noch deutsche Strings an die UI) · Fluch-Anzeige im Arsenal außerhalb des Kampfes (💀 aktuell nur in Seiten-Pickern/Wurf-Leiste sichtbar) · falls E3-Beta es braucht: Elite-suchende Sim-Politik für eine echte RG-1-Messung (Befund §5) · optional nach deinem Geräte-Test: Web-App-Manifest („Zum Startbildschirm"), `100dvh`-Umstellung, History-Guard (alle drei [D]-abhängig, E2-Checkliste)
+- [ ] **E7 [C] Restposten 2** *(klein, nichts davon blockiert E3/E4)*:
+  - [x] **Arena-Szene verdrahtet** (2026-07-11): `figurSprite`/`szeneSprite`-Loader; Kulisse + Boden R1 ersetzen den CSS-Verlauf (`.hat-bild`-Overrides), Hüter-Kampfsprite statt Silhouette, `prefers-reduced-motion` respektiert — **Region 1 im Browser voll bebildert** (Screenshot verifiziert)
+  - [x] **Wurf-Leisten-Effektnamen** (E6-Regressionsfix): `status.schaden`/`status.rinde` zeigten den rohen Key → lesbares „Schaden/Rinde/…" via neuer `effekt.*`-Keys (DE/EN)
+  - [ ] HUD-Sprites (assets/ui, 2026-07-11) ins Kampf-HUD verdrahten (Knöpfe/Atem-Pips/Übermut-Leiste/Schreck-Marke/overlay.gesperrt; Pergament/9-Slice für Panels)
+  - [ ] Engine-seitige Ergebnistexte auf Keys umziehen (`waehleEventOption`-Wirkungsliste + `rasteLagerfeuer`-Texte in knoten.js liefern noch deutsche Strings an die UI)
+  - [ ] Fluch-Anzeige im Arsenal außerhalb des Kampfes (💀 aktuell nur in Seiten-Pickern/Wurf-Leiste sichtbar)
+  - [ ] falls E3-Beta es braucht: Elite-suchende Sim-Politik für eine echte RG-1-Messung (Befund §5)
+  - [ ] optional nach deinem Geräte-Test: Web-App-Manifest („Zum Startbildschirm"), `100dvh`-Umstellung, History-Guard (alle drei [D]-abhängig, E2-Checkliste)
 
 ---
 

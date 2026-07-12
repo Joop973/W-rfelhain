@@ -244,6 +244,17 @@ export const EN = {
   'status.freilauf': 'Freewheel',
   'status.klemme': 'Jam',
 
+  // Non-status effect names (throw bar)
+  'effekt.schaden': 'Damage',
+  'effekt.rinde': 'Bark',
+  'effekt.flaeche': 'Area',
+  'effekt.echo': 'Echo',
+  'effekt.glanz': 'Gleam',
+  'effekt.labung': 'Solace',
+  'effekt.praegung': 'Minting',
+  'effekt.beruhigung': 'Soothing',
+  'effekt.ermutigung': 'Encouragement',
+
   // UI chrome (E6: hard-coded strings from ui/main.js — {name} are placeholders)
   'ui.knoten.kampf': 'Fight',
   'ui.knoten.elite': 'Elite',

@@ -233,6 +233,17 @@ export const DE = {
   'status.freilauf': 'Freilauf',
   'status.klemme': 'Klemme',
 
+  // Nicht-Status-Effekt-Namen (Wurf-Leiste)
+  'effekt.schaden': 'Schaden',
+  'effekt.rinde': 'Rinde',
+  'effekt.flaeche': 'Fläche',
+  'effekt.echo': 'Echo',
+  'effekt.glanz': 'Glanz',
+  'effekt.labung': 'Labung',
+  'effekt.praegung': 'Prägung',
+  'effekt.beruhigung': 'Beruhigung',
+  'effekt.ermutigung': 'Ermutigung',
+
   // UI-Chrome (E6: harte Strings aus ui/main.js — {name} sind Platzhalter)
   'ui.knoten.kampf': 'Kampf',
   'ui.knoten.elite': 'Elite',
