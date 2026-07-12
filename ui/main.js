@@ -125,6 +125,9 @@ function figurSprite(key) {
 function szeneSprite(key) {
   return sprites?.szene?.[key]?.png ?? null; // z. B. "boden.r1", "bg.kulisse.r1"
 }
+function uiSprite(key) {
+  return sprites?.ui?.keys?.includes(key) ? `assets/ui/${key}.png` : null;
+}
 
 // Welk-Entsättigung (D5, 08 §3.4 Variante C): Klasse welk-0…5 am Wurzel-
 // Container treibt den CSS-Filter; Audio dünnt deckungsgleich aus (08 §2.2).
@@ -724,6 +727,18 @@ function wurfKachel(id, index) {
     </button>`;
 }
 
+// Atem als diegetische Pips (D6: atem.pip/pip_leer, 08 §4.5) — voll = verfügbar,
+// leer = verbraucht; Fallback auf den CSS-Orb, solange kein Sprite geladen ist.
+function atemAnzeige() {
+  const voll = uiSprite('atem.pip');
+  const leer = uiSprite('atem.pip_leer');
+  if (!voll || !leer) return `<span class="a-orb">${kampf.atem}</span>`;
+  const slots = Math.max(3, kampf.atem);
+  const pips = Array.from({ length: slots }, (_, i) =>
+    `<img src="${i < kampf.atem ? voll : leer}" alt="">`).join('');
+  return `<span class="a-pips">${pips}</span>`;
+}
+
 function renderKampf() {
   const belohnungOffen = kampf.phase === 'sieg' && kampf.belohnung && !kampf.belohnung.erledigt;
   const g = kampf.gegner;
@@ -778,7 +793,7 @@ function renderKampf() {
       ${statusBadges(kampf.spielerStatus) ? `<div class="a-status-badges badges">${statusBadges(kampf.spielerStatus)}</div>` : ''}
 
       <div class="a-wurf">
-        <div class="a-atem"><span class="a-orb">${kampf.atem}</span><span>${uebersetze('ui.atem_label')}</span></div>
+        <div class="a-atem">${atemAnzeige()}<span>${uebersetze('ui.atem_label')}</span></div>
         ${kampf.hand.map((id, i) => wurfKachel(id, i)).join('')}
       </div>
 

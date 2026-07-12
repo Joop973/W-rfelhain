@@ -119,7 +119,8 @@ Endet mit **Balance-Tor 3** (voller Run balanciert).
 - [ ] **E7 [C] Restposten 2** *(klein, nichts davon blockiert E3/E4)*:
   - [x] **Arena-Szene verdrahtet** (2026-07-11): `figurSprite`/`szeneSprite`-Loader; Kulisse + Boden R1 ersetzen den CSS-Verlauf (`.hat-bild`-Overrides), Hüter-Kampfsprite statt Silhouette, `prefers-reduced-motion` respektiert — **Region 1 im Browser voll bebildert** (Screenshot verifiziert)
   - [x] **Wurf-Leisten-Effektnamen** (E6-Regressionsfix): `status.schaden`/`status.rinde` zeigten den rohen Key → lesbares „Schaden/Rinde/…" via neuer `effekt.*`-Keys (DE/EN)
-  - [ ] HUD-Sprites (assets/ui, 2026-07-11) ins Kampf-HUD verdrahten (Knöpfe/Atem-Pips/Übermut-Leiste/Schreck-Marke/overlay.gesperrt; Pergament/9-Slice für Panels)
+  - [x] **Atem-Pips verdrahtet** (2026-07-11): diegetische `atem.pip`/`atem.pip_leer`-Blattspiralen statt Kreis-Orb, voll/leer je verbleibendem Atem (Screenshot verifiziert)
+  - [ ] restliche HUD-Sprites (assets/ui): Knöpfe/Übermut-Leiste/Schreck-Marke/overlay.gesperrt, Pergament/9-Slice für Panels — **[D]-Entscheid offen**: die geschnitzten Holz-Plaketten (mit eingebrannten Symbolen) kollidieren mit den Text-Labels der aktuellen StS-Arena-Buttons; entweder HUD auf Plaketten-Stil umbauen oder beim cleanen Look bleiben
   - [ ] Engine-seitige Ergebnistexte auf Keys umziehen (`waehleEventOption`-Wirkungsliste + `rasteLagerfeuer`-Texte in knoten.js liefern noch deutsche Strings an die UI)
   - [ ] Fluch-Anzeige im Arsenal außerhalb des Kampfes (💀 aktuell nur in Seiten-Pickern/Wurf-Leiste sichtbar)
   - [ ] falls E3-Beta es braucht: Elite-suchende Sim-Politik für eine echte RG-1-Messung (Befund §5)

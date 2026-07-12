@@ -217,11 +217,13 @@
     .a-wurf { position: absolute; z-index: 24; bottom: 2.5%; left: 1.5%; width: 70%;
       display: flex; align-items: stretch; gap: 5px; }
     .a-atem { flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 2px; width: 40px; border-radius: 9px; background: rgba(16,10,6,.6); border: 1px solid #2a1a0e;
+      gap: 2px; min-width: 40px; padding: 0 3px; border-radius: 9px; background: rgba(16,10,6,.6); border: 1px solid #2a1a0e;
       color: #eadfc7; font: 700 7.5px/1 monospace; }
     .a-orb { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
       background: radial-gradient(circle at 40% 34%,#9fd3dd,#3f7d8a); border: 2px solid #14343b;
       color: #08202a; font: 800 11px/1 monospace; }
+    .a-atem .a-pips { display: flex; gap: 2px; }
+    .a-atem .a-pips img { width: 14px; height: 14px; image-rendering: pixelated; display: block; }
     .a-kachel { flex: 1; min-width: 34px; min-height: 36px; border-radius: 9px; padding: 4px 6px; position: relative;
       background: linear-gradient(180deg,rgba(46,30,18,.96),rgba(30,20,12,.96)); border: 1px solid #2a1a0e;
       display: flex; flex-direction: column; gap: 1px; color: #eadfc7; cursor: pointer; text-align: left; }
