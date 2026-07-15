@@ -81,7 +81,8 @@ class Canvas:
             for x in range(int(x0), int(x1) + 1):
                 self.set(x, y, (*col, 255))
 
-    def line(self, x0, y0, x1, y1, col, dick=1):
+    def line(self, x0, y0, x1, y1, col, dick=1, clip=False):
+        # clip=True: nur auf bereits opake Pixel malen (Binnendetail bleibt in der Silhouette)
         x0, y0, x1, y1 = map(float, (x0, y0, x1, y1))
         n = int(max(abs(x1 - x0), abs(y1 - y0))) + 1
         for i in range(n + 1):
@@ -89,7 +90,8 @@ class Canvas:
             x = x0 + (x1 - x0) * t; y = y0 + (y1 - y0) * t
             for dy in range(dick):
                 for dx in range(dick):
-                    self.set(x + dx, y + dy, (*col, 255))
+                    if not clip or self.opaque(x + dx, y + dy):
+                        self.set(x + dx, y + dy, (*col, 255))
 
     # Kegelstumpf/„Wurst" zwischen zwei Punkten mit Radien (Gliedmaßen, Tentakel).
     # rampe: 3er-Rampe [schatten, base, licht] — Licht sitzt auf der linken Flanke.
@@ -128,6 +130,78 @@ class Canvas:
             self.circle_fill(sx, y, r, weiss)
             self.circle_fill(sx + 0.3, y + 0.4, max(1, r - 1), pupille)
             self.set(sx - r * 0.4, y - r * 0.4, (*glanz, 255))
+
+    # --- Handgemalt-Look: Cel-Shading über Metaball-Körper ---------------------
+    # balls: [(cx,cy,rx,ry,gewicht)]. Rendert eine organische Silhouette mit
+    # HARTEN Shading-Bändern (kein Dithering), Wölbung aus dem Feld-Wert. Der
+    # Aufrufer legt danach Kantenlicht/Kernschatten/Detail drüber.
+    def koerper_cel(self, balls, rampe, lx=-0.62, ly=-0.72, schwelle=1.0, glanz_t=0.9):
+        W, H, n = self.w, self.h, len(rampe)
+        feld = [0.0] * (W * H)
+        for (cx, cy, rx, ry, w) in balls:
+            for y in range(max(0,int(cy-ry-3)), min(H,int(cy+ry+4))):
+                for x in range(max(0,int(cx-rx-3)), min(W,int(cx+rx+4))):
+                    nx = (x-cx)/rx; ny = (y-cy)/ry
+                    d = nx*nx + ny*ny
+                    if d < 3.2:
+                        feld[y*W+x] += w * math.exp(-d*1.05)
+        self._feld = feld  # für Folge-Operationen (Binnenkontur)
+        for y in range(H):
+            for x in range(W):
+                f = feld[y*W+x]
+                if f < schwelle: continue
+                h = min(1.0, (f-schwelle)*1.15 + 0.18)      # Wölbungshöhe
+                nz = math.sqrt(max(0.05, h))
+                fx = feld[y*W+min(W-1,x+1)] - feld[y*W+max(0,x-1)]
+                fy = feld[min(H-1,y+1)*W+x] - feld[max(0,y-1)*W+x]
+                gl = math.hypot(fx, fy) + 1e-5
+                gnx, gny = -fx/gl, -fy/gl                    # Oberflächennormale xy
+                slope = 1.0 - h
+                lv = (gnx*lx + gny*ly)*slope + nz*0.55
+                t = max(0.0, min(0.999, lv*glanz_t + 0.16))
+                self.set(x, y, (*rampe[int(t*(n-1))], 255))  # HART, kein Dither
+
+    # Harte helle Kantenlinie auf der Lichtseite (volle Highlight-Farbe → knackig).
+    # y_max/x-box begrenzt den Bereich (z. B. nur der Körper, nicht die Gliedmaßen).
+    def kantenlicht(self, col, lx=-1, ly=-1, y_min=0, y_max=None, x_min=0, x_max=None):
+        y_max = self.h if y_max is None else y_max
+        x_max = self.w if x_max is None else x_max
+        tr = []
+        for y in range(max(0,y_min), min(self.h,y_max)):
+            for x in range(max(0,x_min), min(self.w,x_max)):
+                if not self.opaque(x, y): continue
+                if not (self.opaque(x+lx, y) and self.opaque(x, y+ly) and self.opaque(x+lx, y+ly)):
+                    tr.append((x, y))
+        for x, y in tr:
+            self.set(x, y, (*col, 255))
+
+    # Kernschatten-Linie an inneren „Tälern" des Metaball-Feldes (wo Teilformen
+    # sich treffen) — die dunklen Trennlinien handgemalter Sprites.
+    def binnenkontur(self, col, tief=0.55):
+        if not hasattr(self, '_feld'): return
+        W, H, f = self.w, self.h, self._feld
+        tr = []
+        for y in range(1, H-1):
+            for x in range(1, W-1):
+                if not self.opaque(x, y): continue
+                c0 = f[y*W+x]
+                # lokales Minimum in einer Richtung + genug „innen" → Sattel
+                lap = (f[y*W+x-1]+f[y*W+x+1]+f[(y-1)*W+x]+f[(y+1)*W+x]) - 4*c0
+                if lap > tief and c0 > 1.0:
+                    tr.append((x, y))
+        for x, y in tr:
+            r,g,b,a = self.get(x,y); self.set(x, y, (int(r*0.62), int(g*0.62), int(b*0.62)))
+
+    # Kontakt-/Bodenschatten: unterste ~3 Zeilen der Silhouette abdunkeln.
+    def kontaktschatten(self, faktor=0.7):
+        for x in range(self.w):
+            tiefste = -1
+            for y in range(self.h-1, -1, -1):
+                if self.opaque(x, y): tiefste = y; break
+            if tiefste < 0: continue
+            for y in range(max(0,tiefste-2), tiefste+1):
+                if self.opaque(x, y):
+                    r,g,b,a=self.get(x,y); self.set(x,y,(int(r*faktor),int(g*faktor),int(b*faktor)))
 
     # Rim-Light: heller Saum auf der Lichtseite (oben-links) — lässt Sprites
     # „poppen". Setzt col auf opake Pixel, die zur Lichtseite hin an Transparenz
