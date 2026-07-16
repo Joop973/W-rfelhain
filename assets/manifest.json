@@ -23,9 +23,19 @@
     "hueter_kampf": { "png": "assets/figur/hueter_kampf.png", "px": 256, "displayLogisch": 88 }
   },
   "szene": {
-    "_hinweis": "Arena-Ebenen je Region (Artefakt 12): bg.kulisse = Hintergrund, boden = Standfläche. Rechteckige RGB-Vollbilder (kein Alpha), Breite 640, per CSS über die Arena-Breite gezogen.",
+    "_hinweis": "Arena-Ebenen je Region (Artefakt 12): bg.kulisse = Hintergrund, boden = Standfläche. Rechteckige RGB-Vollbilder (kein Alpha), Breite 640, per CSS über die Arena-Breite gezogen. R1 aus Aarons Rohbild; R2–R6 prozedural gemalt via tools/landschaft.py (fBm-Noise, Tiefenstaffelung) — je Region eigenes Thema.",
     "boden.r1":      { "png": "assets/szene/boden.r1.png",      "b": 640, "h": 272 },
-    "bg.kulisse.r1": { "png": "assets/szene/bg.kulisse.r1.png", "b": 640, "h": 455 }
+    "bg.kulisse.r1": { "png": "assets/szene/bg.kulisse.r1.png", "b": 640, "h": 455 },
+    "boden.r2":      { "png": "assets/szene/boden.r2.png",      "b": 640, "h": 272 },
+    "bg.kulisse.r2": { "png": "assets/szene/bg.kulisse.r2.png", "b": 640, "h": 456 },
+    "boden.r3":      { "png": "assets/szene/boden.r3.png",      "b": 640, "h": 272 },
+    "bg.kulisse.r3": { "png": "assets/szene/bg.kulisse.r3.png", "b": 640, "h": 456 },
+    "boden.r4":      { "png": "assets/szene/boden.r4.png",      "b": 640, "h": 272 },
+    "bg.kulisse.r4": { "png": "assets/szene/bg.kulisse.r4.png", "b": 640, "h": 456 },
+    "boden.r5":      { "png": "assets/szene/boden.r5.png",      "b": 640, "h": 272 },
+    "bg.kulisse.r5": { "png": "assets/szene/bg.kulisse.r5.png", "b": 640, "h": 456 },
+    "boden.r6":      { "png": "assets/szene/boden.r6.png",      "b": 640, "h": 272 },
+    "bg.kulisse.r6": { "png": "assets/szene/bg.kulisse.r6.png", "b": 640, "h": 456 }
   },
   "icons": {
     "_hinweis": "16×16-Icons (08 §4.2/§4.6), geliefert als Blätter, geschnitten + freigestellt via tools/sprite_freistellen.py. Alle 64×64 RGBA. Keys = Dateiname ohne .png.",

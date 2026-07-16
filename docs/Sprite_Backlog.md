@@ -2,10 +2,11 @@
 
 *Stand 2026-07-11 (Priorität-1-Charge + HUD erledigt). Was fertig freigestellt in `assets/` liegt, ist unten unter „Erledigt" vermerkt. Alle Bildgenerierungs-Prompts stehen in `docs/11_Bild_Prompts.md`; Export-Regeln (Alpha, kein Nebel, mittig) in `docs/Sprite_Freistellung_Befund.md`. Prioritäts-Reihenfolge: was den spielbaren R1-Kampf blockiert zuerst.*
 
-## Erledigt (77)
+## Erledigt (87)
 Würfel: `schaden` · `faeule` · `brand` · `rinde` · `schliff` · `stuetze` · `ermutigung` · `zuversicht`
 Gegner: `astbeisser` · `borkenkriecher` · `moosgnom` · `dornalter`
 Icons (40): Seiten (16) · Status/Combo/FX (8) · Währung (3) · Meta (3) · Knoten (10)
+**Böden + Kulissen R2–R6 (10, 2026-07-11):** prozedural gemalt via `tools/landschaft.py` (fBm-Value-Noise, atmosphärische Tiefenstaffelung) — je Region eigenes Thema: Moderbruch-Sumpf · Schwelgrund-Asche/Glut · Dürrmark · Graupforte-Stein · Hohles-Herz-Schatten. Im Spiel (Manifest `szene`), greifen automatisch je `run.region`.
 **Priorität-1-Figuren (5, 2026-07-11):** `hueter.kampf` (Spielfigur, `assets/figur/`) · `wuerfel.widerhall` (Neuexport, sauber) · `boss.saumhueter` (Neuexport ohne Nebel) · `boden.r1` + `bg.kulisse.r1` (Arena-Ebenen, `assets/szene/`) — **damit ist Region 1 ohne einen Platzhalter bebildert**
 **HUD (20, 2026-07-11):** `atem.pip(+_leer)` · `gemuet.leiste` + 2 Marker · `schreck.marke` · `overlay.gesperrt` · `pool.feld` · `uebermut.leiste(+.kipp)` · 3 Knöpfe × 2 Frames · `karte.pergament` · `rahmen.9slice` · `overlay.gespiegelt.1/.2` — **damit ist Artefakt 11 §6 (HUD) komplett**; Verdrahtung ins Spiel-HUD ist ein E-Restposten
 
@@ -18,9 +19,7 @@ Icons (40): Seiten (16) · Status/Combo/FX (8) · Währung (3) · Meta (3) · Kn
 - [x] ~~`hueter.kampf`~~ — geliefert 2026-07-11 (`assets/figur/hueter_kampf.png`).
 - [x] ~~`boden.r1`~~ / ~~`bg.kulisse.r1`~~ — geliefert 2026-07-11 (`assets/szene/`).
 
-**→ Region 1 ist vollständig bebildert.** Verbleibende Ebenen der anderen Regionen:
-- `boden.r2` … `boden.r6` (5) — Standfläche je Region.
-- `bg.kulisse.r2` … `bg.kulisse.r6` (5) — Kulisse je Region.
+**→ Region 1 vollständig bebildert; Böden + Kulissen R2–R6 ebenfalls fertig (prozedural, 2026-07-11).** Damit sind alle Arena-Ebenen aller Regionen da.
 
 ---
 
@@ -76,8 +75,8 @@ Je Würfel drei Ausdrucks-Zustände (04 §4.1): `ruhig` (= die gelieferte Basis-
 | Würfel Gemüt-Varianten | 18 |
 | Hüter-Kampf-Sprite | ~~1~~ **0 — erledigt** |
 | Gegner & Bosse | 31 (Saumhüter erledigt) |
-| Boden-Ebenen | 5 (R1 erledigt) |
-| Kulissen | 5 (R1 erledigt) |
+| Boden-Ebenen | ~~5~~ **0 — erledigt** |
+| Kulissen | ~~5~~ **0 — erledigt** |
 | Seiten-/Status-/Währung-/Knoten-Icons | ~47 |
 | HUD | ~~13~~ **0 — erledigt** |
 | VFX | 6 Sequenzen |
