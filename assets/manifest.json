@@ -71,6 +71,18 @@
       "karte.pergament": 96, "rahmen.9slice": 48, "overlay.gespiegelt.1": 32, "overlay.gespiegelt.2": 32
     }
   },
+  "vfx": {
+    "_hinweis": "Effekt-Sprite-Sheets (Artefakt 11 §10, 08 §4.9), prozedural gemalt via tools/vfx.py — horizontale Frame-Streifen, RGBA, einmalig (kein Loop). Abspiel-Layer in ui/ folgt (E-Restposten). frames/w/h/fps je Effekt.",
+    "pfad_schema": "assets/fx/<key>.png",
+    "effekte": {
+      "fx.vollmond":        { "png": "assets/fx/fx.vollmond.png",        "frames": 8,  "w": 64,  "h": 64, "fps": 12 },
+      "fx.kristallisation": { "png": "assets/fx/fx.kristallisation.png", "frames": 6,  "w": 32,  "h": 32, "fps": 12 },
+      "fx.troesten":        { "png": "assets/fx/fx.troesten.png",        "frames": 6,  "w": 32,  "h": 32, "fps": 8 },
+      "fx.treffer":         { "png": "assets/fx/fx.treffer.png",         "frames": 4,  "w": 32,  "h": 32, "fps": 12 },
+      "fx.heilung_tau":     { "png": "assets/fx/fx.heilung_tau.png",     "frames": 6,  "w": 32,  "h": 32, "fps": 8 },
+      "fx.tischsturz":      { "png": "assets/fx/fx.tischsturz.png",      "frames": 10, "w": 224, "h": 96, "fps": 12 }
+    }
+  },
   "fehlend": {
     "_hinweis": "Rohbilder abgenommen, aber NICHT sauber freistellbar — brauchen Neuexport. Aktuell keine offenen Fälle (widerhall + saumhueter am 2026-07-11 sauber nachgeliefert)."
   }
